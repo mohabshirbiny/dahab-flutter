@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../core/utils/idempotency.dart';
 import '../models/account.dart';
 import '../models/listing.dart';
+import '../models/prices.dart';
 import '../models/reference.dart';
 import 'api/api_client.dart' show UploadFile;
 import 'live_rates.dart';
@@ -16,8 +17,8 @@ import 'repositories.dart';
 ///
 /// Since backend spec 010 the draft is sent for real: the files are uploaded,
 /// the listing is created (or, when fixing one, edited) and then sent for
-/// review ([send]). The on-screen "You receive" figure is still the
-/// prototype's estimate; the backend's own figure comes back on the listing.
+/// review ([send]). Since backend spec 015 the on-screen "You receive" figure is
+/// the backend's quote ([quote]); the listing carries the backend's own figure too.
 class SellDraft extends ChangeNotifier {
   SellType type = SellType.gold;
   int karat = 21;
@@ -81,11 +82,21 @@ class SellDraft extends ChangeNotifier {
 
   double get suggestedStone => Pricing.suggestedStone(carat, clarity, cut);
 
-  /// The mock rate for the draft's karat; a karat the mock feed does not
-  /// know is derived from 24K by purity.
-  int rateFor(LiveRates rates) => Pricing.baseRates.containsKey(karat) ? rates.rate(karat) : (rates.rate(24) * karat / 24).round();
+  /// What the backend is asked to price (backend spec 015, `GET /reference/quote`).
+  QuoteParams get quoteParams => QuoteParams(
+    type: type,
+    karat: karat,
+    weight: weight,
+    makingPerGram: making,
+    askingPrice: switch (type) {
+      SellType.diamond => stoneAsk,
+      SellType.mixed => totalAsk,
+      SellType.gold => 0,
+    },
+  );
 
-  SellQuote quote(int rate) => Pricing.sell(type: type, rate: rate, weight: weight, makingPerGram: making, stoneAsk: stoneAsk, totalAsk: totalAsk, promoOff: promo?.off ?? 0);
+  /// The backend's estimate for the draft, or null until it has answered.
+  SellQuote? quote(LiveRates rates) => rates.quote(quoteParams);
 
   void _syncStone() {
     if (!_stoneTouched && type == SellType.diamond) {

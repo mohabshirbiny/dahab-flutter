@@ -35,6 +35,46 @@ class WalletSummary {
 
 num _amount(Object? v) => v is num ? v : num.tryParse('${v ?? ''}') ?? 0;
 
+/// One buy request or order holding money, from `GET /customer/me/wallet/held`
+/// (backend spec 015). The amount is the ledger's; the app adds nothing up.
+class HeldItem {
+  const HeldItem({required this.type, required this.id, required this.amount, this.ref, this.titleEn, this.titleAr, this.state = ''});
+
+  factory HeldItem.fromJson(Map<String, dynamic> j) => HeldItem(
+    type: '${j['type'] ?? 'buy_request'}',
+    id: '${j['id'] ?? ''}',
+    ref: j['ref'] as String?,
+    titleEn: j['title'] as String?,
+    titleAr: j['title_ar'] as String?,
+    state: '${j['state'] ?? ''}',
+    amount: _amount(j['amount']),
+  );
+
+  /// `buy_request` or `order`.
+  final String type;
+  final String id;
+  final String? ref;
+  final String? titleEn;
+  final String? titleAr;
+  final String state;
+  final num amount;
+
+  bool get isOrder => type == 'order';
+}
+
+/// The lines and their total (the wallet's held_on_orders), as the backend sends them.
+class HeldItems {
+  const HeldItems({required this.total, required this.items});
+
+  factory HeldItems.fromJson(Map<String, dynamic> j) =>
+      HeldItems(total: _amount(j['total']), items: [for (final i in (j['items'] as List? ?? const [])) HeldItem.fromJson((i as Map).cast<String, dynamic>())]);
+
+  static const empty = HeldItems(total: 0, items: []);
+
+  final num total;
+  final List<HeldItem> items;
+}
+
 class WalletTxn {
   const WalletTxn({
     required this.id,

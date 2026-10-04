@@ -36,8 +36,9 @@ class _Sell1Body extends StatelessWidget {
   Widget build(BuildContext context) {
     context.read<SellDraft>().syncWith(ref);
     final d = context.watch<SellDraft>();
-    final rate = d.rateFor(context.watch<LiveRates>());
-    final q = d.quote(rate);
+    final rates = context.watch<LiveRates>();
+    final q = d.quote(rates);
+    final pricesPaused = rates.quotePaused || rates.paused;
     final isGold = d.type == SellType.gold;
     final isDiamond = d.type == SellType.diamond;
     final isMixed = d.type == SellType.mixed;
@@ -189,23 +190,30 @@ class _Sell1Body extends StatelessWidget {
         if (isMixed) ...[
           const DLabel('Your price for the whole piece'),
           DSlider(label: 'You ask', value: d.totalAsk, min: 0, max: 300000, step: 1000, display: group(d.totalAsk), onChanged: (v) => d.update((d) => d.totalAsk = v)),
-          DNote(
-            icon: 'info-circle',
-            spans: [
-              TextSpan(text: '${context.t('The gold in your piece is worth')} '),
-              TextSpan(
-                text: context.t(money(q.goldValue)),
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              TextSpan(text: ' ${context.t('today. Ask above that to recover the making charge and the stone.')}'),
-            ],
-          ),
+          if (q != null)
+            DNote(
+              icon: 'info-circle',
+              spans: [
+                TextSpan(text: '${context.t('The gold in your piece is worth')} '),
+                TextSpan(
+                  text: context.t(money(q.goldValue)),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                TextSpan(text: ' ${context.t('today. Ask above that to recover the making charge and the stone.')}'),
+              ],
+            ),
           const Gap(16),
         ],
 
-        // ---- summary ---- (the estimate uses the mock gold feed)
-        MockMark(
-          child: DSoft.bordered(
+        // ---- summary ---- the backend's quote (spec 015)
+        if (q == null)
+          DNote(
+            icon: 'clock',
+            kind: pricesPaused ? NoteKind.wait : NoteKind.plain,
+            text: pricesPaused ? 'Prices are paused right now. Your estimate shows again as soon as they are back.' : 'Working out what you would receive…',
+          )
+        else
+          DSoft.bordered(
             margin: const EdgeInsets.only(bottom: 14),
             child: Column(
               children: [
@@ -238,9 +246,8 @@ class _Sell1Body extends StatelessWidget {
               ],
             ),
           ),
-        ),
         // `#cmp-note` — how this compares with selling to a jeweller.
-        if (isGold)
+        if (isGold && q != null)
           DNote(
             icon: 'arrow-up-right',
             kind: NoteKind.ok,

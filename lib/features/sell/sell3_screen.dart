@@ -91,7 +91,7 @@ class _Sell3ScreenState extends State<Sell3Screen> {
   @override
   Widget build(BuildContext context) {
     final d = context.watch<SellDraft>();
-    final q = d.quote(d.rateFor(context.watch<LiveRates>()));
+    final q = d.quote(context.watch<LiveRates>());
     final showStats = context.watch<AppSession>().payStatsVisible;
     return AppPage(
       id: R.sell3,
@@ -100,27 +100,29 @@ class _Sell3ScreenState extends State<Sell3Screen> {
         children: [
           const T('Step 3 of 3', style: DText.tiny),
           const Gap(14),
-          MockMark(
-            child: DCard(
-              padding: EdgeInsets.zero,
-              clip: true,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const PieceThumb(),
-                  Padding(
-                    padding: const EdgeInsets.all(13),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+          DCard(
+            padding: EdgeInsets.zero,
+            clip: true,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const PieceThumb(),
+                Padding(
+                  padding: const EdgeInsets.all(13),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (q == null)
+                        const T('Prices are paused right now.', style: DText.tiny)
+                      else ...[
                         T(money(q.net), style: DText.price),
                         const Gap(3),
                         const T('is what reaches your wallet if it sells today', style: DText.tiny),
                       ],
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           const Gap(16),

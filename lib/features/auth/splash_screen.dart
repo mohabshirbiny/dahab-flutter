@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/live_rates.dart';
-import '../../services/pricing.dart';
 import '../../widgets/widgets.dart';
 
 /// `#s-splash` — dark welcome screen with live rates and partners.
@@ -60,7 +59,7 @@ class SplashScreen extends StatelessWidget {
                               ),
                             ),
                             const Gap(16),
-                            const MockMark(child: _RateCards()),
+                            const _RateCards(),
                             const T(
                               'Prices in EGP per gram, updated live.',
                               textAlign: TextAlign.center,
@@ -132,33 +131,40 @@ class _RateCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rates = context.watch<LiveRates>();
+    if (rates.paused || !rates.ready) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 4, bottom: 8),
+        child: T(rates.paused ? 'Prices are paused' : 'Loading…', style: const TextStyle(fontSize: 12, color: DColors.ink3)),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.only(top: 4, bottom: 8),
       child: Row(
         children: [
-          for (final k in const [18, 21, 24]) ...[
-            if (k != 18) const SizedBox(width: 8),
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 6),
-                decoration: BoxDecoration(color: DColors.splashCard, borderRadius: BorderRadius.circular(10)),
-                child: Column(
-                  children: [
-                    Text(context.t('${k}K'), style: const TextStyle(fontSize: 10, color: DColors.ink3, letterSpacing: 0.4)),
-                    const Gap(3),
-                    FittedBox(
-                      child: Text(
-                        context.t('get ${group(rates.rate(k))}'),
-                        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: DColors.white),
+          for (final k in const [18, 21, 24])
+            if (rates.sellersGet(k) != null) ...[
+              if (k != 18) const SizedBox(width: 8),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 6),
+                  decoration: BoxDecoration(color: DColors.splashCard, borderRadius: BorderRadius.circular(10)),
+                  child: Column(
+                    children: [
+                      Text(context.t('${k}K'), style: const TextStyle(fontSize: 10, color: DColors.ink3, letterSpacing: 0.4)),
+                      const Gap(3),
+                      FittedBox(
+                        child: Text(
+                          context.t('get ${group(rates.rate(k))}'),
+                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: DColors.white),
+                        ),
                       ),
-                    ),
-                    const Gap(2),
-                    Text(context.t('pay ${group(rates.rate(k) + Pricing.buySpread)}'), style: const TextStyle(fontSize: 10, color: DColors.ink3)),
-                  ],
+                      const Gap(2),
+                      Text(context.t('pay ${group(rates.buyersPay(k) ?? 0)}'), style: const TextStyle(fontSize: 10, color: DColors.ink3)),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
         ],
       ),
     );

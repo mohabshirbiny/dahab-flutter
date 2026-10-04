@@ -88,6 +88,7 @@ class BuyRequest {
     required this.aheadCount,
     required this.lockedTotalPrice,
     required this.depositAmount,
+    this.depositHeld,
     required this.requestedAt,
     required this.sellerReplyDeadline,
     required this.resolvedAt,
@@ -110,6 +111,9 @@ class BuyRequest {
   final int? aheadCount;
   final String lockedTotalPrice;
   final String depositAmount;
+
+  /// Backend spec 015: what this request holds in your wallet now (from the ledger).
+  final String? depositHeld;
   final DateTime requestedAt;
   final DateTime sellerReplyDeadline;
   final DateTime? resolvedAt;
@@ -136,6 +140,7 @@ class BuyRequest {
       aheadCount: (j['ahead_count'] as num?)?.toInt(),
       lockedTotalPrice: '${j['locked_total_price'] ?? '0'}',
       depositAmount: '${j['deposit_amount'] ?? '0'}',
+      depositHeld: j['deposit_held'] == null ? null : '${j['deposit_held']}',
       requestedAt: DateTime.tryParse('${j['requested_at']}')?.toLocal() ?? DateTime.now(),
       sellerReplyDeadline: DateTime.tryParse('${j['seller_reply_deadline']}')?.toLocal() ?? DateTime.now(),
       resolvedAt: j['resolved_at'] == null ? null : DateTime.tryParse('${j['resolved_at']}')?.toLocal(),

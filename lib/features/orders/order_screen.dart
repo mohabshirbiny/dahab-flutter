@@ -300,7 +300,7 @@ class _OrderBody extends StatelessWidget {
             child: Column(
               children: [
                 DRow('Your price is fixed at', moneyOf(o.lockedTotalPrice)),
-                DRow('Deposit held', moneyOf(o.depositAmount)),
+                DRow('Deposit held', moneyOf(o.depositHeld ?? o.depositAmount)),
                 DRow('Branch', o.branchNameEn),
                 if (deadline != null) DRow('The seller delivers by', whenOf(deadline.at), valueColor: DColors.wait),
               ],

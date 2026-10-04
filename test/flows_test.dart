@@ -206,7 +206,8 @@ void main() {
     await _tap(tester, 'Create account');
     expect(find.text('Add the photos of your ID first.'), findsOneWidget);
 
-    final paths = api.requests.map((r) => r.url.path.replaceFirst('/api/v1/customer/auth/register/', '')).toList();
+    // The registration calls only (the splash also reads today's prices, backend spec 015).
+    final paths = api.requests.where((r) => r.url.path.contains('/customer/auth/register/')).map((r) => r.url.path.replaceFirst('/api/v1/customer/auth/register/', '')).toList();
     expect(paths, ['start', 'verify-phone-otp', 'email', 'verify-email-otp']);
     await _end(tester);
   });
@@ -590,19 +591,68 @@ void main() {
       ..wallet = {'available': '900.0000', 'held': '11740.0000', 'held_on_orders': '11640.0000', 'pending_withdrawals': '100.0000', 'total': '12640.0000', 'currency': 'EGP'}
       ..withdrawals = [
         {
-          'id': 'wd-11', 'number': 'WD-11', 'amount': '100.0000', 'state': 'requested', 'on_hold': false, 'hold_message': null,
-          'account': {'bank_name': 'CIB', 'number_masked': '•••• 4417'}, 'requested_at': '2026-10-02T10:00:00+03:00', 'released_at': null,
-          'value_date': null, 'rejection_reason': null, 'cancelled_by_change': false, 'can_cancel': true,
+          'id': 'wd-11',
+          'number': 'WD-11',
+          'amount': '100.0000',
+          'state': 'requested',
+          'on_hold': false,
+          'hold_message': null,
+          'account': {'bank_name': 'CIB', 'number_masked': '•••• 4417'},
+          'requested_at': '2026-10-02T10:00:00+03:00',
+          'released_at': null,
+          'value_date': null,
+          'rejection_reason': null,
+          'cancelled_by_change': false,
+          'can_cancel': true,
         },
-      ];
+      ]
+      // Backend spec 015: what each request and order holds, summing to held_on_orders.
+      ..held = {
+        'total': '11640.0000',
+        'items': [
+          {'type': 'order', 'id': 'ord-1', 'ref': 'DH-2026-000123', 'title': 'Ring, 21K', 'title_ar': 'خاتم، عيار 21', 'state': 'awaiting_delivery', 'amount': '8000.0000'},
+          {'type': 'buy_request', 'id': 'br-2', 'ref': null, 'title': 'Bangle, 21K', 'title_ar': 'غويشة، عيار 21', 'state': 'queued', 'amount': '3640.0000'},
+        ],
+      };
     await _start(tester, backend: api);
     await signIn(tester);
     _go(tester, '/held');
     await _settle(tester);
-    expect(find.text('11,640 EGP'), findsOneWidget);
+    expect(find.text('11,640 EGP'), findsWidgets);
+    expect(find.text('What each one holds'), findsOneWidget);
+    expect(find.text('Order DH-2026-000123'), findsOneWidget);
+    expect(find.text('8,000 EGP'), findsOneWidget);
+    expect(find.text('Buy request'), findsOneWidget);
+    expect(find.text('3,640 EGP'), findsOneWidget);
+    expect(api.requests.any((r) => r.url.path.endsWith('/customer/me/wallet/held')), isTrue);
     expect(find.text('On its way to your bank'), findsOneWidget);
     expect(find.text('WD-11 · CIB •••• 4417'), findsOneWidget);
     expect(find.text('MOCK — this screen is not connected to the backend yet'), findsNothing);
+    await _end(tester);
+  });
+
+  testWidgets('home shows today\'s prices and the quote from the backend, without MOCK flags', (tester) async {
+    final api = await _start(tester);
+    _go(tester, '/home');
+    await _settle(tester);
+    await tester.pump(const Duration(milliseconds: 500));
+    await _settle(tester);
+    expect(find.text('21K 5,237'), findsOneWidget);
+    expect(api.requests.any((r) => r.url.path.endsWith('/reference/gold-prices')), isTrue);
+    expect(api.requests.any((r) => r.url.path.endsWith('/reference/quote') && r.url.queryParameters['karat'] == '21'), isTrue);
+    expect(find.text('Prices are paused'), findsNothing);
+    await _end(tester);
+  });
+
+  testWidgets('with no usable price the app says prices are paused, never a made-up figure', (tester) async {
+    final api = FakeBackend()..pricesAvailable = false;
+    await _start(tester, backend: api);
+    _go(tester, '/home');
+    await _settle(tester);
+    await tester.pump(const Duration(milliseconds: 500));
+    await _settle(tester);
+    expect(find.text('Prices are paused'), findsWidgets);
+    expect(find.text('21K 5,237'), findsNothing);
     await _end(tester);
   });
 

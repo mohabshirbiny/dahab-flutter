@@ -112,6 +112,9 @@ class MockWalletRepository implements WalletRepository {
   Future<List<WalletTxn>> transactions() => _later(mockTxns);
 
   @override
+  Future<HeldItems> held() => _later(HeldItems.empty);
+
+  @override
   Future<TopUpMethods> topUpMethods() => _later(mockTopUpMethods, 0);
 
   /// Notices filed in this session (the prototype has no top-up history).
