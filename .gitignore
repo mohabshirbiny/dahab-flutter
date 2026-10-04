@@ -46,3 +46,6 @@ app.*.map.json
 
 # Local agent / tooling config
 **/.claude/
+
+# Archives (local exports, never committed)
+*.zip
