@@ -1,4 +1,5 @@
 import 'package:dahab_app/core/i18n/i18n.dart';
+import 'package:dahab_app/features/home/home_screen.dart';
 import 'package:dahab_app/widgets/mock_flag.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,10 +30,11 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(find.byType(MockScreenBanner), findsNothing);
 
-    // Home: the gold feed, the calculator and the inbox bell are mock.
+    // Home: since backend spec 015 the gold prices and the calculator are live; the inbox bell is still mock.
     go('/home');
     await tester.pump(const Duration(seconds: 1));
-    expect(find.byType(MockFlag), findsAtLeastNWidgets(3));
+    expect(find.byType(MockFlag), findsAtLeastNWidgets(1));
+    expect(find.descendant(of: find.byType(MockMark), matching: find.byType(RateBar)), findsNothing);
 
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 3));

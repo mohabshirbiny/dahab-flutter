@@ -132,6 +132,9 @@ abstract interface class WalletRepository {
   Future<WalletSummary> summary();
   Future<List<WalletTxn>> transactions();
 
+  /// What each buy request and order holds now (backend spec 015).
+  Future<HeldItems> held();
+
   /// Where to send money and the customer's reference (backend spec 009).
   Future<TopUpMethods> topUpMethods();
 

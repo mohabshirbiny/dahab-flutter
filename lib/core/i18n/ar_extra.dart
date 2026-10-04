@@ -526,11 +526,21 @@ const Map<String, String> arExtra = {
   'No open orders': 'مفيش أوردرات مفتوحة',
   'Nothing listed yet': 'مفيش إعلانات لسه',
   'Sign out of every device': 'اخرج من كل الأجهزة',
-  'Every phone and browser signed in to your account is signed out, this one too. You sign in again with your password and a code.': 'كل موبايل أو متصفح داخل على حسابك هيخرج، ومنهم الجهاز ده. هتدخل تاني بالباسورد والكود.',
+  'Every phone and browser signed in to your account is signed out, this one too. You sign in again with your password and a code.':
+      'كل موبايل أو متصفح داخل على حسابك هيخرج، ومنهم الجهاز ده. هتدخل تاني بالباسورد والكود.',
   'Sign out everywhere': 'اخرج من كل حتة',
   'Signed out of every device.': 'خرجت من كل الأجهزة.',
   'In all': 'الإجمالي',
-  'Deposits on pieces you are buying. Each comes back in full if the sale does not go ahead, or goes towards the price when you pay the balance.': 'عرابين على قطع بتشتريها. كل عربون بيرجعلك كامل لو البيعة ماتمتش، أو بيتحسب من السعر لما تدفع الباقي.',
+  'Deposits on pieces you are buying. Each comes back in full if the sale does not go ahead, or goes towards the price when you pay the balance.':
+      'عرابين على قطع بتشتريها. كل عربون بيرجعلك كامل لو البيعة ماتمتش، أو بيتحسب من السعر لما تدفع الباقي.',
   'Nothing is held right now. All your money is available.': 'مفيش حاجة محجوزة دلوقتي. كل فلوسك متاحة.',
   'Sign in to add money to your wallet.': 'سجّل دخول عشان تضيف فلوس لمحفظتك.',
+  // Backend spec 015: what each request and order holds, and today's prices from the backend.
+  'What each one holds': 'كل واحد حاجز قد إيه',
+  'Buy request': 'طلب شراء',
+  'Prices are paused': 'الأسعار متوقفة',
+  'Prices are paused right now.': 'الأسعار متوقفة دلوقتي.',
+  'Prices are paused right now. Your estimate shows again as soon as they are back.': 'الأسعار متوقفة دلوقتي. تقديرك هيظهر تاني أول ما ترجع.',
+  'Working out what you would receive…': 'بنحسب هتستلم قد إيه…',
+  'updated': 'محدّثة',
 };

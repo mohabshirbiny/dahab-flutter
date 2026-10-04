@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/piece.dart';
+import '../../models/prices.dart';
 import '../../services/app_session.dart';
 import '../../services/live_rates.dart';
 import '../../services/pricing.dart';
@@ -22,7 +23,8 @@ class HomeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const MockMark(bottom: -8, end: 12, child: RateBar()),
+          // Backend spec 015: today's prices and the quote are live.
+          const RateBar(),
           // Backend spec 007: only shown while the account is suspended.
           const SuspendedNotice(margin: EdgeInsets.fromLTRB(16, 16, 16, 0)),
           Padding(
@@ -36,10 +38,7 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: MockMark(child: _Calculator()),
-          ),
+          const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: _Calculator()),
           const Padding(padding: EdgeInsets.fromLTRB(16, 18, 16, 16), child: _Protections()),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
@@ -93,31 +92,34 @@ class RateBar extends StatelessWidget {
                 child: Row(
                   children: [
                     const T('Gold now', style: TextStyle(fontSize: 11, color: DColors.ink2)),
-                    for (final k in const [18, 21, 24]) ...[
-                      const SizedBox(width: 9),
-                      AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 400),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          fontFamily: DefaultTextStyle.of(context).style.fontFamily,
-                          fontFamilyFallback: DefaultTextStyle.of(context).style.fontFamilyFallback,
-                          fontFeatures: DefaultTextStyle.of(context).style.fontFeatures,
-                          color: switch (rates.flash(k)) {
-                            1 => DColors.ok,
-                            -1 => DColors.bad,
-                            _ => DColors.ink,
-                          },
+                    if (rates.paused) ...[const SizedBox(width: 9), const T('Prices are paused', style: TextStyle(fontSize: 12, color: DColors.ink3))],
+                    for (final k in const [18, 21, 24])
+                      if (!rates.paused && rates.sellersGet(k) != null) ...[
+                        const SizedBox(width: 9),
+                        AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 400),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: DefaultTextStyle.of(context).style.fontFamily,
+                            fontFamilyFallback: DefaultTextStyle.of(context).style.fontFamilyFallback,
+                            fontFeatures: DefaultTextStyle.of(context).style.fontFeatures,
+                            color: switch (rates.flash(k)) {
+                              1 => DColors.ok,
+                              -1 => DColors.bad,
+                              _ => DColors.ink,
+                            },
+                          ),
+                          child: Text(context.t('${k}K ${group(rates.rate(k))}')),
                         ),
-                        child: Text(context.t('${k}K ${group(rates.rate(k))}')),
-                      ),
-                    ],
+                      ],
                   ],
                 ),
               ),
             ),
             const SizedBox(width: 9),
-            const T('live', style: TextStyle(fontSize: 11, color: DColors.ok)),
+            if (rates.ready && !rates.paused)
+              T(rates.prices?.feedState == 'live' ? 'live' : 'updated', style: TextStyle(fontSize: 11, color: rates.prices?.feedState == 'live' ? DColors.ok : DColors.ink3)),
           ],
         ),
       ),
@@ -132,8 +134,10 @@ class _Calculator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.watch<AppSession>();
-    final rate = context.watch<LiveRates>().rate(s.homeKarat);
-    final q = Pricing.gold(rate: rate, weight: s.homeWeight, makingPerGram: s.homeMaking);
+    final rates = context.watch<LiveRates>();
+    // The backend's quote for this piece (spec 015); null until it answers.
+    final q = rates.quote(QuoteParams(type: SellType.gold, karat: s.homeKarat, weight: s.homeWeight, makingPerGram: s.homeMaking));
+    final rate = rates.rate(s.homeKarat);
     return DCard(
       padding: const EdgeInsets.all(15),
       child: Column(
@@ -170,12 +174,26 @@ class _Calculator extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const T('You would receive', style: DText.tiny),
-                Padding(
-                  padding: const EdgeInsets.only(top: 3, bottom: 7),
-                  child: T(money(q.net), style: DText.big),
-                ),
-                DRow('A jeweller pays gold only', money(q.jewellerPays), padding: const EdgeInsets.symmetric(vertical: 2)),
-                DRow('You get extra', '+ ${money(q.extra)}', bold: true, keyColor: DColors.ok, valueColor: DColors.ok, padding: const EdgeInsets.symmetric(vertical: 2)),
+                if (q == null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 3, bottom: 7),
+                    child: T(rates.paused || rates.quotePaused ? 'Prices are paused' : '…', style: DText.big),
+                  )
+                else ...[
+                  Padding(
+                    padding: const EdgeInsets.only(top: 3, bottom: 7),
+                    child: T(money(q.net), style: DText.big),
+                  ),
+                  DRow('A jeweller pays gold only', money(q.jewellerPays), padding: const EdgeInsets.symmetric(vertical: 2)),
+                  DRow(
+                    'You get extra',
+                    '+ ${money(q.net - q.jewellerPays)}',
+                    bold: true,
+                    keyColor: DColors.ok,
+                    valueColor: DColors.ok,
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                  ),
+                ],
               ],
             ),
           ),

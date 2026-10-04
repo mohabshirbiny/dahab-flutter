@@ -36,6 +36,19 @@ class ApiWalletRepository implements WalletRepository {
     }
   }
 
+  /// `GET /customer/me/wallet/held` (backend spec 015): each request and order holding money.
+  @override
+  Future<HeldItems> held() async {
+    if (!_signedIn) return HeldItems.empty;
+    try {
+      final res = await _client.get('/customer/me/wallet/held', auth: true);
+      return HeldItems.fromJson((res?['data'] as Map).cast<String, dynamic>());
+    } on ApiException catch (e) {
+      if (e.code == 'verification_required') return HeldItems.empty;
+      rethrow;
+    }
+  }
+
   @override
   Future<List<WalletTxn>> transactions() async {
     if (!_signedIn) return const [];

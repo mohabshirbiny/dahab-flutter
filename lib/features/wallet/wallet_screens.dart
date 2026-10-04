@@ -238,9 +238,9 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 }
 
-/// `#s-held` — what is held and why, from the backend's figures only (spec 008 / 013): the part set aside
-/// against orders and buy requests, and each withdrawal on its way to the bank. The backend does not
-/// send a per-order held amount, so the orders themselves are one tap away instead of re-worked here.
+/// `#s-held` — what is held and why, from the backend's figures only (spec 008 / 013 / 015): each buy
+/// request and order holding money with its amount (`GET /customer/me/wallet/held`), and each withdrawal
+/// on its way to the bank. The app adds nothing up: the total is the backend's.
 class HeldScreen extends StatelessWidget {
   const HeldScreen({super.key});
 
@@ -250,12 +250,16 @@ class HeldScreen extends StatelessWidget {
     final payouts = context.read<PayoutRepository>();
     return AppPage(
       id: R.held,
-      child: AsyncView<(WalletSummary, List<CustomerWithdrawal>)>(
-        load: () async => (await wallet.summary(), await payouts.withdrawals()),
+      child: AsyncView<(WalletSummary, HeldItems, List<CustomerWithdrawal>)>(
+        load: () async => (await wallet.summary(), await wallet.held(), await payouts.withdrawals()),
         loadingHeight: 300,
         builder: (context, data) {
-          final (summary, withdrawals) = data;
-          final onTheWay = [for (final w in withdrawals) if (w.open) w];
+          final (summary, held, withdrawals) = data;
+          final arabic = context.isArabic;
+          final onTheWay = [
+            for (final w in withdrawals)
+              if (w.open) w,
+          ];
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -268,26 +272,55 @@ class HeldScreen extends StatelessWidget {
                     const Gap(3),
                     T(money(summary.heldOnOrders), style: DText.big),
                     const Gap(6),
-                    const T('Deposits on pieces you are buying. Each comes back in full if the sale does not go ahead, or goes towards the price when you pay the balance.', style: DText.tiny),
+                    const T(
+                      'Deposits on pieces you are buying. Each comes back in full if the sale does not go ahead, or goes towards the price when you pay the balance.',
+                      style: DText.tiny,
+                    ),
                     const Gap(11),
                     DButton.ghost('See your orders', small: true, onTap: () => context.nav(R.orders)),
                   ],
                 ),
               ),
+              if (held.items.isNotEmpty) ...[
+                const Gap(14),
+                const DLabel('What each one holds'),
+                DSoft.bordered(
+                  child: Column(
+                    children: [
+                      for (final (i, item) in held.items.indexed)
+                        Tappable(
+                          onTap: () => item.isOrder ? context.nav(R.order, query: {'id': item.id}) : context.nav(R.orders),
+                          child: DRow(
+                            item.isOrder ? 'Order ${item.ref ?? ''}' : 'Buy request',
+                            money(item.amount),
+                            rule: i > 0,
+                            keyWidget: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                T(item.isOrder ? 'Order ${item.ref ?? ''}' : 'Buy request', style: const TextStyle(fontSize: 13, color: DColors.ink2)),
+                                if ((arabic ? item.titleAr : item.titleEn) != null) Text(context.t((arabic ? item.titleAr : item.titleEn)!), style: DText.tiny),
+                              ],
+                            ),
+                          ),
+                        ),
+                      DRow('In all', money(held.total), rule: true, bold: true),
+                    ],
+                  ),
+                ),
+              ],
               if (summary.pendingWithdrawals > 0 || onTheWay.isNotEmpty) ...[
                 const Gap(14),
                 const DLabel('On its way to your bank'),
                 DSoft.bordered(
-                  child: Column(children: [
-                    for (final w in onTheWay) DRow('${w.number} · ${w.bankName} ${w.numberMasked}', money(w.amount)),
-                    DRow('In all', money(summary.pendingWithdrawals), rule: onTheWay.isNotEmpty, bold: true),
-                  ]),
+                  child: Column(
+                    children: [
+                      for (final w in onTheWay) DRow('${w.number} · ${w.bankName} ${w.numberMasked}', money(w.amount)),
+                      DRow('In all', money(summary.pendingWithdrawals), rule: onTheWay.isNotEmpty, bold: true),
+                    ],
+                  ),
                 ),
               ],
-              if (summary.held == 0) ...[
-                const Gap(14),
-                const DNote(icon: 'circle-check', kind: NoteKind.ok, text: 'Nothing is held right now. All your money is available.'),
-              ],
+              if (summary.held == 0) ...[const Gap(14), const DNote(icon: 'circle-check', kind: NoteKind.ok, text: 'Nothing is held right now. All your money is available.')],
             ],
           );
         },

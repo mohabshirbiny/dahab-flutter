@@ -132,7 +132,7 @@ class RequestSentScreen extends StatelessWidget {
             DCard(
               child: Column(
                 children: [
-                  DRow('Held from your wallet', moneyOf(r.depositAmount), valueStyle: const TextStyle(fontWeight: FontWeight.w500)),
+                  DRow('Held from your wallet', moneyOf(r.depositHeld ?? r.depositAmount), valueStyle: const TextStyle(fontWeight: FontWeight.w500)),
                   if (place != null) DRow('Your place in the queue', ahead == 0 ? '${ordinal(place)}, next to be answered' : '${ordinal(place)}, $ahead ahead of you'),
                   DRow('The seller replies before', whenOf(r.sellerReplyDeadline)),
                   DRow('Your price is fixed at', moneyOf(r.lockedTotalPrice), rule: true),

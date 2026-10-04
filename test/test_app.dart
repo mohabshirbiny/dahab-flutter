@@ -9,6 +9,7 @@ import 'package:dahab_app/services/api/orders_api.dart';
 import 'package:dahab_app/services/api/listings_api.dart';
 import 'package:dahab_app/services/api/market_api.dart';
 import 'package:dahab_app/services/api/payout_api.dart';
+import 'package:dahab_app/services/api/prices_api.dart';
 import 'package:dahab_app/services/api/token_store.dart';
 import 'package:dahab_app/services/api/wallet_api.dart';
 import 'package:dahab_app/services/app_session.dart';
@@ -67,6 +68,23 @@ class FakeBackend {
 
   /// Newest first, the shape of `GET /customer/me/wallet/transactions` rows.
   List<Map<String, dynamic>> walletRows = [];
+
+  /// Backend spec 015: `GET /customer/me/wallet/held` — what each request and order holds.
+  Map<String, dynamic> held = {'total': '0.0000', 'items': <Map<String, dynamic>>[]};
+
+  /// Backend spec 015: false makes `/reference/gold-prices` and `/reference/quote` answer `price_unavailable`.
+  bool pricesAvailable = true;
+
+  /// Backend spec 015: today's prices, the shape of `GET /reference/gold-prices`.
+  Map<String, dynamic> goldPrices = {
+    'price_at': '2026-10-04T10:00:00+03:00',
+    'feed_state': 'live',
+    'karats': [
+      {'code': 24, 'label': '24K', 'sellers_get': '5985.0090', 'buyers_pay': '6002.9910'},
+      {'code': 21, 'label': '21K', 'sellers_get': '5236.8750', 'buyers_pay': '5263.1250'},
+      {'code': 18, 'label': '18K', 'sellers_get': '4491.0000', 'buyers_pay': '4500.0000'},
+    ],
+  };
 
   /// Backend spec 009: the customer's notices, newest first, as the API sends them.
   List<Map<String, dynamic>> topUps = [];
@@ -666,6 +684,38 @@ class FakeBackend {
       });
     }
     if (path == '/reference/piece-types') return json(200, {'data': pieceTypes});
+    // ---- backend spec 015: today's prices and the quote (a stand-in calculator: 20% of the making charge, 14% VAT) ----
+    if (path == '/reference/gold-prices') {
+      return pricesAvailable ? json(200, {'data': goldPrices}) : error(409, 'price_unavailable');
+    }
+    if (path == '/reference/quote') {
+      if (!pricesAvailable) return error(409, 'price_unavailable');
+      final q = req.url.queryParameters;
+      final weight = double.tryParse(q['weight_g'] ?? '') ?? 0;
+      final makingPerGram = double.tryParse(q['making_per_g'] ?? '') ?? 0;
+      final karat = int.tryParse(q['karat'] ?? '') ?? 21;
+      final rate = double.parse(((goldPrices['karats'] as List).firstWhere((k) => k['code'] == karat) as Map)['sellers_get'] as String);
+      final gold = rate * weight;
+      final making = makingPerGram * weight;
+      final commission = (making * 0.2).clamp(200, double.infinity);
+      final vat = commission * 0.14;
+      return json(200, {
+        'data': {
+          'category': q['category'],
+          'rate_per_gram': rate.toStringAsFixed(4),
+          'gold_value': gold.toStringAsFixed(4),
+          'making_back': making.toStringAsFixed(4),
+          'asking_price': null,
+          'commission': commission.toStringAsFixed(4),
+          'vat': vat.toStringAsFixed(4),
+          'payout': (gold + making - commission - vat).toStringAsFixed(4),
+          'commission_rate': '20.0000',
+          'minimum_applied': making * 0.2 < 200,
+          'indicative': true,
+          'price_at': goldPrices['price_at'],
+        },
+      });
+    }
     if (path == '/reference/branches') return json(200, {'data': branches});
     if (path == '/reference/legal-documents/ownership_declaration') return json(200, {'data': declaration});
     if (path == '/reference/legal-documents/deposit_agreement') return json(200, {'data': depositTerms});
@@ -1080,6 +1130,9 @@ class FakeBackend {
       case '/customer/me/wallet':
         if (pendingAccount) return error(403, 'verification_required');
         return json(200, {'data': wallet});
+      case '/customer/me/wallet/held':
+        if (pendingAccount) return error(403, 'verification_required');
+        return json(200, {'data': held});
       case '/customer/me/wallet/transactions':
         if (pendingAccount) return error(403, 'verification_required');
         return json(200, {
@@ -1161,7 +1214,7 @@ Future<Widget> testApp(LangController lang, {FakeBackend? backend}) async {
       Provider<AccountRepository>.value(value: accountRepo),
       Provider<ContentRepository>.value(value: MockContentRepository()),
       ChangeNotifierProvider(create: (_) => AppSession()),
-      ChangeNotifierProvider(create: (_) => LiveRates()),
+      ChangeNotifierProvider(create: (_) => LiveRates(api: PricesApi(client))),
       ChangeNotifierProvider(create: (_) => SellDraft()),
       ChangeNotifierProvider(create: (_) => AccountController(accountRepo)),
       ChangeNotifierProvider(create: (_) => PayoutController(payouts)),
