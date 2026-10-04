@@ -11,7 +11,6 @@ const bool kShowMockFlags = bool.fromEnvironment('SHOW_MOCK_FLAGS', defaultValue
 
 /// Screens that are entirely mock (no backend behind them yet).
 const Set<String> mockScreens = {
-  R.security, // password change and devices
   R.notif, // notification settings
   R.inbox, // notifications feed
   R.help, // FAQ
@@ -19,7 +18,6 @@ const Set<String> mockScreens = {
   R.support,
   R.delete, // close account
   R.invite,
-  R.held, // held-money detail
   R.invoices,
   R.invoice,
   R.saved, // saved pieces

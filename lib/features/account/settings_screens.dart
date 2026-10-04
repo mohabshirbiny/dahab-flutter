@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../models/account.dart';
 import '../../services/account_controller.dart';
+import '../../services/api/api_client.dart';
+import '../../services/auth/auth_controller.dart';
 import '../../services/repositories.dart';
 import '../../widgets/widgets.dart';
 
@@ -26,6 +28,29 @@ class _SecurityScreenState extends State<SecurityScreen> {
     super.dispose();
   }
 
+  bool _signingOut = false;
+
+  Future<void> _signOutEverywhere() async {
+    final ok = await ask(
+      context,
+      title: 'Sign out of every device',
+      body: 'Every phone and browser signed in to your account is signed out, this one too. You sign in again with your password and a code.',
+      yes: 'Sign out everywhere',
+    );
+    if (!ok || !mounted) return;
+    setState(() => _signingOut = true);
+    try {
+      await context.read<AuthController>().logoutAll();
+      if (!mounted) return;
+      showToast(context, 'Signed out of every device.');
+      context.nav(R.login);
+    } on ApiException catch (e) {
+      if (mounted) showToast(context, e.isNetwork ? 'Could not reach the server. Check your connection and try again.' : 'Something went wrong');
+    } finally {
+      if (mounted) setState(() => _signingOut = false);
+    }
+  }
+
   void _change() {
     if (_current.text.isEmpty) return setState(() => _error = 'Enter your password.');
     if (_next.text.length < 8) return setState(() => _error = 'Your password needs at least 8 characters.');
@@ -42,6 +67,9 @@ class _SecurityScreenState extends State<SecurityScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Changing the password and the device list are still mock (no backend yet).
+          MockMark(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const DLabel('Password'),
           DField(
             label: 'Current password',
@@ -55,9 +83,12 @@ class _SecurityScreenState extends State<SecurityScreen> {
           DError(_error ?? '', visible: _error != null),
           const Gap(13),
           DButton.ghost('Change password', onTap: _change),
+            ]),
+          ),
           const Gap(20),
           const DLabel('Devices signed in'),
-          AsyncView<List<DeviceSession>>(
+          MockMark(
+            child: AsyncView<List<DeviceSession>>(
             load: context.read<AccountRepository>().devices,
             loadingHeight: 100,
             builder: (context, devices) => DMenuCard(
@@ -77,7 +108,11 @@ class _SecurityScreenState extends State<SecurityScreen> {
                   ),
               ],
             ),
-          ),
+          )),
+          if (context.watch<AuthController>().isSignedIn) ...[
+            const Gap(12),
+            DButton.ghost('Sign out of every device', loading: _signingOut, foreground: DColors.bad, onTap: _signOutEverywhere),
+          ],
           const Gap(14),
           const DNote(
             icon: 'shield-lock',

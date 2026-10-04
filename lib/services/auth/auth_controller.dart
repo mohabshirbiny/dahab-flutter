@@ -113,6 +113,15 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Signs out on every device, this one included. Unlike [logout], a failed call
+  /// is reported: the other devices would still be signed in.
+  Future<void> logoutAll() async {
+    await _api.logoutAll();
+    await _tokens.clear();
+    _customer = null;
+    notifyListeners();
+  }
+
   void _expired() {
     if (_customer == null) return;
     _customer = null;

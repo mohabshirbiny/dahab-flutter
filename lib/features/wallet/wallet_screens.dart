@@ -58,10 +58,6 @@ class BalanceCard extends StatelessWidget {
           child: DRow(
             'Held on open orders',
             money(summary.heldOnOrders),
-            // The held-money detail screen is still mock.
-            keyWidget: heldTappable
-                ? const Row(children: [Flexible(child: T('Held on open orders', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: DColors.ink2))), SizedBox(width: 6), MockFlag()])
-                : null,
             onTap: heldTappable ? () => context.nav(R.held) : null,
             valueWidget: heldTappable
                 ? Row(
@@ -242,64 +238,59 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 }
 
-/// `#s-held`
+/// `#s-held` — what is held and why, from the backend's figures only (spec 008 / 013): the part set aside
+/// against orders and buy requests, and each withdrawal on its way to the bank. The backend does not
+/// send a per-order held amount, so the orders themselves are one tap away instead of re-worked here.
 class HeldScreen extends StatelessWidget {
   const HeldScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final wallet = context.read<WalletRepository>();
+    final payouts = context.read<PayoutRepository>();
     return AppPage(
       id: R.held,
-      child: Column(
-        children: [
-          const DCard(
-            padding: EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  T('Held on open orders', style: DText.tiny),
-                  Gap(3),
-                  T('11,640 EGP', style: DText.big),
-                  Gap(3),
-                  T('Across 1 order', style: DText.tiny),
-                ],
-              ),
-            ),
-          ),
-          const Gap(14),
-          DCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
+      child: AsyncView<(WalletSummary, List<CustomerWithdrawal>)>(
+        load: () async => (await wallet.summary(), await payouts.withdrawals()),
+        loadingHeight: 300,
+        builder: (context, data) {
+          final (summary, withdrawals) = data;
+          final onTheWay = [for (final w in withdrawals) if (w.open) w];
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              DCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          T('Gold ring, 21K', style: DText.title),
-                          T('Deposit on a piece you are buying', style: DText.tiny),
-                        ],
-                      ),
-                    ),
-                    DPill('11,640 EGP', kind: PillKind.wait),
+                    const T('Held on open orders', style: DText.tiny),
+                    const Gap(3),
+                    T(money(summary.heldOnOrders), style: DText.big),
+                    const Gap(6),
+                    const T('Deposits on pieces you are buying. Each comes back in full if the sale does not go ahead, or goes towards the price when you pay the balance.', style: DText.tiny),
+                    const Gap(11),
+                    DButton.ghost('See your orders', small: true, onTap: () => context.nav(R.orders)),
                   ],
                 ),
-                const Gap(9),
-                const DSoft.paper(
-                  child: Column(children: [DRow('Held since', '26 Aug, 19:22'), DRow('Piece price', '58,200 EGP'), DRow('Balance to pay, then collect', '46,560 EGP')]),
+              ),
+              if (summary.pendingWithdrawals > 0 || onTheWay.isNotEmpty) ...[
+                const Gap(14),
+                const DLabel('On its way to your bank'),
+                DSoft.bordered(
+                  child: Column(children: [
+                    for (final w in onTheWay) DRow('${w.number} · ${w.bankName} ${w.numberMasked}', money(w.amount)),
+                    DRow('In all', money(summary.pendingWithdrawals), rule: onTheWay.isNotEmpty, bold: true),
+                  ]),
                 ),
-                const Gap(11),
-                const T('This comes back to you in full if the seller declines, misses the deadline, or the piece fails inspection.', style: DText.tiny),
-                const Gap(11),
-                DButton.ghost('See the order', small: true, onTap: () => context.nav(R.orders)),
               ],
-            ),
-          ),
-        ],
+              if (summary.held == 0) ...[
+                const Gap(14),
+                const DNote(icon: 'circle-check', kind: NoteKind.ok, text: 'Nothing is held right now. All your money is available.'),
+              ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -799,9 +790,13 @@ class _AddFundsScreenState extends State<AddFundsScreen> {
       return (await context.read<WalletRepository>().topUpMethods(), null);
     } on ApiException catch (e) {
       if (e.code == 'verification_required' || e.code == 'account_suspended') return (null, authErrorMessage(e));
+      // No session (signed out, or it ended): ask to sign in instead of showing an error.
+      if (e.code == 'unauthenticated') return (null, _signInFirst);
       rethrow;
     }
   }
+
+  static const _signInFirst = 'Sign in to add money to your wallet.';
 
   String _idempotencyKey(String payload) {
     if (_key == null || _key!.$1 != payload) _key = (payload, newIdempotencyKey());
@@ -893,7 +888,10 @@ class _AddFundsScreenState extends State<AddFundsScreen> {
                 children: [
                   DNote(icon: 'alert-triangle', kind: NoteKind.wait, text: blocked ?? ''),
                   const Gap(12),
-                  DButton.ghost('Your top-ups', small: true, onTap: () => context.nav(R.topups)),
+                  if (blocked == _signInFirst)
+                    DButton('Sign in', onTap: () => context.nav(R.login))
+                  else
+                    DButton.ghost('Your top-ups', small: true, onTap: () => context.nav(R.topups)),
                 ],
               );
             }

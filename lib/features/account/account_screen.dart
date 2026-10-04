@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../models/account.dart';
 import '../../models/wallet.dart';
 import '../../models/customer.dart';
+import '../../models/listing.dart';
+import '../../models/order.dart';
 import '../../services/app_session.dart';
 import '../../services/auth/auth_controller.dart';
 import '../../services/auth/auth_messages.dart';
@@ -37,18 +39,31 @@ class AccountScreen extends StatelessWidget {
     final me = auth.customer;
     final account = context.read<AccountRepository>();
     final wallet = context.read<WalletRepository>();
+    final ordersRepo = context.read<OrdersRepository>();
+    final listingsRepo = context.read<ListingsRepository>();
     final payouts = context.watch<PayoutController>();
     return AppPage(
       id: R.account,
-      child: AsyncView<(UserProfile, WalletSummary)>(
+      child: AsyncView<(UserProfile, WalletSummary, List<CustomerOrder>?, List<Listing>?)>(
         load: () async {
           // Backend spec 013: the payout account in use is live.
           if (me != null) await payouts.load();
-          return (await account.profile(), await wallet.summary());
+          // The Activity counts come from the live orders and listings; a failure only hides them.
+          Future<V?> quiet<V>(Future<V> Function() f) async {
+            try {
+              return await f();
+            } on Object {
+              return null;
+            }
+          }
+
+          final orders = me == null ? null : await quiet(ordersRepo.list);
+          final listings = me == null ? null : await quiet(listingsRepo.mine);
+          return (await account.profile(), await wallet.summary(), orders, listings);
         },
         loadingHeight: 400,
         builder: (context, data) {
-          final (mock, summary) = data;
+          final (mock, summary, orders, listings) = data;
           // Identity comes from the signed-in customer (`/customer/auth/me`);
           // the wallet and the payout account are live; activity stays on mock data.
           final p = me == null ? mock : _profileFrom(me, mock);
@@ -153,18 +168,18 @@ class AccountScreen extends StatelessWidget {
               const DLabel('Activity'),
               DMenuCard(
                 children: [
-                  DMenu(icon: 'clipboard-list', title: 'Orders', sub: 'One selling, one ready to collect', onTap: () => context.nav(R.orders), mock: true),
+                  DMenu(icon: 'clipboard-list', title: 'Orders', sub: _ordersSub(orders), onTap: () => context.nav(R.orders)),
                   DMenu(icon: 'receipt-2', title: 'Transactions and invoices', sub: '14 records', onTap: () => context.nav(R.invoices), mock: true),
                   DMenu(icon: 'users', title: 'Invite a friend', sub: 'Both of you pay less commission', onTap: () => context.nav(R.invite), mock: true),
                   DMenu(icon: 'heart', title: 'Saved pieces', sub: '6 saved', onTap: () => context.nav(R.saved), mock: true),
-                  DMenu(icon: 'tag', title: 'My listings', sub: '2 live, 1 sold', onTap: () => context.nav(R.listings), mock: true),
+                  DMenu(icon: 'tag', title: 'My listings', sub: _listingsSub(listings), onTap: () => context.nav(R.listings)),
                 ],
               ),
               const Gap(14),
               const DLabel('Settings'),
               DMenuCard(
                 children: [
-                  DMenu(icon: 'lock', title: 'Password and devices', onTap: () => context.nav(R.security), mock: true),
+                  DMenu(icon: 'lock', title: 'Password and devices', onTap: () => context.nav(R.security)),
                   DMenu(
                     icon: 'language',
                     title: 'Language',
@@ -241,4 +256,21 @@ class _MockKey extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(children: [Flexible(child: T(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: DColors.ink2))), const SizedBox(width: 6), const MockFlag()]);
+}
+
+/// "1 selling, 2 buying" — the open orders by side; nothing when not loaded.
+String? _ordersSub(List<CustomerOrder>? orders) {
+  if (orders == null) return null;
+  final open = [for (final o in orders) if (o.stage != CustomerOrderStage.done && o.stage != CustomerOrderStage.cancelled) o];
+  if (open.isEmpty) return 'No open orders';
+  final selling = open.where((o) => o.isSeller).length;
+  return '$selling selling, ${open.length - selling} buying';
+}
+
+/// "2 live of 5" — listings on the market (live or with a buyer in line) out of all of them.
+String? _listingsSub(List<Listing>? listings) {
+  if (listings == null) return null;
+  if (listings.isEmpty) return 'Nothing listed yet';
+  final live = listings.where((l) => l.state == ListingState.live || l.state == ListingState.reserved).length;
+  return '$live live of ${listings.length}';
 }

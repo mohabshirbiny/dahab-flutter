@@ -158,6 +158,8 @@ class LangController extends ChangeNotifier {
     (RegExp(r'^(\d+) min left$'), r'فاضل $1 دقيقة'),
     // Backend spec 014: report a problem, more time, someone else collects.
     (RegExp(r'^Photo (\d+)$'), r'صورة $1'),
+    (RegExp(r'^(\d+) selling, (\d+) buying$'), r'بتبيع $1، بتشتري $2'),
+    (RegExp(r'^(\d+) live of (\d+)$'), r'$1 معروضة من $2'),
     (RegExp(r'^Order (DH-[\d-]+)$'), r'أوردر $1'),
     (RegExp(r'^The order is on hold and someone will be in touch today\. Your reference is (DSP-\d+)\.$'), r'الأوردر متوقف وحد هيكلمك النهاردة. الرقم المرجعي بتاعك $1.'),
     (RegExp(r'^Bring it by (.+?) · (\d+) h (\d+) min left$'), r'وصّلها قبل $1 · فاضل $2 ساعة و$3 دقيقة'),

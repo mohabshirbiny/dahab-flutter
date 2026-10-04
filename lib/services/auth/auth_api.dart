@@ -52,6 +52,9 @@ class AuthApi {
 
   Future<void> logout() => _client.post('/customer/auth/logout', auth: true);
 
+  /// Revokes every token issued to the customer, this device's too.
+  Future<void> logoutAll() => _client.post('/customer/auth/logout-all', auth: true);
+
   // ---- registration (six steps; the UI shows them as three screens) ----
 
   /// Step 1 — returns the `registration_ref`.

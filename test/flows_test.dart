@@ -573,6 +573,70 @@ void main() {
     await _end(tester);
   });
 
+  // ---- Live parts that used to be mock: held money, sign out everywhere, the Activity counts ----
+
+  testWidgets('add funds without a session asks to sign in instead of failing', (tester) async {
+    await _start(tester);
+    _go(tester, '/addfunds');
+    await _settle(tester);
+    expect(find.text('Sign in to add money to your wallet.'), findsOneWidget);
+    await _tap(tester, 'Sign in');
+    expect(find.text('Sign in to add money to your wallet.'), findsNothing);
+    await _end(tester);
+  });
+
+  testWidgets('held money shows the backend figures and each withdrawal on its way', (tester) async {
+    final api = FakeBackend()
+      ..wallet = {'available': '900.0000', 'held': '11740.0000', 'held_on_orders': '11640.0000', 'pending_withdrawals': '100.0000', 'total': '12640.0000', 'currency': 'EGP'}
+      ..withdrawals = [
+        {
+          'id': 'wd-11', 'number': 'WD-11', 'amount': '100.0000', 'state': 'requested', 'on_hold': false, 'hold_message': null,
+          'account': {'bank_name': 'CIB', 'number_masked': '•••• 4417'}, 'requested_at': '2026-10-02T10:00:00+03:00', 'released_at': null,
+          'value_date': null, 'rejection_reason': null, 'cancelled_by_change': false, 'can_cancel': true,
+        },
+      ];
+    await _start(tester, backend: api);
+    await signIn(tester);
+    _go(tester, '/held');
+    await _settle(tester);
+    expect(find.text('11,640 EGP'), findsOneWidget);
+    expect(find.text('On its way to your bank'), findsOneWidget);
+    expect(find.text('WD-11 · CIB •••• 4417'), findsOneWidget);
+    expect(find.text('MOCK — this screen is not connected to the backend yet'), findsNothing);
+    await _end(tester);
+  });
+
+  testWidgets('sign out of every device revokes every session and goes to sign-in', (tester) async {
+    final api = await _start(tester);
+    await signIn(tester);
+    _go(tester, '/security');
+    await _settle(tester);
+    await _tap(tester, 'Sign out of every device');
+    expect(find.textContaining('this one too'), findsOneWidget);
+    await _tap(tester, 'Sign out everywhere');
+    expect(api.loggedOutEverywhere, isTrue);
+    expect(find.text('Sign in'), findsWidgets);
+    await _end(tester);
+  });
+
+  testWidgets('Account shows the real counts of open orders and listings', (tester) async {
+    final api = FakeBackend()
+      ..orders = [
+        FakeBackend.order('0199d000-0000-7000-8000-00000000000a', role: 'seller', actions: ['cancel']),
+        FakeBackend.order('0199d000-0000-7000-8000-00000000000b', state: 'awaiting_balance', stage: 'pay', actions: ['pay']),
+        FakeBackend.order('0199d000-0000-7000-8000-00000000000c', state: 'completed', stage: 'done'),
+      ]
+      ..listings = [FakeBackend.listing('l-1', 'live'), FakeBackend.listing('l-2', 'draft')];
+    await _start(tester, backend: api);
+    await signIn(tester);
+    _go(tester, '/account');
+    await _settle(tester);
+    expect(find.text('1 selling, 1 buying'), findsOneWidget);
+    expect(find.text('1 live of 2'), findsOneWidget);
+    expect(find.text('One selling, one ready to collect'), findsNothing);
+    await _end(tester);
+  });
+
   // Backend spec 010: the sell flow uploads the files, creates the listing and sends it for review.
   testWidgets('sell flow: photos, description, branch and declaration, then the listing waits for approval', (tester) async {
     final api = await _start(tester);

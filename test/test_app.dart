@@ -56,6 +56,9 @@ class FakeBackend {
   /// They can still sign in and read; trading is refused with `account_suspended`.
   String? suspendedReason;
 
+  /// `POST /customer/auth/logout-all` was called.
+  bool loggedOutEverywhere = false;
+
   /// Answer the login with this refusal instead of the OTP challenge.
   String? refuseLoginWith;
 
@@ -998,6 +1001,8 @@ class FakeBackend {
 
     switch (path) {
       case '/customer/me/wallet/topup-methods':
+        // Like the real API: no session, no methods.
+        if (req.headers['Authorization'] == null) return error(401, 'unauthenticated');
         final refused = tradeRefusal();
         if (refused != null) return error(403, refused);
         return json(200, {'data': topUpMethods});
@@ -1068,6 +1073,9 @@ class FakeBackend {
       case '/customer/auth/me':
         return json(200, {'data': _customer});
       case '/customer/auth/logout':
+        return http.Response('', 204);
+      case '/customer/auth/logout-all':
+        loggedOutEverywhere = true;
         return http.Response('', 204);
       case '/customer/me/wallet':
         if (pendingAccount) return error(403, 'verification_required');
