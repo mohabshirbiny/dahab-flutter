@@ -1,3 +1,4 @@
+import '../models/invoice.dart';
 import '../models/buy_request.dart';
 import '../models/dispute.dart';
 import '../models/reference.dart';
@@ -171,7 +172,17 @@ class MockWalletRepository implements WalletRepository {
   }
 
   @override
-  Future<List<InvoiceSummary>> invoices() => _later(mockInvoices);
+  Future<List<CustomerInvoice>> invoices() => _later(const <CustomerInvoice>[]);
+
+  // Tax invoices are live (backend spec 016): the mock has none to open.
+  @override
+  Future<CustomerInvoice> invoice(String id) => Future.error(StateError('Invoices are live.'));
+
+  @override
+  Future<InvoiceFile> invoicePdf(String id, String number) => Future.error(StateError('Invoices are live.'));
+
+  @override
+  Future<InvoiceFile> creditNotePdf(String id, String number) => Future.error(StateError('Invoices are live.'));
 }
 
 class MockAccountRepository implements AccountRepository {

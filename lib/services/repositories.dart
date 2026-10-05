@@ -1,3 +1,4 @@
+import '../models/invoice.dart';
 import '../models/account.dart';
 import '../models/buy_request.dart';
 import '../models/dispute.dart';
@@ -151,7 +152,17 @@ abstract interface class WalletRepository {
   /// Withdraws a pending notice.
   Future<TopUp> cancelTopUp(String id, {required String idempotencyKey});
 
-  Future<List<InvoiceSummary>> invoices();
+  /// Your tax invoices, newest first (backend spec 016): sold and bought.
+  Future<List<CustomerInvoice>> invoices();
+
+  /// One of your invoices with its lines and credit notes.
+  Future<CustomerInvoice> invoice(String id);
+
+  /// The bilingual PDF of one of your invoices; throws `document_not_ready` while it is being made.
+  Future<InvoiceFile> invoicePdf(String id, String number);
+
+  /// The PDF of a credit note on one of your invoices.
+  Future<InvoiceFile> creditNotePdf(String id, String number);
 }
 
 abstract interface class AccountRepository {

@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import '../../core/utils/idempotency.dart';
 import '../../models/payout.dart';
 import '../../models/topup_words.dart';
+import '../../models/invoice.dart';
+import '../../models/piece.dart' show pieceTitle, pieceTitleAr;
 import '../../models/wallet.dart';
 import '../../services/auth/auth_controller.dart';
 import '../../services/api/api_client.dart';
@@ -380,7 +382,13 @@ class TxnScreen extends StatelessWidget {
               ),
               const Gap(14),
               DNote(icon: 'info-circle', text: x.note),
-              if (x.link != null) ...[const Gap(14), DButton.ghost(x.link == 'invoice' ? 'Open the invoice' : 'See what is held', onTap: () => context.nav(x.link!))],
+              if (x.invoiceId != null) ...[
+                const Gap(14),
+                DButton.ghost('Open the invoice', onTap: () => context.nav(R.invoice, query: {'id': x.invoiceId!})),
+              ] else if (x.link != null) ...[
+                const Gap(14),
+                DButton.ghost(x.link == 'invoice' ? 'Open the invoice' : 'See what is held', onTap: () => context.nav(x.link!)),
+              ],
             ],
           );
         },
@@ -1123,7 +1131,7 @@ class _TopUpsScreenState extends State<TopUpsScreen> {
   }
 }
 
-/// `#s-invoices`
+/// `#s-invoices` — your tax invoices (backend spec 016), sold and bought.
 class InvoicesScreen extends StatefulWidget {
   const InvoicesScreen({super.key});
 
@@ -1133,13 +1141,6 @@ class InvoicesScreen extends StatefulWidget {
 
 class _InvoicesScreenState extends State<InvoicesScreen> {
   String _filter = 'all';
-
-  static const _summaryText =
-      'DAHAB — INVOICE SUMMARY 2026\n\n'
-      'DH-2026-004417  28 Aug  Sold gold ring          56,952.00 EGP\n'
-      'DH-2026-004392  19 Aug  Bought mixed earrings   78,400.00 EGP\n'
-      'DH-2026-004310  02 Aug  Sold gold bracelet      41,220.00 EGP\n\n'
-      'All invoices are filed with the Egyptian Tax Authority.';
 
   @override
   Widget build(BuildContext context) {
@@ -1154,121 +1155,171 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
             ],
           ),
           const Gap(14),
-          AsyncView<List<InvoiceSummary>>(
+          AsyncView<List<CustomerInvoice>>(
             load: context.read<WalletRepository>().invoices,
             builder: (context, all) {
-              final list = _filter == 'all' ? all : all.where((i) => i.kind == _filter).toList();
+              final list = switch (_filter) {
+                'sold' => all.where((i) => i.isSeller).toList(),
+                'bought' => all.where((i) => !i.isSeller).toList(),
+                _ => all,
+              };
+              if (list.isEmpty) {
+                return const DEmpty(icon: 'receipt-2', title: 'No invoices yet', body: 'A tax invoice is issued when a sale is paid in full, one for each side.');
+              }
               return DMenuCard(
-                children: [for (final i in list) DMenu(icon: 'receipt-2', title: i.number, sub: i.sub, onTap: () => context.nav(R.invoice))],
+                children: [
+                  for (final i in list)
+                    DMenu(
+                      icon: 'receipt-2',
+                      title: i.number,
+                      sub: _invoiceLine(context, i),
+                      onTap: () => context.nav(R.invoice, query: {'id': i.id}),
+                    ),
+                ],
               );
             },
           ),
-          const Gap(14),
-          DButton.ghost('Download all as one file', onTap: () => _download(context, 'dahab-invoices-2026.txt', _summaryText)),
-          const Gap(10),
-          const Center(
-            child: T('Every invoice is also filed with the Tax Authority under your name.', style: DText.tiny, textAlign: TextAlign.center),
-          ),
         ],
       ),
     );
   }
 }
 
-/// `#s-invoice` — tax invoice for one sale.
-class InvoiceScreen extends StatelessWidget {
-  const InvoiceScreen({super.key});
+/// "28 Aug, sold a gold ring, 684 EGP" — the list row under the invoice number.
+String _invoiceLine(BuildContext context, CustomerInvoice i) {
+  final date = i.issuedAt == null ? '' : dayMonth(i.issuedAt!);
+  final piece = context.isArabic && (i.typeNameAr ?? '').isNotEmpty
+      ? pieceTitleAr(i.category ?? 'gold', i.typeNameAr!, i.karat)
+      : pieceTitle(i.category ?? 'gold', i.typeNameEn ?? '', i.karat);
+  final action = context.t(i.isSeller ? 'Sold' : 'Bought');
+  return '$date · $action · $piece · ${context.t(moneyOf(i.gross))}';
+}
 
-  static const _text =
-      'DAHAB — TAX INVOICE\nInvoice DH-2026-004417\nDate 28 August 2026\n\n'
-      'Seller  Mona Hassan Ibrahim (Seller 4417)\nItem    Gold ring, 21K, 8.00 g\n\n'
-      'SETTLEMENT\n  Gold value at 6,951 per gram      55,608.00 EGP\n  Making charge back               1,680.00 EGP\n'
-      '  Gross                             57,288.00 EGP\n\n'
-      'DAHAB CHARGES\n  Commission, 20% of making charge        336.00 EGP\n'
-      '    Net of VAT                        294.74 EGP\n    VAT at 14%                         41.26 EGP\n\n'
-      'PAID TO WALLET                      56,952.00 EGP\n\n'
-      'Priced at the Dahab sell rate of 6,951 EGP per gram for 21K,\ntaken from the live exchange rate when the request was locked.\n\n'
-      'TRANSACTION TRAIL\n  24 Aug 11:04  Listed at 57,288 EGP\n  26 Aug 19:22  Request accepted, price locked\n'
-      '  28 Aug 13:40  IGI verified 21K at 8.00 g, cert IGI-EG-88214\n  28 Aug 14:05  Settled to wallet\n\n'
-      'Filed with the Egyptian Tax Authority e-invoicing system.\nTax registration 000-000-000';
+/// `#s-invoice` — one tax invoice (backend spec 016), as issued at settlement.
+class InvoiceScreen extends StatefulWidget {
+  const InvoiceScreen({super.key, required this.id});
+
+  final String id;
+
+  @override
+  State<InvoiceScreen> createState() => _InvoiceScreenState();
+}
+
+class _InvoiceScreenState extends State<InvoiceScreen> {
+  String? _busy;
+
+  Future<void> _download(Future<InvoiceFile> Function() load, String busyId) async {
+    if (_busy != null) return;
+    setState(() => _busy = busyId);
+    try {
+      final file = await load();
+      if (!mounted) return;
+      showToast(context, downloadBytes(file.filename, file.bytes, 'application/pdf') ? 'Downloaded.' : 'Download not available here.');
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      showToast(context, e.code == 'document_not_ready' ? 'This invoice is being prepared. Try again in a few minutes.' : 'The file could not be loaded.');
+    } finally {
+      if (mounted) setState(() => _busy = null);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    const indent = EdgeInsetsDirectional.only(start: 12, top: 4, bottom: 4);
+    final repo = context.read<WalletRepository>();
     return AppPage(
       id: R.invoice,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const T('DH-2026-004417, 28 August 2026', style: DText.tiny),
-          const Gap(14),
-          const Row(
+      child: AsyncView<CustomerInvoice>(
+        load: () => repo.invoice(widget.id),
+        builder: (context, i) {
+          final d = i.detail;
+          final piece = context.isArabic && (i.typeNameAr ?? '').isNotEmpty
+              ? pieceTitleAr(i.category ?? 'gold', i.typeNameAr!, i.karat)
+              : pieceTitle(i.category ?? 'gold', i.typeNameEn ?? '', i.karat);
+          final weight = double.tryParse(i.weight ?? '');
+          final rate = d == null ? '0' : _plain(d.vatRate);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              DPill('You sold'),
-              SizedBox(width: 9),
-              Expanded(child: T('Gold ring, 21K, 8.00 g', style: DText.body13)),
-            ],
-          ),
-          const Gap(14),
-          const DLabel('Settlement'),
-          const DSoft.bordered(
-            child: Column(
-              children: [
-                DRow('Gold value at 6,951 per gram', '55,608 EGP'),
-                DRow('Making charge back', '+1,680 EGP', valueColor: DColors.ok),
-                DRow('Gross', '57,288 EGP', rule: true),
-              ],
-            ),
-          ),
-          const Gap(14),
-          const DLabel('Dahab charges'),
-          DSoft.bordered(
-            child: Column(
-              children: [
-                const DRow('Commission, 20% of the making charge', '336 EGP'),
-                DRow(
-                  'Net of VAT',
-                  '294.74 EGP',
-                  padding: indent,
-                  keyWidget: const T('Net of VAT', style: DText.tiny),
-                  valueWidget: const T('294.74 EGP', style: DText.tiny),
+              T(i.issuedAt == null ? i.number : '${i.number}, ${dayMonthYear(i.issuedAt!)}', style: DText.tiny),
+              const Gap(14),
+              Row(
+                children: [
+                  DPill(i.isSeller ? 'You sold' : 'You bought'),
+                  const SizedBox(width: 9),
+                  Expanded(child: T(weight == null ? piece : '$piece, ${weight.toStringAsFixed(2)} g', style: DText.body13)),
+                ],
+              ),
+              const Gap(14),
+              DLabel(i.isSeller ? 'Settlement' : 'Price'),
+              DSoft.bordered(
+                child: Column(
+                  children: [
+                    if (d?.goldValue != null) ...[
+                      DRow('Gold value at ${moneyOf(d!.unitRate)} per gram', moneyOf(d.goldValue)),
+                      DRow('Making charge', moneyOf(d.makingTotal)),
+                    ] else
+                      DRow('Price of the piece', moneyOf(d?.askingPrice ?? i.subtotal)),
+                    DRow(i.isSeller ? 'Gross' : 'Total paid', moneyOf(i.subtotal), rule: true),
+                  ],
                 ),
-                DRow(
-                  'VAT at 14%',
-                  '41.26 EGP',
-                  padding: indent,
-                  keyWidget: const T('VAT at 14%', style: DText.tiny),
-                  valueWidget: const T('41.26 EGP', style: DText.tiny),
+              ),
+              const Gap(14),
+              if (i.isSeller) ...[
+                const DLabel('Dahab charges'),
+                DSoft.bordered(
+                  child: Column(
+                    children: [
+                      DRow(d?.commissionPct == null ? 'Commission' : 'Commission, ${_plain(d!.commissionPct!)}%', moneyOf(i.net)),
+                      DRow('VAT at $rate%', moneyOf(i.vat)),
+                      DRow('Total charges', moneyOf(i.gross), rule: true),
+                    ],
+                  ),
                 ),
-                const DRow('Total charges', '336 EGP', rule: true),
+                const Gap(14),
+                if (d?.paidToWallet != null)
+                  DNote(
+                    icon: 'wallet',
+                    kind: NoteKind.ok,
+                    textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    text: 'Paid to your wallet, ${moneyOf(d!.paidToWallet)}',
+                  ),
+              ] else
+                DSoft.bordered(child: Column(children: [DRow('VAT', moneyOf(i.vat)), DRow('Invoice total', moneyOf(i.gross), rule: true)])),
+              if (d != null && d.creditNotes.isNotEmpty) ...[
+                const Gap(15),
+                const DLabel('Corrections'),
+                for (final n in d.creditNotes) ...[
+                  DSoft.bordered(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        DRow(n.number, '+ ${moneyOf(n.gross)}', valueColor: DColors.ok),
+                        T(n.reason, style: DText.tiny),
+                        const Gap(8),
+                        DButton.ghost('Download this credit note', loading: _busy == n.id, onTap: () => _download(() => repo.creditNotePdf(n.id, n.number), n.id)),
+                      ],
+                    ),
+                  ),
+                  const Gap(10),
+                ],
               ],
-            ),
-          ),
-          const Gap(14),
-          const DNote(
-            icon: 'wallet',
-            kind: NoteKind.ok,
-            textStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            text: 'Paid to your wallet, 56,952 EGP',
-          ),
-          const Gap(15),
-          const T('Priced at the Dahab sell rate of 6,951 EGP per gram for 21K, taken from the live exchange rate when the request was locked.', style: DText.tiny),
-          const Gap(15),
-          const DLabel('Transaction trail'),
-          const DTrack(
-            steps: [
-              DStep('Listed at 57,288 EGP', '24 Aug, 11:04', state: TrackState.done),
-              DStep('Request accepted, price locked', '26 Aug, 19:22', state: TrackState.done),
-              DStep('IGI verified 21K at 8.00 g', '28 Aug, 13:40, certificate IGI-EG-88214', state: TrackState.done),
-              DStep('Settled to wallet', '28 Aug, 14:05', state: TrackState.done),
+              const Gap(15),
+              if (d?.issuerNameEn != null)
+                DNote(
+                  icon: 'file-check',
+                  text: context.isArabic && d!.issuerNameAr != null
+                      ? '${d.issuerNameAr} · ${d.taxRegistrationNo ?? ''}'
+                      : 'Issued by ${d!.issuerNameEn}. Tax registration ${d.taxRegistrationNo ?? ''}.',
+                ),
+              const Gap(15),
+              DButton.ghost('Download this invoice', loading: _busy == i.id, onTap: () => _download(() => repo.invoicePdf(i.id, i.number), i.id)),
             ],
-          ),
-          const Gap(15),
-          const DNote(icon: 'file-check', text: 'Filed with the Egyptian Tax Authority e-invoicing system. Tax registration 000-000-000.'),
-          const Gap(15),
-          DButton.ghost('Download this invoice', onTap: () => _download(context, 'DH-2026-004417.txt', _text)),
-        ],
+          );
+        },
       ),
     );
   }
 }
+
+/// "14.000" -> "14"; "12.5" stays.
+String _plain(String v) => v.contains('.') ? v.replaceFirst(RegExp(r'0+$'), '').replaceFirst(RegExp(r'\.$'), '') : v;

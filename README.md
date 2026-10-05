@@ -44,7 +44,9 @@ The "You receive" estimate while filling the sell form, the diamond price
 guide, promo codes and saved pieces are still the prototype's (mock), and so are
 the prototype's other order screens (ask for more time, disputes, someone else
 collects, rating). The video, the stone certificate and (for the owner) the invoice
-open in a new browser tab. **Everything else** (invoices, notifications, …) runs on local mock data until those APIs exist.
+open in a new browser tab. Transactions and invoices, the tax invoice screen (with its PDF and credit notes), View
+invoice on a paid order and Open the invoice on the wallet line are live (backend spec 016). **Everything else**
+(notifications, …) runs on local mock data until those APIs exist.
 
 ## Run
 

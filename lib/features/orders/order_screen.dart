@@ -177,6 +177,10 @@ class _OrderBody extends StatelessWidget {
         ..._problem(context),
         ..._stage(context),
         if (o.inspection != null) ...[const Gap(16), _InspectionPanel(order: o)],
+        if (o.invoiceId != null) ...[
+          const Gap(16),
+          DButton.ghost('View invoice', onTap: () => context.nav(R.invoice, query: {'id': o.invoiceId!})),
+        ],
         if (o.can('report_problem')) ...[
           const Gap(16),
           DButton.ghost('Report a problem', onTap: () => context.nav(R.dispute, query: {'id': o.id})),

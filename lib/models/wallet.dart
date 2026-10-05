@@ -87,6 +87,7 @@ class WalletTxn {
     required this.balanceAfter,
     required this.note,
     this.link,
+    this.invoiceId,
     this.at,
     this.heldAfter,
     num? before,
@@ -118,6 +119,7 @@ class WalletTxn {
       note: words.note,
       at: at,
       heldAfter: _amount(j['held_after']),
+      invoiceId: j['invoice_id'] as String?,
       before: sent ? _amount(j['available_after']) : null,
     );
   }
@@ -141,6 +143,10 @@ class WalletTxn {
 
   /// Screen id of the related record (`invoice`, `held`). Mock rows only.
   final String? link;
+
+  /// Backend spec 016: your own tax invoice for a settlement, or the invoice a
+  /// credit note corrects.
+  final String? invoiceId;
 
   /// When it happened (live rows).
   final DateTime? at;
@@ -283,16 +289,4 @@ class TopUp {
 
   /// "28 Aug".
   String get date => submittedAt == null ? '' : dayMonth(submittedAt!);
-}
-
-class InvoiceSummary {
-  const InvoiceSummary({required this.number, required this.sub, required this.kind});
-
-  final String number;
-
-  /// "28 Aug, sold a gold ring, 56,952 EGP"
-  final String sub;
-
-  /// sold / bought
-  final String kind;
 }
