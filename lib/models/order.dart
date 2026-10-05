@@ -297,6 +297,8 @@ class CustomerOrder {
     required this.lockedTotalPrice,
     required this.depositAmount,
     this.depositHeld,
+    this.invoiceId,
+    this.invoiceNumber,
     required this.actions,
     required this.timeline,
     this.karat,
@@ -346,6 +348,10 @@ class CustomerOrder {
   /// Backend spec 015: what this order holds in the buyer's wallet now (from the
   /// ledger); null for the seller, or from an older backend.
   final String? depositHeld;
+
+  /// Backend spec 016: your own tax invoice once the balance is paid (none for orders paid before it).
+  final String? invoiceId;
+  final String? invoiceNumber;
   final OrderDeadline? deadline;
 
   /// The buyer's balance while it is due.
@@ -417,6 +423,8 @@ class CustomerOrder {
       lockedTotalPrice: '${j['locked_total_price'] ?? '0'}',
       depositAmount: '${j['deposit_amount'] ?? '0'}',
       depositHeld: _str(j['deposit_held']),
+      invoiceId: _str((j['invoice'] as Map?)?['id']),
+      invoiceNumber: _str((j['invoice'] as Map?)?['number']),
       deadline: OrderDeadline.fromJson(j['deadline']),
       amountDue: _str(j['amount_due']),
       finalTotal: _str(j['final_total']),

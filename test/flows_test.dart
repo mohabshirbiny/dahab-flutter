@@ -504,6 +504,110 @@ void main() {
     await _end(tester);
   });
 
+  // Backend spec 016: the customer's tax invoices, their PDFs, and the links from the order and the wallet line.
+  testWidgets('invoices: list sold and bought, open one, download, not ready, from the order and the wallet', (tester) async {
+    const orderId = '0199d000-0000-7000-8000-000000000016';
+    final api = FakeBackend()
+      ..invoices = [
+        FakeBackend.invoice(
+          'inv-s',
+          creditNotes: [
+            {
+              'id': 'cn-1',
+              'number': 'CN-2026-000001',
+              'invoice_id': 'inv-s',
+              'invoice_number': 'DH-2026-000004-S',
+              'reason': 'Commission was overstated.',
+              'net': '87.7193',
+              'vat': '12.2807',
+              'gross': '100.0000',
+              'issued_at': '2026-10-06T10:00:00+03:00',
+              'document_ready': true,
+            },
+          ],
+        ),
+        FakeBackend.invoice('inv-b', seller: false, ready: false),
+      ]
+      ..orders = [
+        FakeBackend.order(
+          orderId,
+          role: 'seller',
+          state: 'ready_to_collect',
+          stage: 'collect',
+          sellerProceeds: '54684.7500',
+          invoice: {'id': 'inv-s', 'number': 'DH-2026-000004-S'},
+        ),
+      ]
+      ..walletRows = [
+        {
+          'id': 'txn-1',
+          'kind': 'balance_payment',
+          'created_at': '2026-10-05T14:05:00+03:00',
+          'available_change': '54684.7500',
+          'held_change': '0.0000',
+          'available_after': '54684.7500',
+          'held_after': '0.0000',
+          'reference': null,
+          'invoice_id': 'inv-s',
+        },
+      ];
+    await _start(tester, backend: api);
+    await signIn(tester);
+
+    await _tap(tester, 'Account');
+    await _tap(tester, 'Transactions and invoices');
+    expect(find.text('DH-2026-000004-S'), findsOneWidget);
+    expect(find.text('DH-2026-000004-B'), findsOneWidget);
+    await _tap(tester, 'Bought');
+    expect(find.text('DH-2026-000004-S'), findsNothing);
+    await _tap(tester, 'Sold');
+    await _tap(tester, 'DH-2026-000004-S');
+    expect(find.text('Dahab charges'), findsOneWidget);
+    expect(find.text('Commission, 20%'), findsOneWidget);
+    expect(find.text('VAT at 14%'), findsOneWidget);
+    expect(find.text('Paid to your wallet, 54,684.75 EGP'), findsOneWidget);
+    expect(find.text('CN-2026-000001'), findsOneWidget);
+    await _tap(tester, 'Download this invoice');
+    expect(api.requests.any((r) => r.url.path.endsWith('/customer/me/invoices/inv-s/pdf')), isTrue);
+    await _tap(tester, 'Download this credit note');
+    expect(api.requests.any((r) => r.url.path.endsWith('/customer/me/credit-notes/cn-1/pdf')), isTrue);
+    expect(find.textContaining('Tax Authority'), findsNothing);
+
+    _go(tester, '/invoice?id=inv-b');
+    await _settle(tester);
+    expect(find.text('Total paid'), findsWidgets);
+    await _tap(tester, 'Download this invoice');
+    expect(find.text('This invoice is being prepared. Try again in a few minutes.'), findsOneWidget);
+
+    _go(tester, '/order?id=$orderId');
+    await _settle(tester);
+    await _tap(tester, 'View invoice');
+    expect(find.text('Dahab charges'), findsOneWidget);
+
+    _go(tester, '/txn?id=txn-1');
+    await _settle(tester);
+    await _tap(tester, 'Open the invoice');
+    expect(find.text('Dahab charges'), findsOneWidget);
+    await _end(tester);
+  });
+
+  testWidgets('invoices in Arabic', (tester) async {
+    final api = FakeBackend()..invoices = [FakeBackend.invoice('inv-s')];
+    await _start(tester, backend: api);
+    await signIn(tester);
+    tester.element(find.byType(Navigator).first).read<LangController>().setLang(AppLang.ar);
+    _go(tester, '/invoice?id=inv-s');
+    await _settle(tester);
+    expect(find.text('ما تأخذه دهب'), findsOneWidget);
+    expect(find.text('العمولة، 20٪'), findsOneWidget);
+    expect(find.text('اتحول لمحفظتك 54,684.75 جنيه'), findsOneWidget);
+    expect(find.text('تحميل الفاتورة'), findsOneWidget);
+    _go(tester, '/invoices');
+    await _settle(tester);
+    expect(find.text('DH-2026-000004-S'), findsOneWidget);
+    await _end(tester);
+  });
+
   testWidgets('the buyer names someone else to collect, with their ID and the authorisation, then takes it back', (tester) async {
     const id = '0199d000-0000-7000-8000-000000000008';
     final api = FakeBackend()

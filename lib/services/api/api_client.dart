@@ -94,7 +94,13 @@ class ApiClient {
           .timeout(AppConfig.requestTimeout),
     );
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw ApiException(status: res.statusCode, code: res.statusCode == 404 ? 'not_found' : 'server_error', message: 'The file could not be loaded.');
+      // A JSON refusal keeps its code (backend spec 016: `document_not_ready`).
+      String? code;
+      try {
+        final body = jsonDecode(utf8.decode(res.bodyBytes));
+        if (body is Map && body['code'] is String) code = body['code'] as String;
+      } catch (_) {}
+      throw ApiException(status: res.statusCode, code: code ?? (res.statusCode == 404 ? 'not_found' : 'server_error'), message: 'The file could not be loaded.');
     }
     return (bytes: res.bodyBytes, contentType: res.headers['content-type'] ?? 'application/octet-stream');
   }

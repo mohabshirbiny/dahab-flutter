@@ -143,22 +143,39 @@ class AccountScreen extends StatelessWidget {
               MockMark(
                 enabled: me == null,
                 child: DCard(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    DRow('Phone', p.phoneMasked, keyWidget: const _MockKey('Phone'), padding: detailPad, bottomBorder: true, valueWidget: chevronValue(p.phoneMasked), onTap: () => _changeContact(context, true)),
-                    DRow('Email', p.email, keyWidget: const _MockKey('Email'), padding: detailPad, bottomBorder: true, valueWidget: chevronValue(p.email), onTap: () => _changeContact(context, false)),
-                    DRow(
-                      'National ID',
-                      '',
-                      padding: detailPad,
-                      bottomBorder: true,
-                      valueWidget: idVerified ? const DPill('Verified') : const DPill('Waiting', kind: PillKind.wait),
-                    ),
-                    DRow('Payout account', payoutShort, padding: detailPad, valueWidget: chevronValue(payoutShort), onTap: () => context.nav(R.bank)),
-                  ],
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      DRow(
+                        'Phone',
+                        p.phoneMasked,
+                        keyWidget: const _MockKey('Phone'),
+                        padding: detailPad,
+                        bottomBorder: true,
+                        valueWidget: chevronValue(p.phoneMasked),
+                        onTap: () => _changeContact(context, true),
+                      ),
+                      DRow(
+                        'Email',
+                        p.email,
+                        keyWidget: const _MockKey('Email'),
+                        padding: detailPad,
+                        bottomBorder: true,
+                        valueWidget: chevronValue(p.email),
+                        onTap: () => _changeContact(context, false),
+                      ),
+                      DRow(
+                        'National ID',
+                        '',
+                        padding: detailPad,
+                        bottomBorder: true,
+                        valueWidget: idVerified ? const DPill('Verified') : const DPill('Waiting', kind: PillKind.wait),
+                      ),
+                      DRow('Payout account', payoutShort, padding: detailPad, valueWidget: chevronValue(payoutShort), onTap: () => context.nav(R.bank)),
+                    ],
+                  ),
                 ),
-              )),
+              ),
               const Gap(14),
               const DNote(
                 icon: 'shield-lock',
@@ -169,7 +186,7 @@ class AccountScreen extends StatelessWidget {
               DMenuCard(
                 children: [
                   DMenu(icon: 'clipboard-list', title: 'Orders', sub: _ordersSub(orders), onTap: () => context.nav(R.orders)),
-                  DMenu(icon: 'receipt-2', title: 'Transactions and invoices', sub: '14 records', onTap: () => context.nav(R.invoices), mock: true),
+                  DMenu(icon: 'receipt-2', title: 'Transactions and invoices', sub: 'Tax invoices for what you sold and bought', onTap: () => context.nav(R.invoices)),
                   DMenu(icon: 'users', title: 'Invite a friend', sub: 'Both of you pay less commission', onTap: () => context.nav(R.invite), mock: true),
                   DMenu(icon: 'heart', title: 'Saved pieces', sub: '6 saved', onTap: () => context.nav(R.saved), mock: true),
                   DMenu(icon: 'tag', title: 'My listings', sub: _listingsSub(listings), onTap: () => context.nav(R.listings)),
@@ -255,13 +272,29 @@ class _MockKey extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) => Row(children: [Flexible(child: T(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: DColors.ink2))), const SizedBox(width: 6), const MockFlag()]);
+  Widget build(BuildContext context) => Row(
+    children: [
+      Flexible(
+        child: T(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 13, color: DColors.ink2),
+        ),
+      ),
+      const SizedBox(width: 6),
+      const MockFlag(),
+    ],
+  );
 }
 
 /// "1 selling, 2 buying" — the open orders by side; nothing when not loaded.
 String? _ordersSub(List<CustomerOrder>? orders) {
   if (orders == null) return null;
-  final open = [for (final o in orders) if (o.stage != CustomerOrderStage.done && o.stage != CustomerOrderStage.cancelled) o];
+  final open = [
+    for (final o in orders)
+      if (o.stage != CustomerOrderStage.done && o.stage != CustomerOrderStage.cancelled) o,
+  ];
   if (open.isEmpty) return 'No open orders';
   final selling = open.where((o) => o.isSeller).length;
   return '$selling selling, ${open.length - selling} buying';

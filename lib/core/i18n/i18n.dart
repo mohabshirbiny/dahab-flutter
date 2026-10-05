@@ -166,6 +166,13 @@ class LangController extends ChangeNotifier {
     (RegExp(r'^Bring it by (.+)$'), r'وصّلها قبل $1'),
     (RegExp(r'^More time given: (\d+) working hours\. The deadline below is the new one\.$'), r'اتدّالك وقت زيادة: $1 ساعة عمل. المهلة اللي تحت هي الجديدة.'),
     (RegExp(r'^We could not give more time: (.+)$'), r'مقدرناش ندي وقت زيادة: $1'),
+    // Backend spec 016: the tax invoice screen.
+    (RegExp(r'^Gold value at (\d[\d,]*(?:\.\d+)?) EGP per gram$'), r'قيمة الدهب بسعر $1 جنيه للجرام'),
+    (RegExp(r'^Commission, ([\d.]+)%$'), r'العمولة، $1٪'),
+    (RegExp(r'^VAT at ([\d.]+)%$'), r'ضريبة القيمة المضافة $1٪'),
+    (RegExp(r'^Paid to your wallet, (\d[\d,]*(?:\.\d+)?) EGP$'), r'اتحول لمحفظتك $1 جنيه'),
+    (RegExp(r'^Issued by (.+)\. Tax registration (.*)\.$'), r'صادرة من $1. رقم التسجيل الضريبي $2.'),
+    (RegExp(r'^(.+), ([\d.]+) g$'), r'$1، $2 جرام'),
   ];
 }
 

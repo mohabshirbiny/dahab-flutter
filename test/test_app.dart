@@ -242,6 +242,45 @@ class FakeBackend {
   /// The line on the signed-in seller's listings, by listing id (contract "SellerQueueItem").
   Map<String, List<Map<String, dynamic>>> queues = {};
 
+  // ---- backend spec 016: tax invoices ----
+
+  /// The customer's invoices, newest first (contract "CustomerInvoice"), each with its detail.
+  List<Map<String, dynamic>> invoices = [];
+
+  static Map<String, dynamic> invoice(String id, {bool seller = true, bool ready = true, List<Map<String, dynamic>> creditNotes = const []}) => {
+    'id': id,
+    'number': 'DH-2026-000004-${seller ? 'S' : 'B'}',
+    'party': seller ? 'seller' : 'buyer',
+    'order_id': 'ord-4',
+    'order_ref': 'DH-2026-000004',
+    'issued_at': '2026-10-05T14:05:00+03:00',
+    'net': seller ? '600.0000' : '55631.2500',
+    'vat': seller ? '84.0000' : '0.0000',
+    'gross': seller ? '684.0000' : '55631.2500',
+    'credited': creditNotes.isEmpty ? '0.0000' : '100.0000',
+    'remaining': seller ? '684.0000' : '55631.2500',
+    'status': creditNotes.isEmpty ? 'issued' : 'partly_credited',
+    'document_ready': ready,
+    'vat_rate': seller ? '14.000' : '0.000',
+    'lines': {
+      'category': 'gold',
+      'karat': 21,
+      'karat_label': '21K',
+      'piece_type_en': 'Ring',
+      'piece_type_ar': 'خاتم',
+      'weight_g': '10.000',
+      'unit_rate': seller ? '5236.8750' : '5263.1250',
+      'gold_value': seller ? '52368.7500' : '52631.2500',
+      'making_total': '3000.0000',
+      'asking_price': null,
+      'subtotal': seller ? '55368.7500' : '55631.2500',
+      if (seller) 'commission_pct': '20',
+      if (seller) 'paid_to_wallet': '54684.7500',
+    },
+    'issuer': null,
+    'credit_notes': creditNotes,
+  };
+
   // ---- backend spec 012: orders ----
 
   /// The signed-in customer's orders, newest first (contract "CustomerOrder"), with
@@ -264,6 +303,7 @@ class FakeBackend {
     Map<String, dynamic>? cancel,
     String? collectionCode,
     String? returnCode,
+    Map<String, dynamic>? invoice,
   }) => {
     'id': id,
     'order_ref': 'DH-2026-00000${id.substring(id.length - 1)}',
@@ -291,6 +331,7 @@ class FakeBackend {
     'collection': collection,
     'seller_return': sellerReturn,
     'cancel': cancel,
+    'invoice': invoice,
     'actions': actions,
     'timeline': [
       {
@@ -485,6 +526,41 @@ class FakeBackend {
       'expires_at': DateTime.now().add(const Duration(minutes: 5)).toUtc().toIso8601String(),
       'resend_available_at': DateTime.now().add(const Duration(seconds: 60)).toUtc().toIso8601String(),
     };
+
+    // Backend spec 016: the customer's own invoices and their PDFs.
+    if (path == '/customer/me/invoices') {
+      if (pendingAccount) return error(403, 'verification_required');
+      final rows = [
+        for (final i in invoices)
+          {...i}
+            ..remove('lines')
+            ..remove('credit_notes')
+            ..remove('issuer')
+            ..remove('vat_rate'),
+      ];
+      return json(200, {
+        'data': [
+          for (final r in rows)
+            {
+              ...r,
+              'piece': {'category': 'gold', 'karat': 21, 'piece_type_en': 'Ring', 'piece_type_ar': 'خاتم', 'weight_g': '10.000', 'subtotal': r['gross']},
+            },
+        ],
+        'meta': {'per_page': 50, 'next_cursor': null},
+      });
+    }
+    final invoicePath = RegExp(r'^/customer/me/(invoices|credit-notes)/([^/]+)(/pdf)?$').firstMatch(path);
+    if (invoicePath != null) {
+      final id = invoicePath.group(2);
+      if (invoicePath.group(1) == 'credit-notes') {
+        final known = invoices.any((i) => (i['credit_notes'] as List).any((n) => (n as Map)['id'] == id));
+        return known ? http.Response.bytes(utf8.encode('%PDF-fake $id'), 200, headers: {'content-type': 'application/pdf'}) : error(404, 'not_found');
+      }
+      final i = invoices.where((x) => x['id'] == id).firstOrNull;
+      if (i == null) return error(404, 'not_found');
+      if (invoicePath.group(3) == null) return json(200, {'data': i});
+      return i['document_ready'] == true ? http.Response.bytes(utf8.encode('%PDF-fake $id'), 200, headers: {'content-type': 'application/pdf'}) : error(409, 'document_not_ready');
+    }
 
     // Backend spec 009: trade gate for the receiving details and new notices;
     // a suspended customer may still list and cancel their own notices.

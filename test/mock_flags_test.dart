@@ -21,10 +21,15 @@ void main() {
 
     void go(String loc) => GoRouter.of(tester.element(find.byType(Navigator).first)).go(loc);
 
-    go('/invoices');
+    go('/saved');
     await tester.pump(const Duration(seconds: 1));
     expect(find.byType(MockScreenBanner), findsOneWidget);
     expect(find.text('MOCK — this screen is not connected to the backend yet'), findsOneWidget);
+
+    // Backend spec 016: the invoices are live.
+    go('/invoices');
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(MockScreenBanner), findsNothing);
 
     go('/orders');
     await tester.pump(const Duration(seconds: 1));

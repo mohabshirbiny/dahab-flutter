@@ -35,6 +35,8 @@ class WalletLabels {
     'compensation': WalletLabels('Compensation from Dahab', 'Compensation', 'Paid into your wallet by Dahab.'),
     'weight_adjustment': WalletLabels('Weight adjustment', 'Adjustment', 'A difference after the lab confirmed the weight.'),
     'reversal': WalletLabels('Correction', 'Correction', 'A correction of an earlier movement.'),
+    // Backend spec 016: Dahab corrected one of your tax invoices and gave back part of its charge.
+    'credit_note': WalletLabels('Invoice correction', 'Credit note', 'Dahab corrected one of your invoices and added the difference to your wallet.'),
   };
 
   static WalletLabels of(String kind) => byKind[kind] ?? other;

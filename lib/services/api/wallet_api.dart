@@ -1,23 +1,22 @@
+import '../../models/invoice.dart';
 import '../../models/wallet.dart';
-import '../mock_repositories.dart';
 import '../repositories.dart';
 import 'api_client.dart';
 import 'token_store.dart';
 
 /// The wallet from the backend (spec 008): `GET /customer/me/wallet` and
 /// `GET /customer/me/wallet/transactions`; top-ups (spec 009): the receiving
-/// accounts, receipt upload, notices and cancel. Invoices have no backend
-/// route yet, so they still come from the mock.
+/// accounts, receipt upload, notices and cancel; tax invoices and credit notes
+/// (spec 016).
 ///
 /// Signed out, or signed in but not verified yet (`verification_required`),
 /// the wallet is empty — no money can have moved — and the Wallet screen tells
 /// an unverified customer why.
 class ApiWalletRepository implements WalletRepository {
-  ApiWalletRepository(this._client, this._tokens, {WalletRepository? fallback}) : _fallback = fallback ?? MockWalletRepository();
+  ApiWalletRepository(this._client, this._tokens);
 
   final ApiClient _client;
   final TokenStore _tokens;
-  final WalletRepository _fallback;
 
   /// Pages read for the history (newest first); older movements are not shown yet.
   static const maxPages = 8;
@@ -128,6 +127,47 @@ class ApiWalletRepository implements WalletRepository {
     return TopUp.fromJson((res?['data'] as Map).cast<String, dynamic>());
   }
 
+  /// `GET /customer/me/invoices` (backend spec 016; verified gate, a suspended customer may read).
   @override
-  Future<List<InvoiceSummary>> invoices() => _fallback.invoices();
+  Future<List<CustomerInvoice>> invoices() async {
+    if (!_signedIn) return const [];
+    final rows = <CustomerInvoice>[];
+    String? cursor;
+    try {
+      for (var page = 0; page < maxPages; page++) {
+        final query = cursor == null ? '?per_page=50' : '?per_page=50&cursor=${Uri.encodeQueryComponent(cursor)}';
+        final res = await _client.get('/customer/me/invoices$query', auth: true);
+        for (final row in (res?['data'] as List? ?? const [])) {
+          rows.add(CustomerInvoice.fromJson((row as Map).cast<String, dynamic>()));
+        }
+        cursor = (res?['meta'] as Map?)?['next_cursor'] as String?;
+        if (cursor == null) break;
+      }
+    } on ApiException catch (e) {
+      if (e.code == 'verification_required') return const [];
+      rethrow;
+    }
+    return rows;
+  }
+
+  /// `GET /customer/me/invoices/{id}`: the lines, Dahab's details and the credit notes.
+  @override
+  Future<CustomerInvoice> invoice(String id) async {
+    final res = await _client.get('/customer/me/invoices/${Uri.encodeComponent(id)}', auth: true);
+    return CustomerInvoice.fromJson((res?['data'] as Map).cast<String, dynamic>());
+  }
+
+  /// `GET /customer/me/invoices/{id}/pdf` — 409 `document_not_ready` while it is being made.
+  @override
+  Future<InvoiceFile> invoicePdf(String id, String number) async {
+    final file = await _client.getBytes('/customer/me/invoices/${Uri.encodeComponent(id)}/pdf', auth: true);
+    return InvoiceFile(filename: '$number.pdf', bytes: file.bytes);
+  }
+
+  /// `GET /customer/me/credit-notes/{id}/pdf`.
+  @override
+  Future<InvoiceFile> creditNotePdf(String id, String number) async {
+    final file = await _client.getBytes('/customer/me/credit-notes/${Uri.encodeComponent(id)}/pdf', auth: true);
+    return InvoiceFile(filename: '$number.pdf', bytes: file.bytes);
+  }
 }

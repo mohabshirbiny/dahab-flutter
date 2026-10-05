@@ -18,8 +18,6 @@ const Set<String> mockScreens = {
   R.support,
   R.delete, // close account
   R.invite,
-  R.invoices,
-  R.invoice,
   R.saved, // saved pieces
   R.report, // report a listing
   R.branch, // prototype branch picker (the live one is in Accept)
@@ -83,7 +81,12 @@ class MockMark extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         child,
-        PositionedDirectional(top: bottom == null ? top : null, bottom: bottom, end: end, child: const IgnorePointer(child: MockFlag())),
+        PositionedDirectional(
+          top: bottom == null ? top : null,
+          bottom: bottom,
+          end: end,
+          child: const IgnorePointer(child: MockFlag()),
+        ),
       ],
     );
   }

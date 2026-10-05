@@ -14,7 +14,6 @@ const mockTxns = <WalletTxn>[
     typeLabel: 'Sale settled',
     balanceAfter: 68400,
     note: 'Settlement for a gold ring, 21K, 8.00 g. Commission and VAT were taken before this reached you.',
-    link: 'invoice',
   ),
   WalletTxn(
     id: 't2',
@@ -82,7 +81,6 @@ const mockTxns = <WalletTxn>[
     typeLabel: 'Sale settled',
     balanceAfter: 18088,
     note: 'Settlement for a gold bracelet, 18K, 5.20 g.',
-    link: 'invoice',
   ),
 ];
 
@@ -133,9 +131,3 @@ const mockTopUpMethods = TopUpMethods(
     ),
   ],
 );
-
-const mockInvoices = <InvoiceSummary>[
-  InvoiceSummary(number: 'DH-2026-004417', sub: '28 Aug, sold a gold ring, 56,952 EGP', kind: 'sold'),
-  InvoiceSummary(number: 'DH-2026-004392', sub: '19 Aug, bought earrings with stones, 78,400 EGP', kind: 'bought'),
-  InvoiceSummary(number: 'DH-2026-004310', sub: '2 Aug, sold a gold bracelet, 41,220 EGP', kind: 'sold'),
-];
