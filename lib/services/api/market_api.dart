@@ -50,9 +50,6 @@ class ApiCatalogRepository implements CatalogRepository {
     return PieceDetail.fromMarketJson((res?['data'] as Map).cast<String, dynamic>());
   }
 
-  @override
-  Future<List<Piece>> saved() => _fallback.saved();
-
   /// The token is optional on the market: a session that has just ended must
   /// not hide the market, so a refused token falls back to an anonymous read.
   Future<Map<String, dynamic>?> _get(String path) async {

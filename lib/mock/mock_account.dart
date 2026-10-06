@@ -11,42 +11,6 @@ const mockProfile = UserProfile(
   inviteCode: 'MONA4417',
 );
 
-const mockDevices = <DeviceSession>[
-  DeviceSession(name: 'iPhone, Cairo', sub: 'This device, now', current: true),
-  DeviceSession(name: 'Chrome, Cairo', sub: 'Last used 22 Aug', current: false),
-];
-
-const mockNotifications = <AppNotification>[
-  AppNotification(
-    icon: 'chart-line',
-    tone: 'ok',
-    title: 'Gold is up 2.8% since you listed',
-    sub: 'Your gold necklace would now fetch 91,240 EGP · 20 minutes ago',
-    target: 'listings',
-  ),
-  AppNotification(icon: 'alert-triangle', tone: 'bad', title: 'A buyer wants your gold necklace', sub: 'Reply before 31 Aug, 19:00 · 2 hours ago', target: 'orders'),
-  AppNotification(icon: 'clock', tone: 'wait', title: '9 hours left to bring the gold ring to IGI', sub: 'Nasr City branch closes at 18:00 · 4 hours ago', target: 'orders'),
-  AppNotification(icon: 'circle-check', tone: 'ok', title: 'Your earrings with stones passed inspection', sub: 'Pay the balance to collect · yesterday', target: 'pay'),
-  AppNotification(icon: 'camera', tone: 'bad', title: 'We need a clearer photo of the gold pendant', sub: 'The hallmark is blurred · yesterday', target: 'listings'),
-  AppNotification(
-    icon: 'wallet',
-    tone: 'ok',
-    title: '56,952 EGP reached your wallet',
-    sub: 'Gold ring sold · 28 Aug',
-    // The prototype opens the invoice; its unlinked "How did it go" screen
-    // is about exactly this payout, so it is reached from here.
-    target: 'rate',
-  ),
-  AppNotification(icon: 'shield-lock', tone: 'neutral', title: 'Your payout account was confirmed', sub: 'CIB ending 4417 · 12 May', target: 'bank'),
-];
-
-List<NotificationPref> mockNotificationPrefs() => [
-  NotificationPref(title: 'A buyer requests my piece', sub: 'Always on, this one has a deadline', on: true, locked: true),
-  NotificationPref(title: 'Price of my listed pieces moves', on: true),
-  NotificationPref(title: 'Deadline reminders', on: true),
-  NotificationPref(title: 'New pieces I might like', on: false),
-];
-
 const mockFaq = <FaqItem>[
   FaqItem(
     'Why would I get more than a jeweller?',

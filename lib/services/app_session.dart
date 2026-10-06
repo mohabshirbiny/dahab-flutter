@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../models/buy_request.dart';
 
 /// Local UI session state — what the prototype kept in globals
-/// (`isGuest`, `savedPiece`, `emailOK`, the relist countdown, …).
+/// (`isGuest`, `emailOK`, the relist countdown, …).
 /// Nothing here talks to a server.
 class AppSession extends ChangeNotifier {
   AppSession() {
@@ -51,13 +51,6 @@ class AppSession extends ChangeNotifier {
   }
 
   // ---- piece detail ----
-  bool _savedPiece = false;
-  bool get savedPiece => _savedPiece;
-
-  void toggleSavedPiece() {
-    _savedPiece = !_savedPiece;
-    notifyListeners();
-  }
 
   // ---- buy request (backend spec 011) ----
   /// The request just sent, for *Request sent*.

@@ -23,9 +23,6 @@ class MockCatalogRepository implements CatalogRepository {
 
   @override
   Future<PieceDetail> detail(String id) => _later(mockDetailFor(id), 200);
-
-  @override
-  Future<List<Piece>> saved() => _later(mockPieces.where((p) => mockSavedPieceIds.contains(p.id)).toList());
 }
 
 /// No buy requests without the backend: empty lines and refusals.
@@ -185,18 +182,76 @@ class MockWalletRepository implements WalletRepository {
   Future<InvoiceFile> creditNotePdf(String id, String number) => Future.error(StateError('Invoices are live.'));
 }
 
+/// The prototype's sample profile, shown while signed out. Everything else on
+/// the account needs the backend (spec 017, [ApiAccountRepository]).
 class MockAccountRepository implements AccountRepository {
+  static Never _live() => throw UnsupportedError('The account needs the backend.');
+
   @override
   Future<UserProfile> profile() => _later(mockProfile, 0);
 
   @override
-  Future<List<DeviceSession>> devices() => _later(mockDevices, 0);
+  Future<PhoneChallenge> requestPhoneChange(String phone, {required String idempotencyKey}) => _live();
 
   @override
-  Future<List<AppNotification>> notifications() => _later(mockNotifications);
+  Future<DateTime?> confirmPhoneChange(String challengeId, String code, {required String idempotencyKey}) => _live();
 
   @override
-  Future<List<NotificationPref>> notificationPrefs() => _later(mockNotificationPrefs(), 0);
+  Future<String> requestEmailChange(String email, {required String idempotencyKey}) => _live();
+
+  @override
+  Future<String> readEmailLink(String token) => _live();
+
+  @override
+  Future<DateTime?> confirmEmailLink(String token) => _live();
+
+  @override
+  Future<int> changePassword({required String current, required String next, required String idempotencyKey}) => _live();
+
+  @override
+  Future<List<AccountSession>> sessions() async => const [];
+
+  @override
+  Future<void> signOutSession(String id, {required String idempotencyKey}) => _live();
+
+  @override
+  Future<InboxPage> inbox({String? cursor}) async => const InboxPage(items: [], nextCursor: null, unread: 0);
+
+  @override
+  Future<int> unreadCount() async => 0;
+
+  @override
+  Future<void> markRead(String id, {required String idempotencyKey}) async {}
+
+  @override
+  Future<void> markAllRead({required String idempotencyKey}) async {}
+
+  @override
+  Future<List<SavedPiece>> saved({String? listingId}) async => const [];
+
+  @override
+  Future<void> save(String listingId, {required String idempotencyKey}) => _live();
+
+  @override
+  Future<void> unsave(String listingId) => _live();
+
+  @override
+  Future<List<CloseBlocker>> closeCheck() => _live();
+
+  @override
+  Future<void> close({required String reason, String? note, required String idempotencyKey}) => _live();
+
+  @override
+  Future<String> report({required String listingId, required String reason, String? note, required String idempotencyKey}) => _live();
+
+  @override
+  Future<List<LegalEntry>> legalDocuments() => _live();
+
+  @override
+  Future<LegalDoc> legalDocument(String code) => _live();
+
+  @override
+  Future<SupportContacts> supportContacts() => _live();
 }
 
 class MockContentRepository implements ContentRepository {

@@ -270,3 +270,31 @@ class PieceDetail {
 /// How the detail screen was opened (`ownerView`, `cancelledView`,
 /// `buyState` in the prototype).
 enum DetailView { buyer, owner, cancelled, requested, accepted }
+
+/// A piece the customer saved (backend spec 017 FR-040). While it is on the
+/// market [piece] carries it with its indicative price; once it left, only
+/// the summary taken when it was saved remains.
+class SavedPiece {
+  const SavedPiece({required this.listingId, required this.piece, required this.title, required this.karat, required this.weight});
+
+  final String listingId;
+  final Piece? piece;
+  final String title;
+  final int? karat;
+  final String? weight;
+
+  bool get available => piece != null;
+
+  factory SavedPiece.fromJson(Map<String, dynamic> j) {
+    final summary = ((j['summary'] as Map?) ?? const {}).cast<String, dynamic>();
+    final type = ((summary['piece_type'] as Map?) ?? const {}).cast<String, dynamic>();
+    final listing = j['available'] == true && j['listing'] is Map ? Piece.fromMarketJson((j['listing'] as Map).cast<String, dynamic>()) : null;
+    return SavedPiece(
+      listingId: '${j['listing_id']}',
+      piece: listing,
+      title: '${type['name_en'] ?? 'Piece'}',
+      karat: (summary['karat'] as num?)?.toInt(),
+      weight: summary['weight_g'] as String?,
+    );
+  }
+}

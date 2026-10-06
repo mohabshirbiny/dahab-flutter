@@ -70,8 +70,14 @@ abstract final class R {
   /// Added for the API (backend spec 012): one order, `?id=`.
   static const order = 'order';
 
+  // Backend spec 017: the account.
+  static const changePhone = 'change-phone';
+  static const changeEmail = 'change-email';
+  static const emailConfirm = 'email-confirm';
+  static const legalDoc = 'legal-doc';
+
   /// `AUTH` — no bottom tabs.
-  static const auth = {splash, login, otp, signup1, signup2, signup3, signupEmail, signupDone, withdrawConfirm};
+  static const auth = {splash, login, otp, signup1, signup2, signup3, signupEmail, signupDone, withdrawConfirm, emailConfirm};
 
   /// `ROOT` — tab roots; navigating to one resets the back stack.
   static const roots = {home, browse, sell1, orders, account};
@@ -116,6 +122,10 @@ abstract final class R {
     invoice: 'Tax invoice',
     withdraw: 'Withdraw',
     withdrawConfirm: 'Confirm your withdrawal',
+    changePhone: 'Change your phone number',
+    changeEmail: 'Change your email',
+    emailConfirm: 'Confirm your new email',
+    legalDoc: 'Terms and privacy',
     addfunds: 'Add funds',
     topups: 'Your top-ups',
     invoices: 'Invoices',

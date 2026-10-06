@@ -1,15 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/utils/idempotency.dart';
 import '../../models/piece.dart';
+import '../../services/api/api_client.dart';
 import '../../services/app_session.dart';
 import '../../services/repositories.dart';
 import '../../widgets/widgets.dart';
+import '../account/account_messages.dart';
 import '../shared/piece_card.dart';
 
-/// `#s-saved`
-class SavedScreen extends StatelessWidget {
+/// `#s-saved` — pieces the customer saved (backend spec 017 FR-040).
+class SavedScreen extends StatefulWidget {
   const SavedScreen({super.key});
+
+  @override
+  State<SavedScreen> createState() => _SavedScreenState();
+}
+
+class _SavedScreenState extends State<SavedScreen> {
+  int _reload = 0;
+
+  Future<void> _remove(SavedPiece s) async {
+    try {
+      await context.read<AccountRepository>().unsave(s.listingId);
+      if (!mounted) return;
+      setState(() => _reload++);
+      showToast(context, 'Removed from saved.');
+    } on ApiException catch (e) {
+      if (mounted) showToast(context, accountErrorMessage(e));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,17 +41,53 @@ class SavedScreen extends StatelessWidget {
         children: [
           const T("Saved pieces don't lock a price. Send a request when you're ready.", style: DText.tiny),
           const Gap(12),
-          AsyncView<List<Piece>>(
-            load: context.read<CatalogRepository>().saved,
-            builder: (context, items) => items.isEmpty
-                ? DEmpty(
-                    icon: 'heart',
-                    title: 'Nothing here yet',
-                    body: "Saved pieces don't lock a price. Send a request when you're ready.",
-                    action: 'Keep looking',
-                    onAction: () => context.nav(R.browse),
-                  )
-                : Grid2(children: [for (final p in items) PieceCard(piece: p)]),
+          AsyncView<List<SavedPiece>>(
+            key: ValueKey(_reload),
+            load: context.read<AccountRepository>().saved,
+            builder: (context, items) {
+              if (items.isEmpty) {
+                return DEmpty(
+                  icon: 'heart',
+                  title: 'Nothing here yet',
+                  body: "Saved pieces don't lock a price. Send a request when you're ready.",
+                  action: 'Keep looking',
+                  onAction: () => context.nav(R.browse),
+                );
+              }
+              final live = [
+                for (final s in items)
+                  if (s.piece != null) s.piece!,
+              ];
+              final gone = [
+                for (final s in items)
+                  if (!s.available) s,
+              ];
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (live.isNotEmpty) Grid2(children: [for (final p in live) PieceCard(piece: p)]),
+                  if (gone.isNotEmpty) ...[
+                    const Gap(16),
+                    const DLabel('No longer available'),
+                    DMenuCard(
+                      children: [
+                        for (final g in gone)
+                          DMenu(
+                            icon: 'heart',
+                            title: g.title,
+                            sub: [if (g.karat != null) '${g.karat}K', if (g.weight != null) '${g.weight} g'].join(', '),
+                            trailing: DLink(
+                              'Remove',
+                              style: const TextStyle(fontSize: 12, color: DColors.bad),
+                              onTap: () => _remove(g),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -208,17 +265,60 @@ class TopUpFirstScreen extends StatelessWidget {
   }
 }
 
-/// `#s-report` — report a listing.
+/// `#s-report` — report a listing (backend spec 017 FR-052). The seller is never told who.
 class ReportListingScreen extends StatefulWidget {
-  const ReportListingScreen({super.key});
+  const ReportListingScreen({super.key, required this.listingId, this.title});
+
+  final String listingId;
+  final String? title;
 
   @override
   State<ReportListingScreen> createState() => _ReportListingScreenState();
 }
 
 class _ReportListingScreenState extends State<ReportListingScreen> {
-  int? _reason;
-  bool _error = false;
+  String? _reason;
+  String? _error;
+  bool _busy = false;
+  String? _key;
+  final _note = TextEditingController();
+
+  static const _reasons = [
+    ChoiceOption('photos_not_genuine', 'The photos look fake or taken from somewhere else'),
+    ChoiceOption('price_or_weight_wrong', 'The price or the weight looks wrong'),
+    ChoiceOption('description_mismatch', 'The description does not match the photos'),
+    ChoiceOption('not_theirs_to_sell', 'I think this piece is not theirs to sell'),
+    ChoiceOption('off_platform_dealing', 'The seller is trying to deal outside Dahab'),
+    ChoiceOption('other', 'Something else'),
+  ];
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    if (_reason == null) return setState(() => _error = 'Choose what looks wrong first.');
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      _key ??= newIdempotencyKey();
+      final note = _note.text.trim();
+      await context.read<AccountRepository>().report(listingId: widget.listingId, reason: _reason!, note: note.isEmpty ? null : note, idempotencyKey: _key!);
+      _key = null;
+      if (!mounted) return;
+      await tell(context, title: 'Thanks', body: 'We are looking at this listing. The seller is not told who reported it.');
+      if (mounted) context.back();
+    } on ApiException catch (e) {
+      if (e.code != 'network_error') _key = null;
+      if (mounted) setState(() => _error = accountErrorMessage(e));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -227,50 +327,31 @@ class _ReportListingScreenState extends State<ReportListingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const DCard(
-            padding: EdgeInsets.all(13),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                T('Gold ring, 21K', style: DText.title),
-                Gap(3),
-                T('Seller 4417', style: DText.tiny),
-              ],
+          if (widget.title != null && widget.title!.isNotEmpty) ...[
+            DCard(
+              padding: const EdgeInsets.all(13),
+              child: T(widget.title!, style: DText.title),
             ),
-          ),
-          const Gap(16),
+            const Gap(16),
+          ],
           const DLabel('What looks wrong?'),
-          DChoiceList<int>(
+          DChoiceList<String>(
             value: _reason,
             onChanged: (v) => setState(() {
               _reason = v;
-              _error = false;
+              _error = null;
             }),
-            options: const [
-              ChoiceOption(1, 'The photos look fake or taken from somewhere else'),
-              ChoiceOption(2, 'The price or the weight looks wrong'),
-              ChoiceOption(3, 'The description does not match the photos'),
-              ChoiceOption(4, 'I think this piece is not theirs to sell'),
-              ChoiceOption(5, 'The seller is trying to deal outside Dahab'),
-              ChoiceOption(6, 'Something else'),
-            ],
+            options: _reasons,
           ),
           const Gap(14),
           const DLabel('Anything to add'),
-          const DInput(maxLines: 3, hint: 'Optional, but it helps us look faster.'),
+          DInput(controller: _note, maxLines: 3, hint: 'Optional, but it helps us look faster.'),
           const Gap(14),
           const DNote(icon: 'lock', text: 'The seller is never told who reported the listing.'),
           const Gap(14),
-          DError('Choose what looks wrong first.', visible: _error, top: 0),
-          if (_error) const Gap(7),
-          DButton(
-            'Send report',
-            onTap: () async {
-              if (_reason == null) return setState(() => _error = true);
-              await tell(context, title: 'Thanks', body: 'We are looking at this listing. The seller is not told who reported it.');
-              if (context.mounted) context.back();
-            },
-          ),
+          DError(_error ?? '', visible: _error != null, top: 0),
+          if (_error != null) const Gap(7),
+          DButton('Send report', loading: _busy, onTap: _send),
         ],
       ),
     );

@@ -13,6 +13,7 @@ import '../../services/media_tab.dart';
 import '../../services/repositories.dart';
 import '../../services/sell_draft.dart';
 import '../../widgets/widgets.dart';
+import '../account/account_messages.dart';
 import '../shared/listing_ui.dart';
 import '../shared/piece_card.dart';
 
@@ -293,7 +294,6 @@ class _DetailBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final session = context.watch<AppSession>();
     final arabic = context.isArabic;
     final p = d.piece;
     final own = d.own;
@@ -516,7 +516,11 @@ class _DetailBody extends StatelessWidget {
               ],
               if (!_owner && !_cancelled) ...[
                 Center(
-                  child: MockMark(child: DLink('Report this listing', style: DText.tiny, onTap: () => context.nav(R.report))),
+                  child: DLink(
+                    'Report this listing',
+                    style: DText.tiny,
+                    onTap: () => context.read<AuthController>().isSignedIn ? context.nav(R.report, query: {'id': p.id, 'title': p.title}) : context.nav(R.gate),
+                  ),
                 ),
                 const Gap(14),
               ],
@@ -545,18 +549,7 @@ class _DetailBody extends StatelessWidget {
                 DActsRow(
                   children: [
                     DButton('Send buy request', onTap: p.priceAvailable || !d.live ? () => _buy(context) : null),
-                    MockMark(
-                      child: DButton.ghost(
-                        session.savedPiece ? 'Saved' : 'Save',
-                        small: true,
-                        foreground: session.savedPiece ? DColors.gold : null,
-                        borderColor: session.savedPiece ? DColors.gold : null,
-                        onTap: () {
-                          session.toggleSavedPiece();
-                          showToast(context, session.savedPiece ? 'Added to your saved pieces.' : 'Removed from saved.');
-                        },
-                      ),
-                    ),
+                    _SaveButton(listingId: p.id),
                   ],
                 ),
                 const Gap(9),
@@ -808,4 +801,62 @@ class _OrderNote extends StatelessWidget {
       text: 'You accepted a buyer (order ${order.orderRef}). Bring the piece to ${order.branchNameEn} by ${whenOf(order.reachBranchDeadline)}.',
     );
   }
+}
+
+/// Save / Saved on the piece page (backend spec 017 FR-040). Signed out, it opens the gate.
+class _SaveButton extends StatefulWidget {
+  const _SaveButton({required this.listingId});
+
+  final String listingId;
+
+  @override
+  State<_SaveButton> createState() => _SaveButtonState();
+}
+
+class _SaveButtonState extends State<_SaveButton> {
+  static final _uuid = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+
+  bool _saved = false;
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _check();
+  }
+
+  Future<void> _check() async {
+    if (!_uuid.hasMatch(widget.listingId) || !context.read<AuthController>().isSignedIn) return;
+    try {
+      final rows = await context.read<AccountRepository>().saved(listingId: widget.listingId);
+      if (mounted) setState(() => _saved = rows.isNotEmpty);
+    } on ApiException {
+      // Shown as not saved.
+    }
+  }
+
+  Future<void> _toggle() async {
+    if (!context.read<AuthController>().isSignedIn) return context.nav(R.gate);
+    if (!_uuid.hasMatch(widget.listingId)) return;
+    setState(() => _busy = true);
+    final repo = context.read<AccountRepository>();
+    try {
+      if (_saved) {
+        await repo.unsave(widget.listingId);
+      } else {
+        await repo.save(widget.listingId, idempotencyKey: newIdempotencyKey());
+      }
+      if (!mounted) return;
+      setState(() => _saved = !_saved);
+      showToast(context, _saved ? 'Added to your saved pieces.' : 'Removed from saved.');
+    } on ApiException catch (e) {
+      if (mounted) showToast(context, accountErrorMessage(e));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      DButton.ghost(_saved ? 'Saved' : 'Save', small: true, loading: _busy, foreground: _saved ? DColors.gold : null, borderColor: _saved ? DColors.gold : null, onTap: _toggle);
 }

@@ -19,16 +19,10 @@ import '../wallet/wallet_screens.dart';
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
 
-  Future<void> _changeContact(BuildContext context, bool phone) async {
-    final ok = await ask(
-      context,
-      title: '${context.tr('Change your')} ${context.tr(phone ? 'phone number' : 'email address')}',
-      body: phone
-          ? 'We send a code to the new number and tell the old one. Withdrawals pause for 48 hours after the change.'
-          : 'We send a link to the new address and tell the old one. Your email is one of the two checks on withdrawals.',
-      yes: 'Continue',
-    );
-    if (ok && context.mounted) showToast(context, 'We sent you the code.');
+  /// Backend spec 017: a code to the new number, or a link to the new address.
+  void _changeContact(BuildContext context, bool phone) {
+    if (!context.read<AuthController>().isSignedIn) return context.nav(R.login);
+    context.nav(phone ? R.changePhone : R.changeEmail);
   }
 
   @override
@@ -146,24 +140,8 @@ class AccountScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
                     children: [
-                      DRow(
-                        'Phone',
-                        p.phoneMasked,
-                        keyWidget: const _MockKey('Phone'),
-                        padding: detailPad,
-                        bottomBorder: true,
-                        valueWidget: chevronValue(p.phoneMasked),
-                        onTap: () => _changeContact(context, true),
-                      ),
-                      DRow(
-                        'Email',
-                        p.email,
-                        keyWidget: const _MockKey('Email'),
-                        padding: detailPad,
-                        bottomBorder: true,
-                        valueWidget: chevronValue(p.email),
-                        onTap: () => _changeContact(context, false),
-                      ),
+                      DRow('Phone', p.phoneMasked, padding: detailPad, bottomBorder: true, valueWidget: chevronValue(p.phoneMasked), onTap: () => _changeContact(context, true)),
+                      DRow('Email', p.email, padding: detailPad, bottomBorder: true, valueWidget: chevronValue(p.email), onTap: () => _changeContact(context, false)),
                       DRow(
                         'National ID',
                         '',
@@ -188,7 +166,7 @@ class AccountScreen extends StatelessWidget {
                   DMenu(icon: 'clipboard-list', title: 'Orders', sub: _ordersSub(orders), onTap: () => context.nav(R.orders)),
                   DMenu(icon: 'receipt-2', title: 'Transactions and invoices', sub: 'Tax invoices for what you sold and bought', onTap: () => context.nav(R.invoices)),
                   DMenu(icon: 'users', title: 'Invite a friend', sub: 'Both of you pay less commission', onTap: () => context.nav(R.invite), mock: true),
-                  DMenu(icon: 'heart', title: 'Saved pieces', sub: '6 saved', onTap: () => context.nav(R.saved), mock: true),
+                  DMenu(icon: 'heart', title: 'Saved pieces', sub: "Saved pieces don't lock a price", onTap: () => context.nav(R.saved)),
                   DMenu(icon: 'tag', title: 'My listings', sub: _listingsSub(listings), onTap: () => context.nav(R.listings)),
                 ],
               ),
@@ -218,9 +196,11 @@ class AccountScreen extends StatelessWidget {
                       showToast(context, session.payStatsVisible ? 'Averages shown.' : 'Averages hidden.');
                     },
                   ),
-                  DMenu(icon: 'file-text', title: 'Terms and privacy', onTap: () => context.nav(R.legal), mock: true),
+                  DMenu(icon: 'bell', title: 'Notifications', onTap: () => context.nav(R.inbox)),
+                  DMenu(icon: 'file-text', title: 'Terms and privacy', onTap: () => context.nav(R.legal)),
+                  // The FAQ waits for the Dashboard's App text (backend spec 019).
                   DMenu(icon: 'help', title: 'Help', onTap: () => context.nav(R.help), mock: true),
-                  DMenu(icon: 'device-mobile', title: 'Contact us', sub: '16000, chat, WhatsApp', onTap: () => context.nav(R.support), mock: true),
+                  DMenu(icon: 'device-mobile', title: 'Contact us', sub: 'Phone, WhatsApp or email', onTap: () => context.nav(R.support)),
                 ],
               ),
               const Gap(16),
@@ -232,15 +212,14 @@ class AccountScreen extends StatelessWidget {
                 },
               ),
               const Gap(16),
-              Center(
-                child: MockMark(
+              if (me != null)
+                Center(
                   child: DLink(
                     'Close my account',
                     style: const TextStyle(fontSize: 12, color: DColors.bad),
                     onTap: () => context.nav(R.delete),
                   ),
                 ),
-              ),
             ],
           );
         },
@@ -262,29 +241,6 @@ UserProfile _profileFrom(CustomerProfile c, UserProfile mock) {
     email: c.email ?? '',
     payoutShort: '',
     inviteCode: mock.inviteCode,
-  );
-}
-
-/// A details label whose change action is still mock (changing the phone or email only shows a toast).
-class _MockKey extends StatelessWidget {
-  const _MockKey(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Flexible(
-        child: T(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 13, color: DColors.ink2),
-        ),
-      ),
-      const SizedBox(width: 6),
-      const MockFlag(),
-    ],
   );
 }
 

@@ -11,15 +11,8 @@ const bool kShowMockFlags = bool.fromEnvironment('SHOW_MOCK_FLAGS', defaultValue
 
 /// Screens that are entirely mock (no backend behind them yet).
 const Set<String> mockScreens = {
-  R.notif, // notification settings
-  R.inbox, // notifications feed
-  R.help, // FAQ
-  R.legal,
-  R.support,
-  R.delete, // close account
+  R.help, // FAQ (waits for the Dashboard's App text, backend spec 019)
   R.invite,
-  R.saved, // saved pieces
-  R.report, // report a listing
   R.branch, // prototype branch picker (the live one is in Accept)
   R.rate, // rate a sale
   R.editprice,
