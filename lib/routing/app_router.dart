@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../features/account/account_screen.dart';
 import '../features/account/bank_screens.dart';
+import '../features/account/contact_change_screens.dart';
 import '../features/account/settings_screens.dart';
 import '../features/admin/admin_screens.dart';
 import '../features/auth/login_screens.dart';
@@ -73,7 +74,11 @@ final Map<String, Widget Function(GoRouterState s)> _screens = {
   R.gate: (_) => const GateScreen(),
   R.reqsent: (_) => const RequestSentScreen(),
   R.topup: (_) => const TopUpFirstScreen(),
-  R.report: (_) => const ReportListingScreen(),
+  R.report: (s) => ReportListingScreen(listingId: s.uri.queryParameters['id'] ?? '', title: s.uri.queryParameters['title']),
+  R.changePhone: (_) => const ChangePhoneScreen(),
+  R.changeEmail: (_) => const ChangeEmailScreen(),
+  R.emailConfirm: (s) => EmailConfirmScreen(token: s.uri.queryParameters['token'] ?? ''),
+  R.legalDoc: (s) => LegalDocScreen(code: s.uri.queryParameters['code'] ?? 'terms'),
   R.bank: (_) => const BankScreen(),
   R.bankadd: (_) => const BankAddScreen(),
   R.security: (_) => const SecurityScreen(),

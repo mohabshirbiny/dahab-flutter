@@ -20,6 +20,9 @@ String authErrorMessage(ApiException e) {
       return 'Verify your identity before doing this. We will tell you as soon as your ID is approved.';
     case 'account_suspended':
       return 'This account is suspended. Contact us for help.';
+    // Backend spec 017: the customer closed the account; it never signs in again.
+    case 'account_closed':
+      return 'This account is closed.';
     case 'account_locked':
       return 'Too many attempts. Wait a few minutes and try again.';
     case 'too_many_requests':

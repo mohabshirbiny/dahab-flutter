@@ -21,10 +21,16 @@ void main() {
 
     void go(String loc) => GoRouter.of(tester.element(find.byType(Navigator).first)).go(loc);
 
-    go('/saved');
+    // Backend spec 017: Help keeps its FAQ on mock data until the App text (spec 019).
+    go('/help');
     await tester.pump(const Duration(seconds: 1));
     expect(find.byType(MockScreenBanner), findsOneWidget);
     expect(find.text('MOCK — this screen is not connected to the backend yet'), findsOneWidget);
+
+    // Backend spec 017: saved pieces are live.
+    go('/saved');
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(MockScreenBanner), findsNothing);
 
     // Backend spec 016: the invoices are live.
     go('/invoices');
@@ -35,10 +41,9 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(find.byType(MockScreenBanner), findsNothing);
 
-    // Home: since backend spec 015 the gold prices and the calculator are live; the inbox bell is still mock.
+    // Home: since backend spec 015 the gold prices and the calculator are live; since spec 017 the inbox bell too.
     go('/home');
     await tester.pump(const Duration(seconds: 1));
-    expect(find.byType(MockFlag), findsAtLeastNWidgets(1));
     expect(find.descendant(of: find.byType(MockMark), matching: find.byType(RateBar)), findsNothing);
 
     await tester.pumpWidget(const SizedBox());

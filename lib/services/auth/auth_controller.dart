@@ -49,6 +49,26 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Reload the signed-in customer after their phone or email changed (backend spec 017).
+  /// A failure keeps the current record.
+  Future<void> refreshMe() async {
+    if (!_tokens.hasSession) return;
+    try {
+      _customer = await _api.me();
+      notifyListeners();
+    } on ApiException {
+      // Keep what we have.
+    }
+  }
+
+  /// The account was closed (backend spec 017): the backend already ended every
+  /// session, so this only forgets it here.
+  Future<void> endLocally() async {
+    await _tokens.clear();
+    _customer = null;
+    notifyListeners();
+  }
+
   // ---- sign-in ----
 
   OtpChallenge? _challenge;

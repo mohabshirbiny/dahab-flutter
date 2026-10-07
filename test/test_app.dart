@@ -2,7 +2,8 @@ import 'dart:convert';
 
 import 'package:dahab_app/app.dart';
 import 'package:dahab_app/core/i18n/i18n.dart';
-import 'package:dahab_app/services/account_controller.dart';
+import 'package:dahab_app/services/api/account_api.dart';
+import 'package:dahab_app/services/inbox_controller.dart';
 import 'package:dahab_app/services/api/api_client.dart';
 import 'package:dahab_app/services/api/buy_requests_api.dart';
 import 'package:dahab_app/services/api/orders_api.dart';
@@ -59,6 +60,48 @@ class FakeBackend {
 
   /// `POST /customer/auth/logout-all` was called.
   bool loggedOutEverywhere = false;
+
+  // ---- Backend spec 017: the account ----
+
+  /// Inbox items, newest first, in the API's shape.
+  List<Map<String, dynamic>> inbox = [];
+
+  /// Saved listing ids; a saved id that is not on the market shows as gone.
+  final saved = <String>[];
+
+  /// What stops closing (`{code, count}`); empty = the account may close.
+  List<Map<String, dynamic>> closeBlockers = [];
+  bool closed = false;
+
+  /// Reports sent, in the request body's shape.
+  final reports = <Map<String, dynamic>>[];
+
+  /// The open sessions; `fam` is the current one.
+  List<Map<String, dynamic>> sessions = [
+    {
+      'session_id': 'fam',
+      'platform': 'web',
+      'user_agent': 'Chrome/120',
+      'device_known': true,
+      'started_at': '2026-10-01T10:00:00+03:00',
+      'last_active_at': '2026-10-06T10:00:00+03:00',
+      'is_current': true,
+    },
+    {
+      'session_id': 'f0000000-0000-4000-8000-000000000002',
+      'platform': 'ios',
+      'user_agent': null,
+      'device_known': true,
+      'started_at': '2026-09-01T10:00:00+03:00',
+      'last_active_at': '2026-09-22T10:00:00+03:00',
+      'is_current': false,
+    },
+  ];
+
+  /// The phone that answers `contact_taken`, the code that confirms a change.
+  static const takenPhone = '+201099999999';
+  static const phoneCode = '123456';
+  static const emailToken = 'email-change-token-0123456789';
 
   /// Answer the login with this refusal instead of the OTP challenge.
   String? refuseLoginWith;
@@ -526,6 +569,153 @@ class FakeBackend {
       'expires_at': DateTime.now().add(const Duration(minutes: 5)).toUtc().toIso8601String(),
       'resend_available_at': DateTime.now().add(const Duration(seconds: 60)).toUtc().toIso8601String(),
     };
+
+    // ---- Backend spec 017: the account, the inbox, saved pieces, closing, reports ----
+    if (path == '/customer/me/phone-change') {
+      if (body['phone'] == takenPhone) return error(409, 'contact_taken');
+      return json(201, {
+        'data': {'challenge_id': 'ca000000-0000-4000-8000-000000000001', 'expires_at': '2026-10-06T10:05:00+03:00', 'phone_masked': '+20 10 •••• 2222'},
+      });
+    }
+    if (path.startsWith('/customer/me/phone-change/') && path.endsWith('/confirm')) {
+      if (body['code'] != phoneCode) return json(422, {'message': 'change_code_invalid', 'code': 'change_code_invalid', 'tries_left': 4});
+      return json(200, {
+        'data': {'customer': customer, 'pause_until': '2026-10-08T10:00:00+03:00', 'cancelled_withdrawals': []},
+      });
+    }
+    if (path == '/customer/me/email-change') {
+      return json(201, {
+        'data': {'expires_at': '2026-10-06T10:30:00+03:00', 'email_masked': 'n•••@example.com'},
+      });
+    }
+    if (path == '/contact-changes/email/read' || path == '/contact-changes/email/confirm') {
+      if (body['token'] != emailToken) return error(410, 'change_link_invalid');
+      return json(200, {
+        'data': {'email_masked': 'n•••@example.com', 'expires_at': '2026-10-06T10:30:00+03:00', 'pause_until': '2026-10-08T10:00:00+03:00'},
+      });
+    }
+    if (path == '/customer/me/password') {
+      if (body['current_password'] != 'Password123!') return error(422, 'current_password_wrong');
+      return json(200, {
+        'data': {'signed_out_sessions': 1},
+      });
+    }
+    if (path == '/customer/me/sessions') return json(200, {'data': sessions});
+    if (path.startsWith('/customer/me/sessions/') && path.endsWith('/sign-out')) {
+      final id = path.split('/')[4];
+      if (id == 'fam') return error(422, 'current_session');
+      sessions = [
+        for (final s in sessions)
+          if (s['session_id'] != id) s,
+      ];
+      return json(200, {
+        'data': {'signed_out_sessions': 1, 'device_forgotten': true},
+      });
+    }
+    if (path == '/customer/me/notifications') {
+      return json(200, {
+        'data': inbox,
+        'meta': {'next_cursor': null, 'unread_count': inbox.where((n) => n['read_at'] == null).length},
+      });
+    }
+    if (path == '/customer/me/notifications/unread-count') {
+      return json(200, {
+        'data': {'unread_count': inbox.where((n) => n['read_at'] == null).length},
+      });
+    }
+    if (path == '/customer/me/notifications/read-all') {
+      final marked = inbox.where((n) => n['read_at'] == null).length;
+      inbox = [
+        for (final n in inbox) {...n, 'read_at': n['read_at'] ?? '2026-10-06T10:00:00+03:00'},
+      ];
+      return json(200, {
+        'data': {'marked': marked},
+      });
+    }
+    if (path.startsWith('/customer/me/notifications/') && path.endsWith('/read')) {
+      final id = path.split('/')[4];
+      inbox = [
+        for (final n in inbox) n['id'] == id ? {...n, 'read_at': n['read_at'] ?? '2026-10-06T10:00:00+03:00'} : n,
+      ];
+      return json(200, {'data': inbox.firstWhere((n) => n['id'] == id)});
+    }
+    if (path == '/customer/me/saved-pieces' && req.method == 'POST') {
+      final id = '${body['listing_id']}';
+      if (!saved.contains(id)) saved.insert(0, id);
+      return json(201, {
+        'data': {'listing_id': id, 'available': true},
+      });
+    }
+    if (path == '/customer/me/saved-pieces') {
+      final only = req.url.queryParameters['listing_id'];
+      return json(200, {
+        'data': [
+          for (final id in saved)
+            if (only == null || only == id)
+              {
+                'listing_id': id,
+                'saved_at': '2026-10-05T10:00:00+03:00',
+                'available': false,
+                'listing': null,
+                'summary': {
+                  'category': 'gold',
+                  'piece_type': {'id': 1, 'name_en': 'Ring', 'name_ar': 'خاتم'},
+                  'karat': 21,
+                  'weight_g': '10.000',
+                },
+              },
+        ],
+      });
+    }
+    if (path.startsWith('/customer/me/saved-pieces/') && req.method == 'DELETE') {
+      saved.remove(path.split('/').last);
+      return http.Response('', 204);
+    }
+    if (path == '/customer/me/account/close-check') {
+      return json(200, {
+        'data': {'can_close': closeBlockers.isEmpty, 'blockers': closeBlockers},
+      });
+    }
+    if (path == '/customer/me/account/close') {
+      if (closeBlockers.isNotEmpty) return json(409, {'message': 'account_has_open_items', 'code': 'account_has_open_items', 'blockers': closeBlockers});
+      closed = true;
+      return json(200, {
+        'data': {'closed_at': '2026-10-06T10:00:00+03:00'},
+      });
+    }
+    if (path == '/customer/me/listing-reports') {
+      reports.add(body);
+      return json(201, {
+        'data': {'reference': 'RPT-${reports.length}', 'created_at': '2026-10-06T10:00:00+03:00'},
+      });
+    }
+    if (path == '/reference/legal-documents') {
+      return json(200, {
+        'data': [
+          {'code': 'terms', 'published': true, 'version': 1, 'published_at': '2026-09-01T10:00:00+03:00'},
+          {'code': 'privacy', 'published': false, 'version': null, 'published_at': null},
+          {'code': 'selling_rules', 'published': false, 'version': null, 'published_at': null},
+          {'code': 'id_handling', 'published': false, 'version': null, 'published_at': null},
+        ],
+      });
+    }
+    if (path == '/reference/legal-documents/terms') {
+      return json(200, {
+        'data': {'id': 1, 'code': 'terms', 'version': 1, 'body_en': 'These are the terms of use.', 'body_ar': 'دي شروط الاستخدام.'},
+      });
+    }
+    if (path == '/reference/support-contacts') {
+      return json(200, {
+        'data': {
+          'phone': '16000',
+          'hours_en': 'Sunday to Thursday, 10:00 to 18:00',
+          'hours_ar': 'من الأحد للخميس',
+          'whatsapp': '+201044172026',
+          'email': 'help@dahabapp.com',
+          'social': {'facebook': 'dahabapp', 'instagram': 'dahabapp', 'tiktok': 'dahabapp'},
+        },
+      });
+    }
 
     // Backend spec 016: the customer's own invoices and their PDFs.
     if (path == '/customer/me/invoices') {
@@ -1272,7 +1462,7 @@ Future<Widget> testApp(LangController lang, {FakeBackend? backend}) async {
   final tokens = await TokenStore.open();
   final client = ApiClient(tokens, httpClient: (backend ?? FakeBackend()).client, baseUrl: 'http://api.test/api/v1');
   final auth = AuthController(api: AuthApi(client), tokens: tokens, client: client);
-  final accountRepo = MockAccountRepository();
+  final accountRepo = ApiAccountRepository(client, tokens);
   final payouts = ApiPayoutRepository(client, tokens);
   return MultiProvider(
     providers: [
@@ -1292,7 +1482,7 @@ Future<Widget> testApp(LangController lang, {FakeBackend? backend}) async {
       ChangeNotifierProvider(create: (_) => AppSession()),
       ChangeNotifierProvider(create: (_) => LiveRates(api: PricesApi(client))),
       ChangeNotifierProvider(create: (_) => SellDraft()),
-      ChangeNotifierProvider(create: (_) => AccountController(accountRepo)),
+      ChangeNotifierProvider(create: (_) => InboxController(accountRepo)),
       ChangeNotifierProvider(create: (_) => PayoutController(payouts)),
     ],
     child: const DahabApp(),

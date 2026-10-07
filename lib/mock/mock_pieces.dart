@@ -110,4 +110,3 @@ PieceDetail mockDetailFor(String id) {
 }
 
 /// Saved pieces shown on the Saved screen (`ITEMS.slice(1,3)`).
-final mockSavedPieceIds = ['p2', 'p3'];

@@ -20,9 +20,6 @@ abstract interface class CatalogRepository {
 
   /// One piece on the market. Throws `not_found` once it has left it.
   Future<PieceDetail> detail(String id);
-
-  /// Saved pieces (no backend yet: mock).
-  Future<List<Piece>> saved();
 }
 
 /// What the sell form reads before a listing exists (backend spec 010,
@@ -165,11 +162,48 @@ abstract interface class WalletRepository {
   Future<InvoiceFile> creditNotePdf(String id, String number);
 }
 
+/// The customer's own account (backend spec 017): contact changes, the
+/// password, sessions, the inbox, saved pieces, closing, reports, legal and
+/// support. Every change sends an `Idempotency-Key`.
 abstract interface class AccountRepository {
+  /// The prototype's sample profile, shown while signed out.
   Future<UserProfile> profile();
-  Future<List<DeviceSession>> devices();
-  Future<List<AppNotification>> notifications();
-  Future<List<NotificationPref>> notificationPrefs();
+
+  Future<PhoneChallenge> requestPhoneChange(String phone, {required String idempotencyKey});
+
+  /// Returns when withdrawals open again (`pause_until`), if a pause opened.
+  Future<DateTime?> confirmPhoneChange(String challengeId, String code, {required String idempotencyKey});
+
+  /// Returns the masked new address the link went to.
+  Future<String> requestEmailChange(String email, {required String idempotencyKey});
+
+  /// The email-change link's page (no sign-in). Returns the masked address.
+  Future<String> readEmailLink(String token);
+  Future<DateTime?> confirmEmailLink(String token);
+
+  Future<int> changePassword({required String current, required String next, required String idempotencyKey});
+
+  Future<List<AccountSession>> sessions();
+  Future<void> signOutSession(String id, {required String idempotencyKey});
+
+  Future<InboxPage> inbox({String? cursor});
+  Future<int> unreadCount();
+  Future<void> markRead(String id, {required String idempotencyKey});
+  Future<void> markAllRead({required String idempotencyKey});
+
+  Future<List<SavedPiece>> saved({String? listingId});
+  Future<void> save(String listingId, {required String idempotencyKey});
+  Future<void> unsave(String listingId);
+
+  Future<List<CloseBlocker>> closeCheck();
+  Future<void> close({required String reason, String? note, required String idempotencyKey});
+
+  /// Returns the report reference (`RPT-n`).
+  Future<String> report({required String listingId, required String reason, String? note, required String idempotencyKey});
+
+  Future<List<LegalEntry>> legalDocuments();
+  Future<LegalDoc> legalDocument(String code);
+  Future<SupportContacts> supportContacts();
 }
 
 /// Payout accounts and withdrawals (backend spec 013). Every change sends an

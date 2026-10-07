@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'core/i18n/i18n.dart';
-import 'services/account_controller.dart';
+import 'services/api/account_api.dart';
 import 'services/api/api_client.dart';
 import 'services/api/buy_requests_api.dart';
 import 'services/api/listings_api.dart';
@@ -16,6 +16,7 @@ import 'services/api/wallet_api.dart';
 import 'services/app_session.dart';
 import 'services/auth/auth_api.dart';
 import 'services/auth/auth_controller.dart';
+import 'services/inbox_controller.dart';
 import 'services/live_rates.dart';
 import 'services/media_picker.dart';
 import 'services/mock_repositories.dart';
@@ -37,7 +38,8 @@ Future<void> main() async {
   final client = ApiClient(tokens);
   final auth = AuthController(api: AuthApi(client), tokens: tokens, client: client);
   await auth.restore();
-  final accountRepo = MockAccountRepository();
+  // Backend spec 017: the account, the inbox, saved pieces, reports, legal and support are live.
+  final accountRepo = ApiAccountRepository(client, tokens);
   final buyRequests = ApiBuyRequestsRepository(client, tokens);
   final payouts = ApiPayoutRepository(client, tokens);
 
@@ -65,7 +67,7 @@ Future<void> main() async {
         // Backend spec 015: today's prices and the seller's quote are live.
         ChangeNotifierProvider(create: (_) => LiveRates(api: PricesApi(client))),
         ChangeNotifierProvider(create: (_) => SellDraft()),
-        ChangeNotifierProvider(create: (_) => AccountController(accountRepo)),
+        ChangeNotifierProvider(create: (_) => InboxController(accountRepo)),
         ChangeNotifierProvider(create: (_) => PayoutController(payouts)),
       ],
       child: const DahabApp(),

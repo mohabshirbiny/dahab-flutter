@@ -7,8 +7,11 @@ import '../routing/nav.dart';
 import '../routing/routes.dart';
 import 'buttons.dart';
 import 'd_icon.dart';
-import 'mock_flag.dart';
+import '../services/auth/auth_controller.dart';
+import '../services/inbox_controller.dart';
+import 'package:provider/provider.dart';
 import 'dahab_logo.dart';
+import 'mock_flag.dart';
 
 /// One screen inside the phone: top bar, scrolling body, bottom tabs —
 /// the `.top` / `.body` / `.tabs` layout of the prototype. Which chrome
@@ -97,36 +100,8 @@ class _TopBar extends StatelessWidget {
               ),
             if (isHome) const Spacer(),
             const SizedBox(width: 10),
-            MockMark(
-              bottom: -14,
-              end: -12,
-              child: Tappable(
-                onTap: () => context.nav(R.inbox),
-                child: Semantics(
-                  label: context.t('Notifications'),
-                  button: true,
-                  child: SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        const Center(child: DIcon('bell', size: 18, color: DColors.ink2)),
-                        PositionedDirectional(
-                          top: 0,
-                          end: -1,
-                          child: Container(
-                            width: 7,
-                            height: 7,
-                            decoration: const BoxDecoration(color: DColors.bad, shape: BoxShape.circle),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            // Backend spec 017: the inbox and its unread count.
+            const _Bell(),
           ],
         ),
       ),
@@ -244,6 +219,61 @@ class PhoneFrame extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// The header bell with the unread count (backend spec 017 FR-032).
+class _Bell extends StatefulWidget {
+  const _Bell();
+
+  @override
+  State<_Bell> createState() => _BellState();
+}
+
+class _BellState extends State<_Bell> {
+  @override
+  void initState() {
+    super.initState();
+    if (context.read<AuthController>().isSignedIn) context.read<InboxController>().refresh();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final signedIn = context.watch<AuthController>().isSignedIn;
+    final unread = signedIn ? context.watch<InboxController>().unread : 0;
+    return Tappable(
+      onTap: () => context.nav(signedIn ? R.inbox : R.login),
+      child: Semantics(
+        label: unread > 0 ? '${context.t('Notifications')}, ${context.t('$unread unread')}' : context.t('Notifications'),
+        button: true,
+        child: SizedBox(
+          width: 22,
+          height: 22,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              const Center(child: DIcon('bell', size: 18, color: DColors.ink2)),
+              if (unread > 0)
+                PositionedDirectional(
+                  top: -4,
+                  end: -6,
+                  child: Container(
+                    constraints: const BoxConstraints(minWidth: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    height: 14,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(color: DColors.bad, borderRadius: BorderRadius.circular(7)),
+                    child: Text(
+                      unread > 9 ? '9+' : '$unread',
+                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white, height: 1),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

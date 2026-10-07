@@ -149,7 +149,11 @@ class _Signup1ScreenState extends State<Signup1Screen> {
                 const DCheckLine("Dahab is the middle party between you and the other side. We hold the money, we don't own the piece.", bottom: 6),
                 const DCheckLine('Deadlines are real. Missing one can cancel the sale or cost you your deposit.', bottom: 6),
                 const DCheckLine('You confirm every piece you list is yours to sell.', bottom: 10),
-                MockMark(child: DLink('Read the full terms', style: DText.link12, onTap: () => context.nav(R.legal))),
+                DLink(
+                  'Read the full terms',
+                  style: DText.link12,
+                  onTap: () => context.nav(R.legalDoc, query: {'code': 'terms'}),
+                ),
               ],
             ),
           ),

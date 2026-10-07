@@ -72,6 +72,9 @@ class ApiClient {
   Future<Map<String, dynamic>?> post(String path, {Map<String, dynamic>? body, bool auth = false, String? idempotencyKey}) =>
       _send('POST', path, body: body, auth: auth, idempotencyKey: idempotencyKey);
 
+  /// `DELETE` (removing a saved piece, backend spec 017).
+  Future<Map<String, dynamic>?> delete(String path, {bool auth = false}) => _send('DELETE', path, auth: auth);
+
   /// `PATCH` with a JSON body (editing a listing, backend spec 010).
   Future<Map<String, dynamic>?> patch(String path, {Map<String, dynamic>? body, bool auth = false, String? idempotencyKey}) =>
       _send('PATCH', path, body: body, auth: auth, idempotencyKey: idempotencyKey);
