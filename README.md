@@ -160,3 +160,7 @@ Account → Language. Arabic flips the whole layout to RTL and uses
 IBM Plex Sans Arabic. Translations come from the prototype's dictionary
 (`assets/i18n/ar.json`); a few strings it lacks are in
 `lib/core/i18n/ar_extra.dart`.
+
+## Git attribution
+
+Never record Claude (or any AI tool) as a participant in a git action: no `Co-Authored-By:` trailer, no `Claude-Session:` line, no "Generated with Claude Code" text, no claude.ai links and no model or tool name in any commit message, merge commit, cherry-pick, squash, tag, PR title or PR body. Messages are plain, in the project's style (`feat(scope): …`, `docs(scope): …`, `test(scope): …`), authored only by the git user already configured on the machine; never change `user.name` or `user.email`. Check the full message before every commit and merge. Only fix commits you created yourself; never rewrite shared history unless asked. This is Golden rule 10 of `../dahab-backend/CLAUDE.md`.
