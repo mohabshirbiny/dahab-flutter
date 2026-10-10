@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:dahab_app/app.dart';
 import 'package:dahab_app/core/i18n/i18n.dart';
+import 'package:dahab_app/core/text/texts_controller.dart';
+import 'package:dahab_app/services/api/content_api.dart';
 import 'package:dahab_app/services/api/account_api.dart';
 import 'package:dahab_app/services/inbox_controller.dart';
 import 'package:dahab_app/services/api/api_client.dart';
@@ -114,6 +116,21 @@ class FakeBackend {
 
   /// Backend spec 015: `GET /customer/me/wallet/held` — what each request and order holds.
   Map<String, dynamic> held = {'total': '0.0000', 'items': <Map<String, dynamic>>[]};
+
+  // ---- Backend spec 019: published app texts ----
+
+  /// `GET /reference/app-texts`: the published overrides by key (`{en, ar}`), the setting values
+  /// the bundle carries, the bundle number, and whether the server answers at all.
+  Map<String, Map<String, String>> appTexts = {};
+  Map<String, Object?> appTextSettings = {};
+  int appTextsVersion = 0;
+  bool appTextsDown = false;
+
+  /// Answers that carried the bundle (not 304s).
+  int appTextsReads = 0;
+
+  /// The version tag: it moves on a publish and on a setting change, like the backend's ETag.
+  String get appTextsTag => '"$appTextsVersion-${jsonEncode(appTextSettings).hashCode}"';
 
   /// Backend spec 015: false makes `/reference/gold-prices` and `/reference/quote` answer `price_unavailable`.
   bool pricesAvailable = true;
@@ -958,6 +975,26 @@ class FakeBackend {
     }
     if (path == '/reference/piece-types') return json(200, {'data': pieceTypes});
     // ---- backend spec 015: today's prices and the quote (a stand-in calculator: 20% of the making charge, 14% VAT) ----
+    if (path == '/reference/app-texts') {
+      if (appTextsDown) return error(503, 'service_unavailable');
+      final tag = appTextsTag;
+      if (req.headers['If-None-Match'] == tag) return http.Response('', 304, headers: {'etag': tag});
+      appTextsReads++;
+      return http.Response(
+        jsonEncode({
+          'data': {
+            'tag': tag,
+            'version': appTextsVersion,
+            'published_at': '2026-10-12T10:00:00+03:00',
+            'texts': appTexts,
+            'faq': <Object>[],
+            'settings': appTextSettings,
+          },
+        }),
+        200,
+        headers: {'content-type': 'application/json', 'etag': tag},
+      );
+    }
     if (path == '/reference/gold-prices') {
       return pricesAvailable ? json(200, {'data': goldPrices}) : error(409, 'price_unavailable');
     }
@@ -1514,16 +1551,22 @@ class FakeMediaPicker implements MediaPicker {
 
 /// The app wired exactly like main.dart: mock repositories, and auth, the
 /// wallet, the market and listings against [backend] (a [FakeBackend] by default).
-Future<Widget> testApp(LangController lang, {FakeBackend? backend}) async {
+///
+/// [liveTexts] makes the published-text controller read `/reference/app-texts` from [backend]
+/// (backend spec 019); without it the controller has no API and every text is the code's.
+Future<Widget> testApp(LangController lang, {FakeBackend? backend, bool liveTexts = false}) async {
   SharedPreferences.setMockInitialValues({});
   final tokens = await TokenStore.open();
   final client = ApiClient(tokens, httpClient: (backend ?? FakeBackend()).client, baseUrl: 'http://api.test/api/v1');
+  final texts = TextsController(api: liveTexts ? ContentApi(client) : null);
+  if (liveTexts) texts.start();
   final auth = AuthController(api: AuthApi(client), tokens: tokens, client: client);
   final accountRepo = ApiAccountRepository(client, tokens);
   final payouts = ApiPayoutRepository(client, tokens);
   return MultiProvider(
     providers: [
       ChangeNotifierProvider.value(value: lang),
+      ChangeNotifierProvider.value(value: texts),
       ChangeNotifierProvider.value(value: auth),
       Provider<ApiClient>.value(value: client),
       Provider<CatalogRepository>.value(value: ApiCatalogRepository(client, tokens)),

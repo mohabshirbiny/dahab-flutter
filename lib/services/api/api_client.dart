@@ -72,6 +72,21 @@ class ApiClient {
   Future<Map<String, dynamic>?> post(String path, {Map<String, dynamic>? body, bool auth = false, String? idempotencyKey}) =>
       _send('POST', path, body: body, auth: auth, idempotencyKey: idempotencyKey);
 
+  /// A public `GET` that may answer `304 Not Modified` to an `If-None-Match` (backend spec 019:
+  /// the app-text bundle). `etag` is the server's tag for this answer, taken from the header
+  /// or, when the browser does not expose it, from the body's `data.tag`.
+  Future<({int status, String? etag, Map<String, dynamic>? json})> getConditional(String path, {String? etag}) async {
+    final res = await _guard(
+      () => _http.get(Uri.parse('$_base$path'), headers: {..._deviceHeaders, 'If-None-Match': ?etag}).timeout(AppConfig.requestTimeout),
+    );
+    if (res.statusCode == 304) return (status: 304, etag: etag, json: null);
+    final json = _decode(res);
+    final header = res.headers['etag'];
+    final data = json?['data'];
+    final fromBody = data is Map && data['tag'] is String ? data['tag'] as String : null;
+    return (status: res.statusCode, etag: header ?? fromBody, json: json);
+  }
+
   /// `DELETE` (removing a saved piece, backend spec 017).
   Future<Map<String, dynamic>?> delete(String path, {bool auth = false}) => _send('DELETE', path, auth: auth);
 
