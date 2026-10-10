@@ -14,7 +14,6 @@ const Set<String> mockScreens = {
   R.help, // FAQ (waits for the Dashboard's App text, backend spec 019)
   R.invite,
   R.branch, // prototype branch picker (the live one is in Accept)
-  R.rate, // rate a sale
   R.editprice,
   R.codes,
   R.codeuses,

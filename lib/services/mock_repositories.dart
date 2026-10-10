@@ -100,6 +100,13 @@ class MockOrdersRepository implements OrdersRepository {
 
   @override
   Future<CustomerOrder> removeProxy(String id, {required String idempotencyKey}) => throw UnsupportedError('No orders without the backend.');
+
+  @override
+  Future<FreeRelisted> freeRelist(String id, {String? makingChargePerG, String? askingPrice, String? description, required int ownershipDocId, required String idempotencyKey}) =>
+      throw UnsupportedError('No orders without the backend.');
+
+  @override
+  Future<CustomerOrder> rate(String id, {required int stars, String? note, required String idempotencyKey}) => throw UnsupportedError('No orders without the backend.');
 }
 
 class MockWalletRepository implements WalletRepository {

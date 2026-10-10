@@ -127,6 +127,45 @@ class ApiOrdersRepository implements OrdersRepository {
   Future<CustomerOrder> removeProxy(String id, {required String idempotencyKey}) async =>
       _one(await _client.post('$_base/${Uri.encodeComponent(id)}/proxy/remove', auth: true, idempotencyKey: idempotencyKey));
 
+  // ---- spec 018 ----
+
+  /// `POST /customer/me/orders/{id}/free-relist` (trade gate, 201: the new listing and the order).
+  @override
+  Future<FreeRelisted> freeRelist(
+    String id, {
+    String? makingChargePerG,
+    String? askingPrice,
+    String? description,
+    required int ownershipDocId,
+    required String idempotencyKey,
+  }) async {
+    final res = await _client.post(
+      '$_base/${Uri.encodeComponent(id)}/free-relist',
+      body: {
+        'making_charge_per_g': ?makingChargePerG,
+        'asking_price': ?askingPrice,
+        if (description != null && description.trim().isNotEmpty) 'description': description.trim(),
+        'ownership_legal_doc_id': ownershipDocId,
+      },
+      auth: true,
+      idempotencyKey: idempotencyKey,
+    );
+    final data = (res?['data'] as Map).cast<String, dynamic>();
+    return FreeRelisted(listingId: '${(data['listing'] as Map)['id']}', order: CustomerOrder.fromJson((data['order'] as Map).cast<String, dynamic>()));
+  }
+
+  /// `POST /customer/me/orders/{id}/rating` (verified gate, 201: the rating and the order).
+  @override
+  Future<CustomerOrder> rate(String id, {required int stars, String? note, required String idempotencyKey}) async {
+    final res = await _client.post(
+      '$_base/${Uri.encodeComponent(id)}/rating',
+      body: {'stars': stars, if (note != null && note.trim().isNotEmpty) 'note': note.trim()},
+      auth: true,
+      idempotencyKey: idempotencyKey,
+    );
+    return CustomerOrder.fromJson(((res?['data'] as Map)['order'] as Map).cast<String, dynamic>());
+  }
+
   CustomerOrder _one(Map<String, dynamic>? res) => CustomerOrder.fromJson((res?['data'] as Map).cast<String, dynamic>());
 
   /// What the card says for an order, by side and stage.
@@ -307,6 +346,14 @@ String orderErrorMessage(ApiException e) => switch (e.code) {
   'too_many_requests' => 'Too many reports in a minute. Wait a moment and try again.',
   'upload_token_invalid' => 'A photo did not upload properly. Add it again.',
   'declaration_required' => 'The authorisation changed. Read it again and tick the box.',
+  // Spec 018.
+  'free_relist_expired' => 'The time to relist this piece with no commission has passed.',
+  'already_relisted' => 'You already put this piece back on the market.',
+  'branch_options_required' => 'None of the branches this piece was offered at is open now. Contact us to relist it.',
+  'ownership_declaration_required' => 'Confirm ownership to list the piece.',
+  'rating_not_available' => 'This order cannot be rated yet.',
+  'rating_closed' => 'The time to rate this order has passed.',
+  'already_rated' => 'You already rated this order.',
   _ when e.isNetwork => 'Could not reach the server. Check your connection and try again.',
   _ => 'Something went wrong',
 };

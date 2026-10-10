@@ -264,6 +264,64 @@ class OrderReturn {
   }
 }
 
+/// Backend spec 018: the buyer's offer to relist a collected piece at 0% commission.
+/// `status` is none, open, used or expired; an unknown value reads as none. `endsAt` is
+/// the server's window end (working hours from the handover): the countdown is only a
+/// display of it, the Backend decides.
+class FreeRelistOffer {
+  const FreeRelistOffer({this.status = 'none', this.endsAt, this.listingId});
+
+  final String status;
+  final DateTime? endsAt;
+
+  /// The new listing, once the offer is used.
+  final String? listingId;
+
+  static const none = FreeRelistOffer();
+
+  bool get isOpen => status == 'open' && endsAt != null;
+  bool get isUsed => status == 'used';
+
+  /// An open offer whose end has passed on this device's clock (the server still decides).
+  bool isOver(DateTime now) => endsAt != null && !now.isBefore(endsAt!);
+
+  static FreeRelistOffer fromJson(Object? raw) {
+    if (raw is! Map) return none;
+    final status = '${raw['status']}';
+    return FreeRelistOffer(status: const {'open', 'used', 'expired'}.contains(status) ? status : 'none', endsAt: _time(raw['ends_at']), listingId: _str(raw['listing_id']));
+  }
+}
+
+/// Backend spec 018: your own rating of an order. `canRate` is the Backend's call (party,
+/// state, 30 days); `given` is what you already sent (immutable).
+class OrderRatingState {
+  const OrderRatingState({this.canRate = false, this.opensAt, this.closesAt, this.givenStars, this.givenNote, this.givenAt});
+
+  final bool canRate;
+  final DateTime? opensAt;
+  final DateTime? closesAt;
+  final int? givenStars;
+  final String? givenNote;
+  final DateTime? givenAt;
+
+  static const none = OrderRatingState();
+
+  bool get given => givenStars != null;
+
+  static OrderRatingState fromJson(Object? raw) {
+    if (raw is! Map) return none;
+    final given = raw['given'];
+    return OrderRatingState(
+      canRate: raw['can_rate'] == true,
+      opensAt: _time(raw['opens_at']),
+      closesAt: _time(raw['closes_at']),
+      givenStars: given is Map ? (given['stars'] as num?)?.toInt() : null,
+      givenNote: given is Map ? _str(given['note']) : null,
+      givenAt: given is Map ? _time(given['created_at']) : null,
+    );
+  }
+}
+
 /// One event of the order's story, oldest first.
 class OrderTimelineEvent {
   const OrderTimelineEvent({required this.event, required this.at, this.detail = const {}});
@@ -324,6 +382,9 @@ class CustomerOrder {
     this.disputeOutcome,
     this.extensionRequest,
     this.proxy,
+    this.freeRelist = FreeRelistOffer.none,
+    this.rating = OrderRatingState.none,
+    this.noFee = false,
   });
 
   final String id;
@@ -395,6 +456,15 @@ class CustomerOrder {
   /// The person named to collect (buyer only).
   final OrderProxy? proxy;
 
+  /// Backend spec 018: the buyer's 0% relist offer after collecting (always present, `none` when there is no offer).
+  final FreeRelistOffer freeRelist;
+
+  /// Backend spec 018: your own rating of this order.
+  final OrderRatingState rating;
+
+  /// Backend spec 018: this sale was a free relist, so Dahab charged the seller no fee (seller only).
+  final bool noFee;
+
   bool get isSeller => side == OrderSide.seller;
   bool can(String action) => actions.contains(action);
 
@@ -444,8 +514,19 @@ class CustomerOrder {
       disputeOutcome: _str(j['dispute_outcome']),
       extensionRequest: OrderExtensionRequest.fromJson(j['extension_request']),
       proxy: OrderProxy.fromJson(j['proxy']),
+      freeRelist: FreeRelistOffer.fromJson(j['free_relist']),
+      rating: OrderRatingState.fromJson(j['rating']),
+      noFee: j['no_fee'] == true,
     );
   }
+}
+
+/// The answer of a free relist (backend spec 018): the new live listing and the order, its offer now used.
+class FreeRelisted {
+  const FreeRelisted({required this.listingId, required this.order});
+
+  final String listingId;
+  final CustomerOrder order;
 }
 
 /// What a 409 `insufficient_funds` on pay-balance says.
