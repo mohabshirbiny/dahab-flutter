@@ -1,21 +1,12 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 
 import '../models/buy_request.dart';
 
 /// Local UI session state — what the prototype kept in globals
-/// (`isGuest`, `emailOK`, the relist countdown, …).
+/// (`isGuest`, `emailOK`, …).
 /// Nothing here talks to a server.
 class AppSession extends ChangeNotifier {
-  AppSession() {
-    _relistTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (_relistMinutes > 0) {
-        _relistMinutes--;
-        notifyListeners();
-      }
-    });
-  }
+  AppSession();
 
   // ---- auth (mock) ----
   bool _guest = false;
@@ -77,16 +68,5 @@ class AppSession extends ChangeNotifier {
   void togglePayStats() {
     _payStatsVisible = !_payStatsVisible;
     notifyListeners();
-  }
-
-  // ---- free relist countdown on the collection code (12h shown as minutes) ----
-  late final Timer _relistTimer;
-  int _relistMinutes = 12 * 60;
-  int get relistMinutesLeft => _relistMinutes;
-
-  @override
-  void dispose() {
-    _relistTimer.cancel();
-    super.dispose();
   }
 }

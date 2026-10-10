@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -8,10 +10,12 @@ import '../../models/piece.dart';
 import '../../models/reference.dart';
 import '../../services/api/api_client.dart';
 import '../../services/api/orders_api.dart';
+import '../../services/auth/auth_controller.dart';
 import '../../services/auth/auth_messages.dart' show toE164;
 import '../../services/media_picker.dart';
 import '../../services/repositories.dart';
 import '../../widgets/widgets.dart';
+import '../shared/suspended_notice.dart';
 import 'order_flows.dart' show OrderContextCard;
 
 // Backend spec 014, on the live API: report a problem (`#s-dispute`), ask for more
@@ -567,6 +571,360 @@ class _ProxyFormState extends State<_ProxyForm> with _Keyed {
         DError('Fill in their name, a valid phone and their ID photo, and tick the box.', visible: _error, top: 0),
         if (_error) const Gap(7),
         DButton('Send them the collection code', loading: _busy, onTap: _uploading ? null : _send),
+      ],
+    );
+  }
+}
+
+// ---- Backend spec 018: after collection ----
+
+/// `#s-freerelist` — the buyer of a collected piece puts it back on the market at
+/// 0% commission, inside the window the handover started (`free_relist.ends_at`).
+/// The countdown is only a display of the server's end; the backend decides.
+class FreeRelistScreen extends StatelessWidget {
+  const FreeRelistScreen({super.key, required this.orderId});
+
+  final String orderId;
+
+  @override
+  Widget build(BuildContext context) => _OnOrder(
+    id: orderId,
+    screenId: R.freeRelist,
+    builder: (context, o) => _FreeRelistForm(key: ValueKey(o.id), order: o),
+  );
+}
+
+class _FreeRelistForm extends StatefulWidget {
+  const _FreeRelistForm({super.key, required this.order});
+
+  final CustomerOrder order;
+
+  @override
+  State<_FreeRelistForm> createState() => _FreeRelistFormState();
+}
+
+class _FreeRelistFormState extends State<_FreeRelistForm> with _Keyed {
+  final _price = TextEditingController();
+  final _description = TextEditingController();
+  LegalDoc? _declaration;
+  bool _declarationFailed = false;
+  bool _own = false;
+  bool _busy = false;
+  String? _error;
+  late final Timer _tick;
+
+  bool get _gold => widget.order.category == 'gold';
+
+  @override
+  void initState() {
+    super.initState();
+    _tick = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() {});
+    });
+    _loadDeclaration();
+  }
+
+  Future<void> _loadDeclaration() async {
+    setState(() => _declarationFailed = false);
+    try {
+      final reference = await context.read<ReferenceRepository>().sellReference();
+      if (mounted) setState(() => _declaration = reference.declaration);
+    } on Object {
+      if (mounted) setState(() => _declarationFailed = true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _tick.cancel();
+    _price.dispose();
+    _description.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    if (_busy) return;
+    final price = double.tryParse(_price.text.trim().replaceAll(',', '.'));
+    final declaration = _declaration;
+    if (price == null || price < 0 || (!_gold && price <= 0)) {
+      return setState(() => _error = _gold ? 'Enter your making charge per gram.' : 'Enter the price you are asking.');
+    }
+    if (declaration == null || !_own) return setState(() => _error = 'Confirm ownership to list the piece.');
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await context.read<OrdersRepository>().freeRelist(
+        widget.order.id,
+        makingChargePerG: _gold ? price.toStringAsFixed(2) : null,
+        askingPrice: _gold ? null : price.toStringAsFixed(2),
+        description: _description.text,
+        ownershipDocId: declaration.id,
+        idempotencyKey: key,
+      );
+      forgetKey();
+      if (!mounted) return;
+      await tell(context, title: 'Back on the market', body: 'Your piece is live again with no Dahab commission. You can see it in My listings.');
+      if (mounted) context.nav(R.listings);
+    } on ApiException catch (e) {
+      if (!e.isNetwork) forgetKey();
+      if (!mounted) return;
+      final stale = e.code == 'validation_failed' && e.fieldError('ownership_legal_doc_id') != null;
+      if (e.code == 'ownership_declaration_required' || stale) {
+        unawaited(_loadDeclaration());
+        setState(() {
+          _own = false;
+          _error = 'The declaration text changed. Read it again and confirm.';
+        });
+      } else {
+        setState(() => _error = orderErrorMessage(e));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final o = widget.order;
+    final offer = o.freeRelist;
+    final suspended = context.watch<AuthController>().customer?.status == 'suspended';
+    final declaration = _declaration;
+
+    if (!offer.isOpen || (offer.endsAt != null && offer.isOver(DateTime.now()))) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          OrderContextCard(_title(context, o), o.orderRef),
+          const Gap(16),
+          DNote(
+            icon: 'info-circle',
+            kind: NoteKind.wait,
+            text: offer.isUsed ? 'You already put this piece back on the market.' : 'The time to relist this piece with no commission has passed.',
+          ),
+          const Gap(14),
+          DButton.ghost('Back to the order', onTap: () => context.nav(R.order, query: {'id': o.id})),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        OrderContextCard(_title(context, o), o.orderRef),
+        const Gap(14),
+        _FreeRelistWindow(endsAt: offer.endsAt!),
+        const Gap(14),
+        if (suspended) ...[const SuspendedNotice(), const Gap(14)],
+        const DNote(
+          icon: 'info-circle',
+          text:
+              'Your piece goes live again straight away, with no review. The karat and weight are the ones IGI measured, and your photos and branches come with it. You set the price.',
+        ),
+        const Gap(14),
+        DField(
+          label: _gold ? 'Your making charge per gram (EGP)' : 'The price you are asking (EGP)',
+          child: DInput(
+            controller: _price,
+            hint: _gold ? 'For example 250' : 'For example 120000',
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            onChanged: (_) {
+              forgetKey();
+              if (_error != null) setState(() => _error = null);
+            },
+          ),
+        ),
+        DField(
+          label: 'Anything to add? (optional)',
+          child: DInput(controller: _description, maxLines: 3, hint: 'A line about the piece.', onChanged: (_) => forgetKey()),
+        ),
+        const DNote(
+          icon: 'tag',
+          text:
+              'No Dahab commission on this sale. The difference between the rate you were charged and the rate you are paid still applies, and the final figure is worked out on the weight IGI measures.',
+        ),
+        const Gap(14),
+        if (_declarationFailed)
+          DErrorState(onRetry: _loadDeclaration)
+        else if (declaration == null)
+          const DLoading(height: 60)
+        else
+          DCheck(
+            value: _own,
+            bottom: 8,
+            onChanged: (v) => setState(() {
+              _own = v;
+              _error = null;
+            }),
+            text: (context.isArabic ? declaration.bodyAr : declaration.bodyEn).isEmpty
+                ? 'I confirm this piece is mine to sell and the details above are accurate.'
+                : (context.isArabic ? declaration.bodyAr : declaration.bodyEn),
+          ),
+        DError(_error ?? '', visible: _error != null),
+        const Gap(12),
+        DButton('Relist with no commission', loading: _busy, onTap: suspended ? null : _send),
+      ],
+    );
+  }
+}
+
+/// How long is left to relist: the end comes from the server, the digits only count down to it.
+class _FreeRelistWindow extends StatelessWidget {
+  const _FreeRelistWindow({required this.endsAt});
+
+  final DateTime endsAt;
+
+  @override
+  Widget build(BuildContext context) {
+    final left = endsAt.difference(DateTime.now());
+    final text = left.isNegative ? 'Time is up' : (left.inHours >= 1 ? '${left.inHours} h ${left.inMinutes % 60} min left' : '${left.inMinutes} min left');
+    return DSoft.bordered(
+      child: Column(
+        children: [
+          DRow('Relist with no commission until', whenOf(endsAt)),
+          DRow('Time left', text, valueColor: left.isNegative || left.inHours < 2 ? DColors.bad : DColors.wait),
+        ],
+      ),
+    );
+  }
+}
+
+/// `#s-rate` — rate an order (backend spec 018): 1–5 stars and an optional note, once.
+class RateScreen extends StatelessWidget {
+  const RateScreen({super.key, required this.orderId});
+
+  final String orderId;
+
+  @override
+  Widget build(BuildContext context) => _OnOrder(
+    id: orderId,
+    screenId: R.rate,
+    builder: (context, o) => _RateForm(key: ValueKey(o.id), order: o),
+  );
+}
+
+class _RateForm extends StatefulWidget {
+  const _RateForm({super.key, required this.order});
+
+  final CustomerOrder order;
+
+  @override
+  State<_RateForm> createState() => _RateFormState();
+}
+
+class _RateFormState extends State<_RateForm> with _Keyed {
+  final _note = TextEditingController();
+  int _stars = 0;
+  bool _error = false;
+  bool _busy = false;
+  CustomerOrder? _after;
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    if (_busy) return;
+    if (_stars < 1) return setState(() => _error = true);
+    setState(() => _busy = true);
+    try {
+      final o = await context.read<OrdersRepository>().rate(widget.order.id, stars: _stars, note: _note.text, idempotencyKey: key);
+      forgetKey();
+      if (mounted) setState(() => _after = o);
+    } on ApiException catch (e) {
+      if (!e.isNetwork) forgetKey();
+      if (mounted) showToast(context, orderErrorMessage(e));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Widget _starsRow({required int value, ValueChanged<int>? onPick}) => Directionality(
+    textDirection: TextDirection.ltr,
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (var i = 1; i <= 5; i++) ...[
+          if (i > 1) const SizedBox(width: 10),
+          Tappable(
+            onTap: onPick == null ? null : () => onPick(i),
+            child: Semantics(
+              label: '$i',
+              selected: i <= value,
+              child: Text('★', style: TextStyle(fontSize: 34, color: i <= value ? DColors.star : DColors.line2, height: 1.1)),
+            ),
+          ),
+        ],
+      ],
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final o = _after ?? widget.order;
+    final given = o.rating.givenStars;
+
+    if (given != null) {
+      return Column(
+        children: [
+          const DIcon('circle-check', size: 36, color: DColors.ok),
+          const Gap(14),
+          const T('Thank you', style: DText.h2, textAlign: TextAlign.center),
+          const Gap(6),
+          const T('It helps more than you think.', style: DText.muted, textAlign: TextAlign.center),
+          const Gap(20),
+          _starsRow(value: given),
+          if (o.rating.givenNote != null && o.rating.givenNote!.isNotEmpty) ...[
+            const Gap(14),
+            DCard(
+              padding: const EdgeInsets.all(13),
+              child: T(o.rating.givenNote!, style: const TextStyle(fontSize: 12, color: DColors.ink2, height: 1.7)),
+            ),
+          ],
+          const Gap(20),
+          DButton.ghost('Back to the order', onTap: () => context.nav(R.order, query: {'id': o.id})),
+        ],
+      );
+    }
+
+    if (!o.rating.canRate) {
+      final closed = o.rating.closesAt != null && !DateTime.now().isBefore(o.rating.closesAt!);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          OrderContextCard(_title(context, o), o.orderRef),
+          const Gap(16),
+          DNote(icon: 'info-circle', kind: NoteKind.wait, text: closed ? 'The time to rate this order has passed.' : 'You can rate this order once the sale is settled for you.'),
+          const Gap(14),
+          DButton.ghost('Back to the order', onTap: () => context.nav(R.order, query: {'id': o.id})),
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        const DIcon('circle-check', size: 36, color: DColors.ok),
+        const Gap(14),
+        T(o.isSeller ? 'How did your sale go?' : 'How did your purchase go?', style: DText.h2, textAlign: TextAlign.center),
+        const Gap(6),
+        const T('Tell us about your experience with Dahab. It is only for us.', style: DText.muted, textAlign: TextAlign.center),
+        const Gap(20),
+        _starsRow(
+          value: _stars,
+          onPick: (i) => setState(() {
+            _stars = i;
+            _error = false;
+            forgetKey();
+          }),
+        ),
+        DError('Choose how many stars before sending.', visible: _error),
+        const Gap(16),
+        DInput(controller: _note, maxLines: 3, hint: 'Anything we could do better?', onChanged: (_) => forgetKey()),
+        const Gap(14),
+        DButton('Send', loading: _busy, onTap: _send),
       ],
     );
   }

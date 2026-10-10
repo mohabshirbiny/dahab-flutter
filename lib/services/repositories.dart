@@ -124,6 +124,16 @@ abstract interface class OrdersRepository {
 
   /// The buyer withdraws the person named; only the buyer can collect again.
   Future<CustomerOrder> removeProxy(String id, {required String idempotencyKey});
+
+  // ---- spec 018 ----
+
+  /// The buyer of a collected piece relists it at 0% commission inside the window
+  /// (`free_relist.ends_at`): a new live listing, no review. Exactly one of
+  /// [makingChargePerG] (gold) and [askingPrice] (stones) is sent.
+  Future<FreeRelisted> freeRelist(String id, {String? makingChargePerG, String? askingPrice, String? description, required int ownershipDocId, required String idempotencyKey});
+
+  /// Rates the order as its buyer or seller: 1–5 stars and an optional note. One per party, final.
+  Future<CustomerOrder> rate(String id, {required int stars, String? note, required String idempotencyKey});
 }
 
 abstract interface class WalletRepository {

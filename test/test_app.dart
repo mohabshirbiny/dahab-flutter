@@ -347,6 +347,9 @@ class FakeBackend {
     String? collectionCode,
     String? returnCode,
     Map<String, dynamic>? invoice,
+    Map<String, dynamic>? freeRelist,
+    Map<String, dynamic>? rating,
+    bool noFee = false,
   }) => {
     'id': id,
     'order_ref': 'DH-2026-00000${id.substring(id.length - 1)}',
@@ -375,6 +378,10 @@ class FakeBackend {
     'seller_return': sellerReturn,
     'cancel': cancel,
     'invoice': invoice,
+    // Backend spec 018.
+    'free_relist': freeRelist ?? {'status': 'none', 'ends_at': null, 'listing_id': null},
+    'rating': rating ?? {'can_rate': false, 'opens_at': null, 'closes_at': null, 'given': null},
+    'no_fee': noFee,
     'actions': actions,
     'timeline': [
       {
@@ -1078,7 +1085,9 @@ class FakeBackend {
         'meta': {'per_page': 100, 'next_cursor': null},
       });
     }
-    final ord = RegExp(r'^/customer/me/orders/([^/]+)(?:/(cancel|decision|pay-balance|relist|disputes|extension-requests|proxy/remove|proxy))?$').firstMatch(path);
+    final ord = RegExp(
+      r'^/customer/me/orders/([^/]+)(?:/(cancel|decision|pay-balance|relist|disputes|extension-requests|proxy/remove|proxy|free-relist|rating))?$',
+    ).firstMatch(path);
     if (ord != null) {
       final i = orders.indexWhere((o) => o['id'] == ord.group(1));
       if (i < 0) return error(404, 'not_found');
@@ -1086,6 +1095,54 @@ class FakeBackend {
       final action = ord.group(2);
       if (action == null) return json(200, {'data': orderOut(o, detail: true)});
       if (req.headers['Idempotency-Key'] == null) return error(400, 'idempotency_key_required');
+      // Backend spec 018: the relist and the rating, with the backend's own refusals.
+      if (action == 'free-relist') {
+        if ((o['free_relist'] as Map)['status'] == 'used') return error(409, 'already_relisted');
+        if ((o['free_relist'] as Map)['status'] != 'open') return error(409, 'free_relist_expired');
+        if (body['ownership_legal_doc_id'] != declaration['id']) return error(422, 'ownership_declaration_required');
+        if (body['making_charge_per_g'] == null && body['asking_price'] == null) {
+          return json(422, {
+            'message': 'The given data was invalid.',
+            'code': 'validation_failed',
+            'errors': {
+              'making_charge_per_g': ['Required.'],
+            },
+          });
+        }
+        orders[i] = {
+          ...o,
+          'free_relist': {'status': 'used', 'ends_at': (o['free_relist'] as Map)['ends_at'], 'listing_id': 'relisted-listing-1'},
+        };
+        return json(201, {
+          'data': {
+            'listing': {'id': 'relisted-listing-1'},
+            'order': orderOut(orders[i], detail: true),
+          },
+        });
+      }
+      if (action == 'rating') {
+        final r = o['rating'] as Map;
+        if (r['given'] != null) return error(409, 'already_rated');
+        if (r['can_rate'] != true) return error(409, 'rating_not_available');
+        final stars = body['stars'];
+        if (stars is! int || stars < 1 || stars > 5) {
+          return json(422, {
+            'message': 'The given data was invalid.',
+            'code': 'validation_failed',
+            'errors': {
+              'stars': ['Invalid.'],
+            },
+          });
+        }
+        final given = {'stars': stars, 'note': body['note'], 'created_at': '2026-10-12T10:00:00+03:00'};
+        orders[i] = {
+          ...o,
+          'rating': {...r, 'can_rate': false, 'given': given},
+        };
+        return json(201, {
+          'data': {'rating': given, 'order': orderOut(orders[i], detail: true)},
+        });
+      }
       final may = action == 'proxy/remove'
           ? o['proxy'] != null
           : (o['actions'] as List).contains(switch (action) {

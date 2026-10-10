@@ -661,6 +661,106 @@ void main() {
     await _end(tester);
   });
 
+  testWidgets('a collected piece: the open offer, the relist form, then the order shows it used', (tester) async {
+    const id = '0199d000-0000-7000-8000-000000000018';
+    final ends = DateTime.now().add(const Duration(hours: 9)).toUtc().toIso8601String();
+    final api = FakeBackend()
+      ..orders = [
+        FakeBackend.order(
+          id,
+          state: 'completed',
+          stage: 'done',
+          freeRelist: {'status': 'open', 'ends_at': ends, 'listing_id': null},
+          rating: {'can_rate': true, 'opens_at': '2026-10-10T10:00:00+03:00', 'closes_at': '2026-11-09T10:00:00+03:00', 'given': null},
+        ),
+      ];
+    await _start(tester, backend: api);
+    await signIn(tester);
+    _go(tester, '/order?id=$id');
+    await _settle(tester);
+    expect(find.text('Sell it again with no commission'), findsOneWidget);
+
+    await _tap(tester, 'Relist this piece, no commission');
+    expect(find.text('Your making charge per gram (EGP)'), findsOneWidget);
+
+    // Nothing is sent without a price and the ownership box.
+    await _tap(tester, 'Relist with no commission');
+    expect(api.requests.any((r) => r.url.path.endsWith('/free-relist')), isFalse);
+
+    await tester.enterText(_field('Your making charge per gram (EGP)'), '275');
+    await _tap(tester, 'I confirm this piece is mine to sell and the details above are accurate.');
+    await _tap(tester, 'Relist with no commission');
+
+    final sent = api.requests.singleWhere((r) => r.url.path.endsWith('/free-relist'));
+    expect(sent.headers['Idempotency-Key'], isNotNull);
+    expect(jsonDecode(sent.body), {'making_charge_per_g': '275.00', 'ownership_legal_doc_id': 7});
+    await _tap(tester, 'OK');
+
+    _go(tester, '/orders');
+    await _settle(tester);
+    _go(tester, '/order?id=$id');
+    await _settle(tester);
+    expect(find.text('Sell it again with no commission'), findsNothing);
+    expect(find.text('You put this piece back on the market with no commission.'), findsOneWidget);
+    await _end(tester);
+  });
+
+  testWidgets('an expired offer shows nothing, and the seller of a free relist reads "No Dahab fee"', (tester) async {
+    const gone = '0199d000-0000-7000-8000-000000000019';
+    const sold = '0199d000-0000-7000-8000-000000000020';
+    final api = FakeBackend()
+      ..orders = [
+        FakeBackend.order(gone, state: 'completed', stage: 'done', freeRelist: {'status': 'expired', 'ends_at': '2026-10-09T10:00:00+03:00', 'listing_id': null}),
+        FakeBackend.order(sold, role: 'seller', state: 'ready_to_collect', stage: 'collect', sellerProceeds: '58200.0000', noFee: true),
+      ];
+    await _start(tester, backend: api);
+    await signIn(tester);
+    _go(tester, '/order?id=$gone');
+    await _settle(tester);
+    expect(find.text('Sell it again with no commission'), findsNothing);
+
+    _go(tester, '/orders');
+    await _settle(tester);
+    _go(tester, '/order?id=$sold');
+    await _settle(tester);
+    expect(find.text('No Dahab fee on this sale. It was a free relist, so the whole price reached you.'), findsOneWidget);
+    await _end(tester);
+  });
+
+  testWidgets('rate an order: stars, a note, sent once; no invite card', (tester) async {
+    const id = '0199d000-0000-7000-8000-000000000021';
+    final api = FakeBackend()
+      ..orders = [
+        FakeBackend.order(
+          id,
+          state: 'completed',
+          stage: 'done',
+          rating: {'can_rate': true, 'opens_at': '2026-10-10T10:00:00+03:00', 'closes_at': '2026-11-09T10:00:00+03:00', 'given': null},
+        ),
+      ];
+    await _start(tester, backend: api);
+    await signIn(tester);
+    _go(tester, '/order?id=$id');
+    await _settle(tester);
+    await _tap(tester, 'Rate this order');
+    expect(find.text('Know someone with gold in a drawer?'), findsNothing);
+
+    await _tap(tester, 'Send');
+    expect(api.requests.any((r) => r.url.path.endsWith('/rating')), isFalse);
+    expect(find.text('Choose how many stars before sending.'), findsOneWidget);
+
+    await tester.tap(find.text('★').at(3));
+    await tester.pump();
+    await tester.enterText(find.byType(TextField).last, 'Clear and quick.');
+    await _tap(tester, 'Send');
+
+    final sent = api.requests.singleWhere((r) => r.url.path.endsWith('/rating'));
+    expect(sent.headers['Idempotency-Key'], isNotNull);
+    expect(jsonDecode(sent.body), {'stars': 4, 'note': 'Clear and quick.'});
+    expect(find.text('Thank you'), findsOneWidget);
+    await _end(tester);
+  });
+
   testWidgets('report a problem in Arabic', (tester) async {
     const id = '0199d000-0000-7000-8000-000000000009';
     final api = FakeBackend()

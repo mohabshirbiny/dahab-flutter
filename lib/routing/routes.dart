@@ -55,6 +55,7 @@ abstract final class R {
   static const gate = 'gate';
   static const dispute = 'dispute';
   static const rate = 'rate';
+  static const freeRelist = 'freerelist';
   static const invite = 'invite';
   static const report = 'report';
   static const inspection = 'inspection';
@@ -113,6 +114,7 @@ abstract final class R {
     report: 'Report this listing',
     dispute: 'Report a problem',
     rate: 'How did it go',
+    freeRelist: 'Relist with no commission',
     invite: 'Invite a friend',
     prices: 'Where prices come from',
     gate: 'Create an account',

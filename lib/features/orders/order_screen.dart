@@ -9,8 +9,10 @@ import '../../models/order.dart';
 import '../../models/piece.dart';
 import '../../services/api/api_client.dart';
 import '../../services/api/orders_api.dart';
+import '../../services/auth/auth_controller.dart';
 import '../../services/repositories.dart';
 import '../../widgets/widgets.dart';
+import '../shared/suspended_notice.dart';
 import 'order_flows.dart' show OrderContextCard;
 
 /// One order from the backend (spec 012), for its buyer or its seller: where it is,
@@ -176,6 +178,7 @@ class _OrderBody extends StatelessWidget {
         const Gap(14),
         ..._problem(context),
         ..._stage(context),
+        ..._afterCollection(context),
         if (o.inspection != null) ...[const Gap(16), _InspectionPanel(order: o)],
         if (o.invoiceId != null) ...[
           const Gap(16),
@@ -236,6 +239,33 @@ class _OrderBody extends StatelessWidget {
       ] else if (o.disputeOutcome == 'resumed' && !o.frozen) ...[
         const DNote(icon: 'info-circle', text: 'Dahab looked into a problem on this order. It is moving again, and every deadline got back the time it was on hold.'),
         const Gap(14),
+      ],
+    ];
+  }
+
+  /// Backend spec 018: the buyer's offer to relist at 0% commission, the seller's "no fee" line
+  /// and the rating (own party only). The backend decides every one of them.
+  List<Widget> _afterCollection(BuildContext context) {
+    final o = order;
+    final offer = o.freeRelist;
+    return [
+      if (!o.isSeller && offer.isOpen) ...[const Gap(16), _FreeRelistCard(order: o)],
+      if (!o.isSeller && offer.isUsed) ...[
+        const Gap(16),
+        const DNote(icon: 'circle-check', kind: NoteKind.ok, text: 'You put this piece back on the market with no commission.'),
+        const Gap(10),
+        DButton.ghost('See it in My listings', onTap: () => context.nav(R.listings)),
+      ],
+      if (o.isSeller && o.noFee) ...[
+        const Gap(16),
+        const DNote(icon: 'circle-check', kind: NoteKind.ok, text: 'No Dahab fee on this sale. It was a free relist, so the whole price reached you.'),
+      ],
+      if (o.rating.givenStars != null) ...[
+        const Gap(16),
+        DNote(icon: 'circle-check', kind: NoteKind.ok, text: 'You rated this order ${o.rating.givenStars} out of 5.'),
+      ] else if (o.rating.canRate) ...[
+        const Gap(16),
+        DButton.ghost('Rate this order', onTap: () => context.nav(R.rate, query: {'id': o.id})),
       ],
     ];
   }
@@ -456,6 +486,71 @@ class _OrderBody extends StatelessWidget {
           ],
         ];
     }
+  }
+}
+
+/// Backend spec 018: "Sell it again with no commission", while the window the handover
+/// started is open. The countdown only displays the server's `ends_at`.
+class _FreeRelistCard extends StatefulWidget {
+  const _FreeRelistCard({required this.order});
+
+  final CustomerOrder order;
+
+  @override
+  State<_FreeRelistCard> createState() => _FreeRelistCardState();
+}
+
+class _FreeRelistCardState extends State<_FreeRelistCard> {
+  late final Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final end = widget.order.freeRelist.endsAt;
+    if (end == null || widget.order.freeRelist.isOver(DateTime.now())) return const SizedBox.shrink();
+    final left = end.difference(DateTime.now());
+    final text = left.inHours >= 1 ? '${left.inHours} h ${left.inMinutes % 60} min left' : '${left.inMinutes} min left';
+    final suspended = context.watch<AuthController>().customer?.status == 'suspended';
+    return DCard(
+      borderColor: DColors.gold,
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const T('Sell it again with no commission', style: DText.title),
+          const Gap(4),
+          const T(
+            'You collected this piece. Put it back on the market now and Dahab takes no commission on that sale. It goes live straight away, with no review.',
+            style: DText.tiny,
+          ),
+          const Gap(10),
+          DSoft.bordered(
+            child: Column(
+              children: [
+                DRow('Until', whenOf(end)),
+                DRow('Time left', text, valueColor: left.inHours < 2 ? DColors.bad : DColors.wait),
+              ],
+            ),
+          ),
+          if (suspended) ...[const Gap(10), const SuspendedNotice()],
+          const Gap(12),
+          DButton('Relist this piece, no commission', onTap: suspended ? null : () => context.nav(R.freeRelist, query: {'id': widget.order.id})),
+        ],
+      ),
+    );
   }
 }
 
