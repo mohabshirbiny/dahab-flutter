@@ -125,6 +125,51 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ---- forgot password (backend spec 020) ----
+
+  String? _resetPhone;
+  DateTime? _resetResendAt;
+  PasswordResetDone? _resetDone;
+
+  /// The number a reset is in progress for; null when none was asked.
+  String? get resetPhone => _resetPhone;
+  DateTime? get resetResendAvailableAt => _resetResendAt;
+
+  /// Asks for a code. The answer never says whether the number is registered.
+  Future<void> requestPasswordReset(String phone) async {
+    final answer = await _api.passwordResetRequest(phone);
+    _resetPhone = phone;
+    _resetResendAt = answer.resendAvailableAt;
+    notifyListeners();
+  }
+
+  /// Sets the new password with the code. On success the reset is over: [takeResetDone] gives
+  /// the sign-in screen what to tell the customer.
+  Future<void> confirmPasswordReset({required String code, required String password}) async {
+    final phone = _resetPhone;
+    if (phone == null) throw const ApiException(status: 401, code: 'otp_invalid', message: 'Ask for a code first.');
+    _resetDone = await _api.passwordResetConfirm(phone: phone, code: code, password: password);
+    notifyListeners();
+  }
+
+  /// What the last reset did, once (the notice on the sign-in screen); null when none finished.
+  ({String phone, PasswordResetDone done})? takeResetDone() {
+    final done = _resetDone;
+    final phone = _resetPhone;
+    if (done == null || phone == null) return null;
+    _resetDone = null;
+    _resetPhone = null;
+    _resetResendAt = null;
+    return (phone: phone, done: done);
+  }
+
+  /// Forgets a reset in progress (the customer went back).
+  void cancelPasswordReset() {
+    _resetPhone = null;
+    _resetResendAt = null;
+    _resetDone = null;
+  }
+
   Future<void> _startSession(CustomerProfile customer, SessionTokens session) async {
     await _tokens.save(session);
     _customer = customer;

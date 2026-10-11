@@ -229,4 +229,95 @@ void main() {
     expect(find.text('help@dahabapp.com'), findsOneWidget);
     await _acEnd(tester);
   });
+
+  // ---- Backend spec 020: forgot password ----
+
+  /// Opens the reset screen from the sign-in screen and asks for the code.
+  Future<void> acAskForCode(WidgetTester tester) async {
+    await _acTap(tester, 'I already have one');
+    await _acTap(tester, 'Forgot your password?');
+    expect(find.text('Reset your password'), findsWidgets);
+    await tester.enterText(_acField('Phone number'), '010 1234 4417');
+    await _acTap(tester, 'Send the code');
+  }
+
+  Future<void> acEnterCode(WidgetTester tester, String code) async {
+    final boxes = find.descendant(of: find.byType(DOtp), matching: find.byType(TextField));
+    for (var i = 0; i < 6; i++) {
+      await tester.enterText(boxes.at(i), code[i]);
+    }
+    await tester.pump();
+  }
+
+  testWidgets('forgot password: the phone, then the code and a new password, then sign in', (tester) async {
+    final api = await _acStart(tester);
+    await acAskForCode(tester);
+
+    // The second step names the number, masked, and takes the code with the new password.
+    expect(find.textContaining('+20 10 •••• 4417'), findsOneWidget);
+    final asked = api.requests.singleWhere((r) => r.url.path.endsWith('/password/reset-request'));
+    expect(jsonDecode(asked.body)['phone'], '+201012344417');
+
+    // A wrong code is refused with the plain message and keeps the form.
+    await acEnterCode(tester, '000000');
+    await tester.enterText(_acField('New password'), 'brand-new-passphrase-77');
+    await tester.enterText(_acField('Confirm the new password'), 'brand-new-passphrase-77');
+    await _acTap(tester, 'Set the new password');
+    expect(find.text('That code is not right. Check the message and try again.'), findsOneWidget);
+
+    // The right code resets the password and returns to sign in with the number filled.
+    await acEnterCode(tester, FakeBackend.resetCode);
+    await _acTap(tester, 'Set the new password');
+    final confirmed = api.requests.lastWhere((r) => r.url.path.endsWith('/password/reset-confirm'));
+    expect(jsonDecode(confirmed.body), {
+      'phone': '+201012344417',
+      'code': FakeBackend.resetCode,
+      'password': 'brand-new-passphrase-77',
+      'password_confirmation': 'brand-new-passphrase-77',
+    });
+    expect(find.textContaining('Your password was changed'), findsOneWidget);
+    await _acEnd(tester);
+  });
+
+  testWidgets('forgot password: an expired code, a short password and a mismatch are said plainly', (tester) async {
+    await _acStart(tester);
+    await acAskForCode(tester);
+
+    await acEnterCode(tester, FakeBackend.resetExpiredCode);
+    await tester.enterText(_acField('New password'), 'brand-new-passphrase-77');
+    await tester.enterText(_acField('Confirm the new password'), 'brand-new-passphrase-77');
+    await _acTap(tester, 'Set the new password');
+    expect(find.text('That code has expired. Ask for a new one.'), findsOneWidget);
+
+    await tester.enterText(_acField('New password'), 'short');
+    await tester.enterText(_acField('Confirm the new password'), 'short');
+    await _acTap(tester, 'Set the new password');
+    expect(find.text('Choose a password of at least 10 characters.'), findsOneWidget);
+
+    await tester.enterText(_acField('New password'), 'brand-new-passphrase-77');
+    await tester.enterText(_acField('Confirm the new password'), 'another-passphrase-88');
+    await _acTap(tester, 'Set the new password');
+    expect(find.text('The two passwords do not match.'), findsOneWidget);
+    await _acEnd(tester);
+  });
+
+  testWidgets('forgot password: the sign-in notice names the stopped withdrawals', (tester) async {
+    final api = FakeBackend()
+      ..resetDone = {
+        'password_changed': true,
+        'signed_out_sessions': 1,
+        'withdrawals_paused_until': DateTime.now().add(const Duration(hours: 48)).toUtc().toIso8601String(),
+        'cancelled_withdrawals': 1,
+      };
+    await _acStart(tester, backend: api);
+    await acAskForCode(tester);
+    await acEnterCode(tester, FakeBackend.resetCode);
+    await tester.enterText(_acField('New password'), 'brand-new-passphrase-77');
+    await tester.enterText(_acField('Confirm the new password'), 'brand-new-passphrase-77');
+    await _acTap(tester, 'Set the new password');
+
+    expect(find.textContaining('were cancelled and the money is back in your wallet'), findsOneWidget);
+    expect(find.textContaining('withdrawals are paused until'), findsOneWidget);
+    await _acEnd(tester);
+  });
 }

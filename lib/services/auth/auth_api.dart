@@ -18,6 +18,37 @@ class LoginNeedsOtp extends LoginResult {
   final OtpChallenge challenge;
 }
 
+/// Answer of `POST /customer/auth/password/reset-request` (backend spec 020): the same for any
+/// phone, so nothing here says whether the number is registered.
+class PasswordResetRequested {
+  const PasswordResetRequested({required this.expiresInSeconds, required this.resendAvailableAt});
+
+  final int expiresInSeconds;
+  final DateTime resendAvailableAt;
+
+  factory PasswordResetRequested.fromJson(Map<String, dynamic> j) => PasswordResetRequested(
+    expiresInSeconds: (j['expires_in_seconds'] as num?)?.toInt() ?? 300,
+    resendAvailableAt: DateTime.tryParse(j['resend_available_at'] as String? ?? '')?.toLocal() ?? DateTime.now().add(const Duration(seconds: 60)),
+  );
+}
+
+/// Answer of `POST /customer/auth/password/reset-confirm`: no session is issued.
+class PasswordResetDone {
+  const PasswordResetDone({required this.signedOutSessions, required this.withdrawalsPausedUntil, required this.cancelledWithdrawals});
+
+  final int signedOutSessions;
+
+  /// Null when the withdrawal pause setting is 0.
+  final DateTime? withdrawalsPausedUntil;
+  final int cancelledWithdrawals;
+
+  factory PasswordResetDone.fromJson(Map<String, dynamic> j) => PasswordResetDone(
+    signedOutSessions: (j['signed_out_sessions'] as num?)?.toInt() ?? 0,
+    withdrawalsPausedUntil: DateTime.tryParse(j['withdrawals_paused_until'] as String? ?? '')?.toLocal(),
+    cancelledWithdrawals: (j['cancelled_withdrawals'] as num?)?.toInt() ?? 0,
+  );
+}
+
 /// Typed calls to the customer auth + registration endpoints in
 /// `dahab-backend/routes/api.php`. Request and response fields mirror the
 /// FormRequests and controller responses there.
@@ -43,6 +74,23 @@ class AuthApi {
   Future<OtpChallenge> resendLoginOtp(String challengeId) async {
     final json = await _client.post('/customer/auth/otp/resend', body: {'challenge_id': challengeId});
     return OtpChallenge.fromJson(json!['data'] as Map<String, dynamic>);
+  }
+
+  // ---- forgot password (backend spec 020) ----
+
+  /// Texts a code to the phone when it belongs to an open account; answers the same either way.
+  Future<PasswordResetRequested> passwordResetRequest(String phone) async {
+    final json = await _client.post('/customer/auth/password/reset-request', body: {'phone': phone});
+    return PasswordResetRequested.fromJson(json!['data'] as Map<String, dynamic>);
+  }
+
+  /// Spends the code and sets the new password; every session and device is signed out.
+  Future<PasswordResetDone> passwordResetConfirm({required String phone, required String code, required String password}) async {
+    final json = await _client.post(
+      '/customer/auth/password/reset-confirm',
+      body: {'phone': phone, 'code': code, 'password': password, 'password_confirmation': password},
+    );
+    return PasswordResetDone.fromJson(json!['data'] as Map<String, dynamic>);
   }
 
   Future<CustomerProfile> me() async {

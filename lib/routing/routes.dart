@@ -4,6 +4,10 @@ abstract final class R {
   static const splash = 'splash';
   static const login = 'login';
   static const otp = 'otp';
+
+  /// Backend spec 020: forgot password — the phone, then the code with a new password.
+  static const forgotPassword = 'forgot-password';
+  static const resetPassword = 'reset-password';
   static const signup1 = 'signup1';
   static const signup2 = 'signup2';
   static const signup3 = 'signup3';
@@ -76,7 +80,7 @@ abstract final class R {
   static const legalAccept = 'legal-accept';
 
   /// `AUTH` — no bottom tabs.
-  static const auth = {splash, login, otp, signup1, signup2, signup3, signupEmail, signupDone, withdrawConfirm, emailConfirm, legalAccept};
+  static const auth = {splash, login, otp, forgotPassword, resetPassword, signup1, signup2, signup3, signupEmail, signupDone, withdrawConfirm, emailConfirm, legalAccept};
 
   /// `ROOT` — tab roots; navigating to one resets the back stack.
   static const roots = {home, browse, sell1, orders, account};
@@ -85,6 +89,8 @@ abstract final class R {
   static const titles = <String, String>{
     login: 'Sign in',
     otp: 'Verification',
+    forgotPassword: 'Reset your password',
+    resetPassword: 'Choose a new password',
     signup1: 'Create account',
     signup2: 'Create account',
     signup3: 'Create account',

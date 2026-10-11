@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/auth_reset.dart';
+import '../../core/text/texts_controller.dart';
 import '../../mock/mock_account.dart';
 import '../../services/api/api_client.dart';
+import '../../services/auth/auth_api.dart';
 import '../../services/auth/auth_controller.dart';
 import '../../services/auth/auth_messages.dart';
 import '../../widgets/widgets.dart';
@@ -24,6 +27,21 @@ class _LoginScreenState extends State<LoginScreen> {
   final _pw = TextEditingController();
   String? _error;
   bool _busy = false;
+
+  /// What a finished password reset did (backend spec 020), shown once above the form.
+  PasswordResetDone? _resetDone;
+
+  @override
+  void initState() {
+    super.initState();
+    final reset = context.read<AuthController>().takeResetDone();
+    if (reset != null) {
+      _resetDone = reset.done;
+      final (cc, national) = splitE164(reset.phone);
+      if (cc.isNotEmpty) _cc = cc;
+      _phone.text = national;
+    }
+  }
 
   @override
   void dispose() {
@@ -62,6 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (_resetDone != null) ...[_resetNotice(context, _resetDone!), const Gap(16)],
             const T('Welcome back', style: DText.h2),
             const Gap(6),
             const T('Sign in with the phone number on your account.', style: DText.muted),
@@ -76,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             Align(
               alignment: AlignmentDirectional.centerEnd,
-              child: DLink('Forgot your password?', onTap: () => showToast(context, 'Password reset is not available yet.')),
+              child: DLink('Forgot your password?', onTap: () => context.nav(R.forgotPassword)),
             ),
             const Gap(18),
             DButton('Sign in', loading: _busy, onTap: _submit),
@@ -99,6 +118,16 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+}
+
+/// The note above the sign-in form after a reset: what changed, and what was stopped for safety.
+Widget _resetNotice(BuildContext context, PasswordResetDone done) {
+  final lines = <String>[
+    context.k(AuthResetKeys.doneBody),
+    if (done.cancelledWithdrawals > 0) context.k(AuthResetKeys.doneCancelled, {'count': done.cancelledWithdrawals}),
+    if (done.withdrawalsPausedUntil != null) context.k(AuthResetKeys.donePaused, {'until': whenOf(done.withdrawalsPausedUntil!)}),
+  ];
+  return DNote(icon: 'circle-check', kind: NoteKind.ok, text: '${context.k(AuthResetKeys.doneTitle)}. ${lines.join(' ')}');
 }
 
 /// Country code picker + phone number input.
