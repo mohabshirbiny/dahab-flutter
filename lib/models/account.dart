@@ -160,6 +160,10 @@ class LegalEntry {
     'privacy' => 'Privacy policy',
     'selling_rules' => 'Selling rules and deadlines',
     'id_handling' => 'How we handle your ID and documents',
+    'ownership_declaration' => 'Ownership declaration',
+    'deposit_agreement' => 'Deposit agreement',
+    'collection_proxy_authorisation' => 'Collection authorisation',
+    'payout_account_declaration' => 'Payout account declaration',
     _ => code,
   };
 }
@@ -188,18 +192,6 @@ class FaqItem {
   const FaqItem(this.question, this.answer);
   final String question;
   final String answer;
-}
-
-class Branch {
-  const Branch({required this.name, required this.address, required this.status, required this.open, required this.hours, required this.closed, required this.duration});
-
-  final String name;
-  final String address;
-  final String status;
-  final bool open;
-  final String hours;
-  final String closed;
-  final String duration;
 }
 
 class PromoCode {

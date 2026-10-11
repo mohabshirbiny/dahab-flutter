@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/orders_after_collection.dart';
+import '../../core/text/texts_controller.dart';
 import '../../core/utils/idempotency.dart';
 import '../../models/dispute.dart';
 import '../../models/order.dart';
@@ -647,9 +649,9 @@ class _FreeRelistFormState extends State<_FreeRelistForm> with _Keyed {
     final price = double.tryParse(_price.text.trim().replaceAll(',', '.'));
     final declaration = _declaration;
     if (price == null || price < 0 || (!_gold && price <= 0)) {
-      return setState(() => _error = _gold ? 'Enter your making charge per gram.' : 'Enter the price you are asking.');
+      return setState(() => _error = context.kr(_gold ? OrdersAfterCollectionKeys.formErrorPriceGold : OrdersAfterCollectionKeys.formErrorPriceOther));
     }
-    if (declaration == null || !_own) return setState(() => _error = 'Confirm ownership to list the piece.');
+    if (declaration == null || !_own) return setState(() => _error = context.kr(OrdersAfterCollectionKeys.formErrorConfirmOwnership));
     setState(() {
       _busy = true;
       _error = null;
@@ -665,7 +667,7 @@ class _FreeRelistFormState extends State<_FreeRelistForm> with _Keyed {
       );
       forgetKey();
       if (!mounted) return;
-      await tell(context, title: 'Back on the market', body: 'Your piece is live again with no Dahab commission. You can see it in My listings.');
+      await tell(context, title: context.kr(OrdersAfterCollectionKeys.formSuccessTitle), body: context.kr(OrdersAfterCollectionKeys.formSuccessBody));
       if (mounted) context.nav(R.listings);
     } on ApiException catch (e) {
       if (!e.isNetwork) forgetKey();
@@ -675,7 +677,7 @@ class _FreeRelistFormState extends State<_FreeRelistForm> with _Keyed {
         unawaited(_loadDeclaration());
         setState(() {
           _own = false;
-          _error = 'The declaration text changed. Read it again and confirm.';
+          _error = context.kr(OrdersAfterCollectionKeys.formErrorDeclarationChanged);
         });
       } else {
         setState(() => _error = orderErrorMessage(e));
@@ -701,10 +703,10 @@ class _FreeRelistFormState extends State<_FreeRelistForm> with _Keyed {
           DNote(
             icon: 'info-circle',
             kind: NoteKind.wait,
-            text: offer.isUsed ? 'You already put this piece back on the market.' : 'The time to relist this piece with no commission has passed.',
+            text: context.k(offer.isUsed ? OrdersAfterCollectionKeys.formUsedAlready : OrdersAfterCollectionKeys.formWindowOver),
           ),
           const Gap(14),
-          DButton.ghost('Back to the order', onTap: () => context.nav(R.order, query: {'id': o.id})),
+          DButton.ghost(context.k(OrdersAfterCollectionKeys.formBackToOrder), onTap: () => context.nav(R.order, query: {'id': o.id})),
         ],
       );
     }
@@ -717,17 +719,13 @@ class _FreeRelistFormState extends State<_FreeRelistForm> with _Keyed {
         _FreeRelistWindow(endsAt: offer.endsAt!),
         const Gap(14),
         if (suspended) ...[const SuspendedNotice(), const Gap(14)],
-        const DNote(
-          icon: 'info-circle',
-          text:
-              'Your piece goes live again straight away, with no review. The karat and weight are the ones IGI measured, and your photos and branches come with it. You set the price.',
-        ),
+        DNote(icon: 'info-circle', text: context.k(OrdersAfterCollectionKeys.formLiveAgainNote)),
         const Gap(14),
         DField(
-          label: _gold ? 'Your making charge per gram (EGP)' : 'The price you are asking (EGP)',
+          label: context.k(_gold ? OrdersAfterCollectionKeys.formPriceLabelGold : OrdersAfterCollectionKeys.formPriceLabelOther),
           child: DInput(
             controller: _price,
-            hint: _gold ? 'For example 250' : 'For example 120000',
+            hint: context.k(_gold ? OrdersAfterCollectionKeys.formPriceHintGold : OrdersAfterCollectionKeys.formPriceHintOther),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             onChanged: (_) {
               forgetKey();
@@ -736,14 +734,10 @@ class _FreeRelistFormState extends State<_FreeRelistForm> with _Keyed {
           ),
         ),
         DField(
-          label: 'Anything to add? (optional)',
-          child: DInput(controller: _description, maxLines: 3, hint: 'A line about the piece.', onChanged: (_) => forgetKey()),
+          label: context.k(OrdersAfterCollectionKeys.formDescriptionLabel),
+          child: DInput(controller: _description, maxLines: 3, hint: context.k(OrdersAfterCollectionKeys.formDescriptionHint), onChanged: (_) => forgetKey()),
         ),
-        const DNote(
-          icon: 'tag',
-          text:
-              'No Dahab commission on this sale. The difference between the rate you were charged and the rate you are paid still applies, and the final figure is worked out on the weight IGI measures.',
-        ),
+        DNote(icon: 'tag', text: context.k(OrdersAfterCollectionKeys.formEstimateLine)),
         const Gap(14),
         if (_declarationFailed)
           DErrorState(onRetry: _loadDeclaration)
@@ -758,12 +752,12 @@ class _FreeRelistFormState extends State<_FreeRelistForm> with _Keyed {
               _error = null;
             }),
             text: (context.isArabic ? declaration.bodyAr : declaration.bodyEn).isEmpty
-                ? 'I confirm this piece is mine to sell and the details above are accurate.'
+                ? context.k(OrdersAfterCollectionKeys.formDeclarationFallback)
                 : (context.isArabic ? declaration.bodyAr : declaration.bodyEn),
           ),
         DError(_error ?? '', visible: _error != null),
         const Gap(12),
-        DButton('Relist with no commission', loading: _busy, onTap: suspended ? null : _send),
+        DButton(context.k(OrdersAfterCollectionKeys.formSubmitButton), loading: _busy, onTap: suspended ? null : _send),
       ],
     );
   }
@@ -778,12 +772,16 @@ class _FreeRelistWindow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final left = endsAt.difference(DateTime.now());
-    final text = left.isNegative ? 'Time is up' : (left.inHours >= 1 ? '${left.inHours} h ${left.inMinutes % 60} min left' : '${left.inMinutes} min left');
+    final text = left.isNegative
+        ? context.k(OrdersAfterCollectionKeys.formWindowTimeUp)
+        : (left.inHours >= 1
+              ? context.k(OrdersAfterCollectionKeys.formWindowLeftHoursMinutes, {'hours': left.inHours, 'minutes': left.inMinutes % 60})
+              : context.k(OrdersAfterCollectionKeys.formWindowLeftMinutes, {'minutes': left.inMinutes}));
     return DSoft.bordered(
       child: Column(
         children: [
-          DRow('Relist with no commission until', whenOf(endsAt)),
-          DRow('Time left', text, valueColor: left.isNegative || left.inHours < 2 ? DColors.bad : DColors.wait),
+          DRow(context.k(OrdersAfterCollectionKeys.formWindowUntil), whenOf(endsAt)),
+          DRow(context.k(OrdersAfterCollectionKeys.formWindowTimeLeft), text, valueColor: left.isNegative || left.inHours < 2 ? DColors.bad : DColors.wait),
         ],
       ),
     );
@@ -872,9 +870,9 @@ class _RateFormState extends State<_RateForm> with _Keyed {
         children: [
           const DIcon('circle-check', size: 36, color: DColors.ok),
           const Gap(14),
-          const T('Thank you', style: DText.h2, textAlign: TextAlign.center),
+          T(context.k(OrdersAfterCollectionKeys.rateThanksTitle), style: DText.h2, textAlign: TextAlign.center),
           const Gap(6),
-          const T('It helps more than you think.', style: DText.muted, textAlign: TextAlign.center),
+          T(context.k(OrdersAfterCollectionKeys.rateThanksBody), style: DText.muted, textAlign: TextAlign.center),
           const Gap(20),
           _starsRow(value: given),
           if (o.rating.givenNote != null && o.rating.givenNote!.isNotEmpty) ...[
@@ -885,7 +883,7 @@ class _RateFormState extends State<_RateForm> with _Keyed {
             ),
           ],
           const Gap(20),
-          DButton.ghost('Back to the order', onTap: () => context.nav(R.order, query: {'id': o.id})),
+          DButton.ghost(context.k(OrdersAfterCollectionKeys.rateBackToOrder), onTap: () => context.nav(R.order, query: {'id': o.id})),
         ],
       );
     }
@@ -897,9 +895,9 @@ class _RateFormState extends State<_RateForm> with _Keyed {
         children: [
           OrderContextCard(_title(context, o), o.orderRef),
           const Gap(16),
-          DNote(icon: 'info-circle', kind: NoteKind.wait, text: closed ? 'The time to rate this order has passed.' : 'You can rate this order once the sale is settled for you.'),
+          DNote(icon: 'info-circle', kind: NoteKind.wait, text: context.k(closed ? OrdersAfterCollectionKeys.rateClosedNote : OrdersAfterCollectionKeys.rateNotYetNote)),
           const Gap(14),
-          DButton.ghost('Back to the order', onTap: () => context.nav(R.order, query: {'id': o.id})),
+          DButton.ghost(context.k(OrdersAfterCollectionKeys.rateBackToOrder), onTap: () => context.nav(R.order, query: {'id': o.id})),
         ],
       );
     }
@@ -908,9 +906,9 @@ class _RateFormState extends State<_RateForm> with _Keyed {
       children: [
         const DIcon('circle-check', size: 36, color: DColors.ok),
         const Gap(14),
-        T(o.isSeller ? 'How did your sale go?' : 'How did your purchase go?', style: DText.h2, textAlign: TextAlign.center),
+        T(context.k(o.isSeller ? OrdersAfterCollectionKeys.rateTitleSeller : OrdersAfterCollectionKeys.rateTitleBuyer), style: DText.h2, textAlign: TextAlign.center),
         const Gap(6),
-        const T('Tell us about your experience with Dahab. It is only for us.', style: DText.muted, textAlign: TextAlign.center),
+        T(context.k(OrdersAfterCollectionKeys.rateSubtitle), style: DText.muted, textAlign: TextAlign.center),
         const Gap(20),
         _starsRow(
           value: _stars,
@@ -920,11 +918,11 @@ class _RateFormState extends State<_RateForm> with _Keyed {
             forgetKey();
           }),
         ),
-        DError('Choose how many stars before sending.', visible: _error),
+        DError(context.k(OrdersAfterCollectionKeys.rateErrorStars), visible: _error),
         const Gap(16),
-        DInput(controller: _note, maxLines: 3, hint: 'Anything we could do better?', onChanged: (_) => forgetKey()),
+        DInput(controller: _note, maxLines: 3, hint: context.k(OrdersAfterCollectionKeys.rateNoteHint), onChanged: (_) => forgetKey()),
         const Gap(14),
-        DButton('Send', loading: _busy, onTap: _send),
+        DButton(context.k(OrdersAfterCollectionKeys.rateSendButton), loading: _busy, onTap: _send),
       ],
     );
   }

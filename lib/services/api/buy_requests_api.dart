@@ -25,8 +25,13 @@ class ApiBuyRequestsRepository implements BuyRequestsRepository {
   }
 
   @override
-  Future<BuyRequest> send({required String listingId, required String confirmedPrice, required int termsId, required String idempotencyKey}) async => _one(
-    await _client.post(_base, body: {'listing_id': listingId, 'confirm_locked_price': confirmedPrice, 'deposit_legal_doc_id': termsId}, auth: true, idempotencyKey: idempotencyKey),
+  Future<BuyRequest> send({required String listingId, required String confirmedPrice, required int termsId, required String idempotencyKey, String? promoCode}) async => _one(
+    await _client.post(
+      _base,
+      body: {'listing_id': listingId, 'confirm_locked_price': confirmedPrice, 'deposit_legal_doc_id': termsId, if (promoCode != null && promoCode.isNotEmpty) 'promo_code': promoCode},
+      auth: true,
+      idempotencyKey: idempotencyKey,
+    ),
   );
 
   @override

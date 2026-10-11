@@ -83,10 +83,32 @@ class AuthApi {
       _client.postMultipart('/customer/auth/register/documents', fields: {'registration_ref': ref, 'document_type': documentType}, files: [front, ?back]);
 
   /// Step 6 — creates the customer as `pending_verification`; no session.
+  ///
+  /// Sends the ids of the live `terms` and `privacy` versions (backend spec 019) so the sign-up
+  /// acceptance is recorded. A document that is not published, or any failure reading it, sends
+  /// no id: the customer then meets the first-acceptance screen at their first sign-in.
   Future<CustomerProfile> registerSubmit(String ref) async {
-    final json = await _client.post('/customer/auth/register/submit', body: {'registration_ref': ref});
+    final terms = await _liveLegalId('terms');
+    final privacy = await _liveLegalId('privacy');
+    final json = await _client.post(
+      '/customer/auth/register/submit',
+      body: {'registration_ref': ref, 'terms_legal_doc_id': ?terms, 'privacy_legal_doc_id': ?privacy},
+    );
     return CustomerProfile.fromJson((json!['data'] as Map<String, dynamic>)['customer'] as Map<String, dynamic>);
   }
+
+  Future<int?> _liveLegalId(String code) async {
+    try {
+      final json = await _client.get('/reference/legal-documents/$code');
+      return ((json?['data'] as Map?)?['id'] as num?)?.toInt();
+    } on ApiException {
+      return null;
+    }
+  }
+
+  /// Accepts the live terms or privacy the customer was shown (backend spec 019).
+  Future<void> acceptLegal(int legalDocId, {required String idempotencyKey}) =>
+      _client.post('/customer/me/legal-acceptances', body: {'legal_doc_id': legalDocId}, auth: true, idempotencyKey: idempotencyKey);
 
   LoginSignedIn _signedIn(Map<String, dynamic> data) =>
       LoginSignedIn(CustomerProfile.fromJson(data['customer'] as Map<String, dynamic>), SessionTokens.fromJson(data['session'] as Map<String, dynamic>));

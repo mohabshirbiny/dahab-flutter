@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'core/i18n/i18n.dart';
+import 'core/text/texts_controller.dart';
 import 'services/api/account_api.dart';
 import 'services/api/api_client.dart';
 import 'services/api/buy_requests_api.dart';
+import 'services/api/content_api.dart';
 import 'services/api/listings_api.dart';
 import 'services/api/market_api.dart';
 import 'services/api/orders_api.dart';
@@ -37,6 +39,11 @@ Future<void> main() async {
   final tokens = await TokenStore.open();
   final client = ApiClient(tokens);
   final auth = AuthController(api: AuthApi(client), tokens: tokens, client: client);
+  // Backend spec 019: published app texts. The saved copy is read before the first frame; the
+  // server is asked on start, on resume and every 15 minutes. A failure keeps what is held.
+  final texts = TextsController(api: ContentApi(client));
+  await texts.loadSaved();
+  texts.start();
   await auth.restore();
   // Backend spec 017: the account, the inbox, saved pieces, reports, legal and support are live.
   final accountRepo = ApiAccountRepository(client, tokens);
@@ -47,6 +54,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: lang),
+        ChangeNotifierProvider.value(value: texts),
         ChangeNotifierProvider.value(value: auth),
         Provider<ApiClient>.value(value: client),
         // Backend spec 010: the market, the sell flow and My listings are live.

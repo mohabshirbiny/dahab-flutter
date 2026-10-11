@@ -11,14 +11,8 @@ const bool kShowMockFlags = bool.fromEnvironment('SHOW_MOCK_FLAGS', defaultValue
 
 /// Screens that are entirely mock (no backend behind them yet).
 const Set<String> mockScreens = {
-  R.help, // FAQ (waits for the Dashboard's App text, backend spec 019)
-  R.invite,
-  R.branch, // prototype branch picker (the live one is in Accept)
+  R.invite, // referral rules are not defined (backend spec 019 OD-2)
   R.editprice,
-  R.codes,
-  R.codeuses,
-  R.mmapprove,
-  R.compensate,
 };
 
 /// The small red "MOCK" flag.

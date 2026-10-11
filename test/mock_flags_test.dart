@@ -21,8 +21,12 @@ void main() {
 
     void go(String loc) => GoRouter.of(tester.element(find.byType(Navigator).first)).go(loc);
 
-    // Backend spec 017: Help keeps its FAQ on mock data until the App text (spec 019).
+    // Help reads the published questions (spec 019); the prototype's Branch picker is still mock.
     go('/help');
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(MockScreenBanner), findsNothing);
+
+    go('/invite');
     await tester.pump(const Duration(seconds: 1));
     expect(find.byType(MockScreenBanner), findsOneWidget);
     expect(find.text('MOCK — this screen is not connected to the backend yet'), findsOneWidget);

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/account_help.dart';
+import '../../core/text/texts_controller.dart';
 import '../../core/utils/idempotency.dart';
 import '../../models/account.dart';
 import '../../models/reference.dart';
@@ -342,7 +344,8 @@ class _InboxScreenState extends State<InboxScreen> {
   }
 }
 
-/// `#s-help` — FAQ with expanding answers.
+/// `#s-help` — the questions staff published (backend spec 019 US5), each with an expanding
+/// answer. Nothing published yet: a short note and the way to Contact us.
 class HelpScreen extends StatefulWidget {
   const HelpScreen({super.key});
 
@@ -355,21 +358,25 @@ class _HelpScreenState extends State<HelpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LangController>();
+    final texts = Provider.of<TextsController?>(context);
+    final faq = texts?.faq(lang) ?? const <FaqItem>[];
     return AppPage(
       id: R.help,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const DLabel('The ones people ask most'),
-          AsyncView<List<FaqItem>>(
-            load: context.read<ContentRepository>().faq,
-            builder: (context, faq) => DMenuCard(
+          if (faq.isEmpty)
+            DNote(icon: 'help', text: context.k(AccountHelpKeys.empty))
+          else ...[
+            const DLabel('The ones people ask most'),
+            DMenuCard(
               children: [
                 for (var i = 0; i < faq.length; i++)
                   _FaqRow(item: faq[i], open: _open.contains(i), onTap: () => setState(() => _open.contains(i) ? _open.remove(i) : _open.add(i))),
               ],
             ),
-          ),
+          ],
           const Gap(14),
           const DLabel('Still stuck'),
           DMenuCard(
@@ -403,14 +410,14 @@ class _FaqRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    T(item.question, style: DText.body14),
+                    Text(item.question, style: DText.body14),
                     AnimatedSize(
                       duration: const Duration(milliseconds: 180),
                       alignment: AlignmentDirectional.topStart,
                       child: open
                           ? Padding(
                               padding: const EdgeInsets.only(top: 7),
-                              child: T(item.answer, style: const TextStyle(fontSize: 12, color: DColors.ink2, height: 1.75)),
+                              child: Text(item.answer, style: const TextStyle(fontSize: 12, color: DColors.ink2, height: 1.75)),
                             )
                           : const SizedBox(width: double.infinity),
                     ),
@@ -713,76 +720,6 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
             DButton.ghost('Keep my account', onTap: () => context.nav(R.account)),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// `#s-invite`
-class InviteScreen extends StatelessWidget {
-  const InviteScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return AppPage(
-      id: R.invite,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          DCard(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              children: [
-                const DIcon('users', size: 30, color: DColors.gold),
-                const Gap(10),
-                const T('Invite a friend', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                const Gap(6),
-                const T(
-                  'She pays a lower commission on her first sale. You pay a lower one on your next.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: DColors.ink2, height: 1.65),
-                ),
-                const Gap(14),
-                const DSoft.paper(
-                  child: Column(
-                    children: [
-                      T('Your code', style: DText.tiny),
-                      Gap(3),
-                      Text('MONA4417', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, letterSpacing: 2)),
-                    ],
-                  ),
-                ),
-                const Gap(12),
-                DActsRow(
-                  children: [
-                    DButton('Share', small: true, onTap: () => showToast(context, 'Ready to share.')),
-                    DButton.ghost('Copy', small: true, onTap: () => showToast(context, 'Copied.')),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const Gap(16),
-          const DLabel('Where it stands'),
-          const DSoft.bordered(
-            child: Column(
-              children: [
-                DRow('Invites sent', '3'),
-                DRow('Joined', '1'),
-                DRow('Sold something', '1'),
-                DRow(
-                  'Earned so far',
-                  '200 EGP',
-                  rule: true,
-                  valueColor: DColors.ok,
-                  valueStyle: TextStyle(fontWeight: FontWeight.w500),
-                ),
-              ],
-            ),
-          ),
-          const Gap(14),
-          const T('The reward lands as commission credit after your friend completes her first sale, not when she signs up.', style: DText.tiny),
-        ],
       ),
     );
   }

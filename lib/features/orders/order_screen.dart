@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/orders_after_collection.dart';
+import '../../core/text/texts_controller.dart';
 import '../../core/utils/idempotency.dart';
 import '../../models/dispute.dart';
 import '../../models/order.dart';
@@ -252,20 +254,20 @@ class _OrderBody extends StatelessWidget {
       if (!o.isSeller && offer.isOpen) ...[const Gap(16), _FreeRelistCard(order: o)],
       if (!o.isSeller && offer.isUsed) ...[
         const Gap(16),
-        const DNote(icon: 'circle-check', kind: NoteKind.ok, text: 'You put this piece back on the market with no commission.'),
+        DNote(icon: 'circle-check', kind: NoteKind.ok, text: context.k(OrdersAfterCollectionKeys.freeRelistUsedNote)),
         const Gap(10),
-        DButton.ghost('See it in My listings', onTap: () => context.nav(R.listings)),
+        DButton.ghost(context.k(OrdersAfterCollectionKeys.freeRelistUsedSeeListings), onTap: () => context.nav(R.listings)),
       ],
       if (o.isSeller && o.noFee) ...[
         const Gap(16),
-        const DNote(icon: 'circle-check', kind: NoteKind.ok, text: 'No Dahab fee on this sale. It was a free relist, so the whole price reached you.'),
+        DNote(icon: 'circle-check', kind: NoteKind.ok, text: context.k(OrdersAfterCollectionKeys.noFeeSellerNote)),
       ],
       if (o.rating.givenStars != null) ...[
         const Gap(16),
-        DNote(icon: 'circle-check', kind: NoteKind.ok, text: 'You rated this order ${o.rating.givenStars} out of 5.'),
+        DNote(icon: 'circle-check', kind: NoteKind.ok, text: context.k(OrdersAfterCollectionKeys.ratingGivenNote, {'stars': o.rating.givenStars})),
       ] else if (o.rating.canRate) ...[
         const Gap(16),
-        DButton.ghost('Rate this order', onTap: () => context.nav(R.rate, query: {'id': o.id})),
+        DButton.ghost(context.k(OrdersAfterCollectionKeys.ratingRateButton), onTap: () => context.nav(R.rate, query: {'id': o.id})),
       ],
     ];
   }
@@ -522,7 +524,9 @@ class _FreeRelistCardState extends State<_FreeRelistCard> {
     final end = widget.order.freeRelist.endsAt;
     if (end == null || widget.order.freeRelist.isOver(DateTime.now())) return const SizedBox.shrink();
     final left = end.difference(DateTime.now());
-    final text = left.inHours >= 1 ? '${left.inHours} h ${left.inMinutes % 60} min left' : '${left.inMinutes} min left';
+    final text = left.inHours >= 1
+        ? context.k(OrdersAfterCollectionKeys.freeRelistCardLeftHoursMinutes, {'hours': left.inHours, 'minutes': left.inMinutes % 60})
+        : context.k(OrdersAfterCollectionKeys.freeRelistCardLeftMinutes, {'minutes': left.inMinutes});
     final suspended = context.watch<AuthController>().customer?.status == 'suspended';
     return DCard(
       borderColor: DColors.gold,
@@ -530,24 +534,21 @@ class _FreeRelistCardState extends State<_FreeRelistCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const T('Sell it again with no commission', style: DText.title),
+          T(context.k(OrdersAfterCollectionKeys.freeRelistCardTitle), style: DText.title),
           const Gap(4),
-          const T(
-            'You collected this piece. Put it back on the market now and Dahab takes no commission on that sale. It goes live straight away, with no review.',
-            style: DText.tiny,
-          ),
+          T(context.k(OrdersAfterCollectionKeys.freeRelistCardBody), style: DText.tiny),
           const Gap(10),
           DSoft.bordered(
             child: Column(
               children: [
-                DRow('Until', whenOf(end)),
-                DRow('Time left', text, valueColor: left.inHours < 2 ? DColors.bad : DColors.wait),
+                DRow(context.k(OrdersAfterCollectionKeys.freeRelistCardUntil), whenOf(end)),
+                DRow(context.k(OrdersAfterCollectionKeys.freeRelistCardTimeLeft), text, valueColor: left.inHours < 2 ? DColors.bad : DColors.wait),
               ],
             ),
           ),
           if (suspended) ...[const Gap(10), const SuspendedNotice()],
           const Gap(12),
-          DButton('Relist this piece, no commission', onTap: suspended ? null : () => context.nav(R.freeRelist, query: {'id': widget.order.id})),
+          DButton(context.k(OrdersAfterCollectionKeys.freeRelistCardButton), onTap: suspended ? null : () => context.nav(R.freeRelist, query: {'id': widget.order.id})),
         ],
       ),
     );

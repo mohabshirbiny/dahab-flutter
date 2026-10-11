@@ -130,9 +130,14 @@ class ApiAccountRepository implements AccountRepository {
       '${_data(await _client.post('$_me/listing-reports', body: {'listing_id': listingId, 'reason': reason, 'note': ?note}, auth: true, idempotencyKey: idempotencyKey))['reference'] ?? ''}';
 
   @override
-  Future<List<LegalEntry>> legalDocuments() async => [
-    for (final r in _rows(await _client.get('/reference/legal-documents'))) LegalEntry(code: '${r['code']}', published: r['published'] == true),
-  ];
+  Future<List<LegalEntry>> legalDocuments() async {
+    final json = await _client.get('/reference/legal-documents');
+    // The documents first, then (backend spec 019) the declarations ticked inside forms.
+    return [
+      for (final r in _rows(json)) LegalEntry(code: '${r['code']}', published: r['published'] == true),
+      for (final r in (json?['declarations'] as List?) ?? const []) LegalEntry(code: '${(r as Map)['code']}', published: r['published'] == true),
+    ];
+  }
 
   @override
   Future<LegalDoc> legalDocument(String code) async => LegalDoc.fromJson(_data(await _client.get('/reference/legal-documents/${_id(code)}')));

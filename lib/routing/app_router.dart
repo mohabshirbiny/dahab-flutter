@@ -4,8 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../features/account/account_screen.dart';
 import '../features/account/bank_screens.dart';
 import '../features/account/contact_change_screens.dart';
+import '../features/account/invite_screen.dart';
+import '../features/account/legal_accept_screen.dart';
 import '../features/account/settings_screens.dart';
-import '../features/admin/admin_screens.dart';
 import '../features/auth/login_screens.dart';
 import '../features/auth/signup_screens.dart';
 import '../features/auth/splash_screen.dart';
@@ -55,7 +56,6 @@ final Map<String, Widget Function(GoRouterState s)> _screens = {
   R.dispute: (s) => DisputeScreen(orderId: s.uri.queryParameters['id'] ?? ''),
   R.inspection: _liveOrder,
   R.order: (s) => OrderScreen(id: s.uri.queryParameters['id'] ?? ''),
-  R.branch: (_) => const BranchScreen(),
   R.pay: _liveOrder,
   R.code: _liveOrder,
   R.proxy: (s) => ProxyScreen(orderId: s.uri.queryParameters['id'] ?? ''),
@@ -80,21 +80,18 @@ final Map<String, Widget Function(GoRouterState s)> _screens = {
   R.changeEmail: (_) => const ChangeEmailScreen(),
   R.emailConfirm: (s) => EmailConfirmScreen(token: s.uri.queryParameters['token'] ?? ''),
   R.legalDoc: (s) => LegalDocScreen(code: s.uri.queryParameters['code'] ?? 'terms'),
+  R.legalAccept: (_) => const LegalAcceptScreen(),
   R.bank: (_) => const BankScreen(),
   R.bankadd: (_) => const BankAddScreen(),
   R.security: (_) => const SecurityScreen(),
   R.notif: (_) => const NotificationSettingsScreen(),
   R.inbox: (_) => const InboxScreen(),
   R.help: (_) => const HelpScreen(),
+  R.invite: (_) => const InviteScreen(),
   R.legal: (_) => const LegalScreen(),
   R.support: (_) => const SupportScreen(),
   R.delete: (_) => const DeleteAccountScreen(),
-  R.invite: (_) => const InviteScreen(),
   R.prices: (_) => const PricesScreen(),
-  R.codes: (_) => const PromoCodesScreen(),
-  R.codeuses: (_) => const CodeUsesScreen(),
-  R.mmapprove: (_) => const MarketMakerApproveScreen(),
-  R.compensate: (_) => const CompensateScreen(),
 };
 
 /// Screen ids with a route, for tests and the QA checklist.

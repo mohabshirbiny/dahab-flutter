@@ -45,8 +45,18 @@ guide, promo codes and saved pieces are still the prototype's (mock), and so are
 the prototype's other order screens (ask for more time, disputes, someone else
 collects, rating). The video, the stone certificate and (for the owner) the invoice
 open in a new browser tab. Transactions and invoices, the tax invoice screen (with its PDF and credit notes), View
-invoice on a paid order and Open the invoice on the wallet line are live (backend spec 016). **Everything else**
-(notifications, …) runs on local mock data until those APIs exist.
+invoice on a paid order and Open the invoice on the wallet line are live (backend spec 016).
+
+**Text staff can change (backend spec 019, first release).** The customer app's own wording is the default and the
+fallback: every text of the spec 018 screens (the free-relist card, the relist form, the rating screen) is a `TextKey`
+(`lib/core/text/keys/`), and `context.k(key)` shows what staff published for it, else the app's own text. The published
+bundle (`GET /reference/app-texts`) is kept on the device and asked for on start, on return to the app and every 15 minutes;
+offline, a missing key, a missing language or a placeholder the app cannot fill all show the app's own text. After
+changing a catalogue, regenerate the manifest the Backend registers its keys from:
+`UPDATE_TEXT_MANIFEST=1 flutter test test/text_manifest_test.dart`, then copy `assets/text/keys.json` to the Backend's
+`database/data/app_text_keys.json`.
+
+**Everything else** (notifications, …) runs on local mock data until those APIs exist.
 
 ## Run
 

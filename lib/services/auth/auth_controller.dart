@@ -16,6 +16,7 @@ enum LoginOutcome { signedIn, needsOtp }
 class AuthController extends ChangeNotifier {
   AuthController({required AuthApi api, required TokenStore tokens, required ApiClient client}) : _api = api, _tokens = tokens {
     client.onSessionExpired = _expired;
+    client.onLegalAcceptanceRequired = () => refreshMe();
   }
 
   final AuthApi _api;
@@ -59,6 +60,17 @@ class AuthController extends ChangeNotifier {
     } on ApiException {
       // Keep what we have.
     }
+  }
+
+  /// The terms or privacy the customer must accept before anything else (backend spec 019).
+  List<LegalRequirement> get legalRequired => _customer?.legalAcceptanceRequired ?? const [];
+
+  /// Accepts [requirement]'s live version, then reloads the customer so the next one (or none)
+  /// shows. A failure is thrown for the screen to say.
+  Future<void> acceptLegal(LegalRequirement requirement, {required String idempotencyKey}) async {
+    await _api.acceptLegal(requirement.legalDocId, idempotencyKey: idempotencyKey);
+    _customer = await _api.me();
+    notifyListeners();
   }
 
   /// The account was closed (backend spec 017): the backend already ended every

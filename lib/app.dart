@@ -27,17 +27,38 @@ class _DahabAppState extends State<DahabApp> {
   void initState() {
     super.initState();
     _auth.addListener(_onAuth);
+    // A customer who restored a session may already owe an acceptance (backend spec 019).
+    WidgetsBinding.instance.addPostFrameCallback((_) => _goToAcceptanceIfOwed());
+    // The sign-in flow navigates home after the session is set: keep the acceptance in front of it.
+    _router.routerDelegate.addListener(_onRoute);
+  }
+
+  void _onRoute() {
+    if (_auth.legalRequired.isEmpty) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _goToAcceptanceIfOwed());
   }
 
   /// A session that ended on its own (refresh token rejected) sends the
-  /// customer back to the start.
+  /// customer back to the start; owing the live terms or privacy sends them to accept
+  /// them before anything else (backend spec 019).
   void _onAuth() {
-    if (_auth.takeSessionExpired()) _router.go('/${R.login}');
+    if (_auth.takeSessionExpired()) {
+      _router.go('/${R.login}');
+      return;
+    }
+    _goToAcceptanceIfOwed();
+  }
+
+  void _goToAcceptanceIfOwed() {
+    if (!mounted || _auth.legalRequired.isEmpty) return;
+    final here = _router.routerDelegate.currentConfiguration.uri.path;
+    if (here != '/${R.legalAccept}') _router.go('/${R.legalAccept}');
   }
 
   @override
   void dispose() {
     _auth.removeListener(_onAuth);
+    _router.routerDelegate.removeListener(_onRoute);
     _router.dispose();
     super.dispose();
   }

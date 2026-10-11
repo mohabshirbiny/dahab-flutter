@@ -8,6 +8,19 @@
 /// The prototype dictionary (assets/i18n/ar.json) always wins over this map.
 const Map<String, String> arExtra = {
   // States added in the Flutter build.
+  // Signed-out Account (AR-DRAFT). makers (backend spec 019 6B). AR-DRAFT: the owner approves the wording.
+  'Sign in to see your account': 'سجّل دخولك عشان تشوف حسابك',
+  'Your orders, your wallet and your listings are here once you sign in.': 'طلباتك ومحفظتك وإعلاناتك هتلاقيها هنا بعد ما تسجّل دخولك.',
+  // Market makers (backend spec 019 6B). AR-DRAFT: the owner approves the wording.
+  'Approved': 'معتمدة',
+  'Approved for market makers': 'معتمدة للتجار',
+  'Your market maker code': 'كود التاجر بتاعك',
+  'Leave empty to send without a code': 'سيبه فاضي لو هتبعت من غير كود',
+  'This code belongs to another account.': 'الكود ده بتاع حساب تاني.',
+  'This piece is not approved for market makers.': 'القطعة دي مش معتمدة للتجار.',
+  'This piece has not been listed long enough yet.': 'القطعة دي لسه ماتعرضتش مدة كفاية.',
+  'This code has reached its limit for the month.': 'الكود ده وصل للحد بتاعه الشهر ده.',
+  'This code is not active.': 'الكود ده مش شغال.',
   'Loading…': 'جاري التحميل…',
   'Something went wrong': 'حصلت مشكلة',
   'Try again': 'حاول تاني',

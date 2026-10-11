@@ -1,3 +1,4 @@
+import '../../core/text/app_controls.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -26,7 +27,18 @@ Future<void> pickIntoSlot(BuildContext context, String key) async {
 
 /// What to tell a seller when the backend refuses a listing request
 /// (backend spec 010 codes), in the English source wording.
+/// A stop or a pause: what staff wrote for customers, in the language of the app
+/// (`details.message {en, ar}`); null for any other refusal (backend spec 019 US7).
+String? controlRefusalMessage(ApiException e) {
+  if (e.code != 'category_stopped' && e.code != 'platform_stopped' && e.code != 'category_paused') return null;
+  final details = e.extra['details'];
+  final words = details is Map ? ControlMessage.fromJson(details['message']).text(arabic: arabicDates) : '';
+  return words.isNotEmpty ? words : e.message;
+}
+
 String listingErrorMessage(ApiException e) {
+  final controlled = controlRefusalMessage(e);
+  if (controlled != null) return controlled;
   switch (e.code) {
     case 'seller_suspended':
       return 'This account is suspended. Contact us for help.';
@@ -63,7 +75,17 @@ String listingErrorMessage(ApiException e) {
 
 /// One sentence per buy-request refusal (backend spec 011).
 String buyRequestErrorMessage(ApiException e) {
+  final controlled = controlRefusalMessage(e);
+  if (controlled != null) return controlled;
   switch (e.code) {
+    case 'promo_code_invalid':
+      return switch ((e.extra['details'] as Map?)?['reason']) {
+        'not_your_code' => 'This code belongs to another account.',
+        'not_approved' => 'This piece is not approved for market makers.',
+        'too_new' => 'This piece has not been listed long enough yet.',
+        'cap_reached' => 'This code has reached its limit for the month.',
+        _ => 'This code is not active.',
+      };
     case 'price_moved':
       final fresh = (e.extra['details'] as Map?)?['current_price'] as String?;
       return fresh == null ? 'The price has changed. Check it and send again.' : 'The price is now ${moneyOf(fresh)}. Check it and send again.';

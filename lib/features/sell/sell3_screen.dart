@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../models/reference.dart';
 import '../../services/api/api_client.dart';
 import '../../services/api/market_api.dart';
-import '../../services/app_session.dart';
 import '../../services/live_rates.dart';
 import '../../services/repositories.dart';
 import '../../services/sell_draft.dart';
@@ -92,7 +91,6 @@ class _Sell3ScreenState extends State<Sell3Screen> {
   Widget build(BuildContext context) {
     final d = context.watch<SellDraft>();
     final q = d.quote(context.watch<LiveRates>());
-    final showStats = context.watch<AppSession>().payStatsVisible;
     return AppPage(
       id: R.sell3,
       child: Column(
@@ -173,20 +171,6 @@ class _Sell3ScreenState extends State<Sell3Screen> {
             ),
           ),
           const Gap(12),
-          if (showStats) ...[
-            const DSoft.bordered(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  DRow('Money usually reaches sellers in', '4 days'),
-                  DRow('Sales that complete', '92%'),
-                  Gap(7),
-                  T('From our own record of completed sales, updated automatically.', style: DText.tiny),
-                ],
-              ),
-            ),
-            const Gap(12),
-          ],
           DNote(
             icon: 'circle-check',
             kind: NoteKind.ok,
