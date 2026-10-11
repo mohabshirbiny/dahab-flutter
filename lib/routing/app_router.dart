@@ -7,7 +7,9 @@ import '../features/account/contact_change_screens.dart';
 import '../features/account/invite_screen.dart';
 import '../features/account/legal_accept_screen.dart';
 import '../features/account/settings_screens.dart';
+import '../features/auth/forgot_password_screen.dart';
 import '../features/auth/login_screens.dart';
+import '../features/auth/reset_password_screen.dart';
 import '../features/auth/signup_screens.dart';
 import '../features/auth/splash_screen.dart';
 import '../features/catalog/browse_screen.dart';
@@ -37,6 +39,8 @@ final Map<String, Widget Function(GoRouterState s)> _screens = {
   R.splash: (_) => const SplashScreen(),
   R.login: (_) => const LoginScreen(),
   R.otp: (_) => const OtpScreen(),
+  R.forgotPassword: (_) => const ForgotPasswordScreen(),
+  R.resetPassword: (_) => const ResetPasswordScreen(),
   R.signup1: (_) => const Signup1Screen(),
   R.signup2: (_) => const Signup2Screen(),
   R.signup3: (_) => const Signup3Screen(),

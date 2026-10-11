@@ -61,6 +61,14 @@ String toE164(String countryCode, String input) {
   return '$countryCode$digits';
 }
 
+/// The inverse of [toE164]: "+201012344417" → ("+20", "1012344417"). A number with no known
+/// country code comes back whole, with an empty code.
+(String, String) splitE164(String e164) {
+  const codes = ['+971', '+966', '+965', '+974', '+20', '+44', '+39', '+1'];
+  final cc = codes.firstWhere(e164.startsWith, orElse: () => '');
+  return (cc, e164.substring(cc.length));
+}
+
 /// "+201012344417" → "+20 10 •••• 4417" (as shown in the prototype).
 String maskPhone(String e164) {
   const codes = ['+971', '+966', '+965', '+974', '+20', '+44', '+39', '+1'];

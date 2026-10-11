@@ -44,7 +44,6 @@ abstract final class ScreensSharedKeys {
   static const authNewHere = TextKey('auth.new_here', 'New here?', area: 'Auth', where: 'Sign in');
   static const authOurPartners = TextKey('auth.our_partners', 'Our partners', area: 'Auth', where: 'Splash');
   static const authPassport = TextKey('auth.passport', 'Passport', area: 'Auth', where: 'Sign up');
-  static const authPasswordResetIsNotAvailableYet = TextKey('auth.password_reset_is_not_available_yet', 'Password reset is not available yet.', area: 'Auth', where: 'Sign in');
   static const authPhoneNumber = TextKey('auth.phone_number', 'Phone number', area: 'Auth', where: 'Sign in');
   static const authPhotographTheWholeCardAvoidGlar = TextKey('auth.photograph_the_whole_card_avoid_glar', 'Photograph the whole card, avoid glare, and make sure the text is readable.', area: 'Auth', where: 'Sign up');
   static const authPricesInEgpPerGramUpdated = TextKey('auth.prices_in_egp_per_gram_updated', 'Prices in EGP per gram, updated live.', area: 'Auth', where: 'Splash');
@@ -388,7 +387,6 @@ abstract final class ScreensSharedKeys {
     authNewHere,
     authOurPartners,
     authPassport,
-    authPasswordResetIsNotAvailableYet,
     authPhoneNumber,
     authPhotographTheWholeCardAvoidGlar,
     authPricesInEgpPerGramUpdated,

@@ -105,6 +105,18 @@ class FakeBackend {
   static const phoneCode = '123456';
   static const emailToken = 'email-change-token-0123456789';
 
+  /// Backend spec 020: the code that resets a password; [resetExpiredCode] answers `otp_expired`.
+  static const resetCode = '482913';
+  static const resetExpiredCode = '999999';
+
+  /// What the reset answers on confirm (the backend's shape); a test may change it.
+  Map<String, dynamic> resetDone = {
+    'password_changed': true,
+    'signed_out_sessions': 2,
+    'withdrawals_paused_until': null,
+    'cancelled_withdrawals': 0,
+  };
+
   /// Answer the login with this refusal instead of the OTP challenge.
   String? refuseLoginWith;
 
@@ -1509,6 +1521,22 @@ class FakeBackend {
         });
       case '/customer/auth/otp/resend':
         return json(200, {'data': challenge});
+      case '/customer/auth/password/reset-request':
+        // Always the same answer, whether or not the number is registered.
+        if (!RegExp(r'^\+[1-9]\d{7,14}$').hasMatch('${body['phone']}')) {
+          return json(422, {
+            'message': 'bad',
+            'code': 'validation_failed',
+            'errors': {'phone': ['Enter the phone number.']},
+          });
+        }
+        return json(202, {
+          'data': {'expires_in_seconds': 300, 'resend_available_at': DateTime.now().add(const Duration(seconds: 60)).toUtc().toIso8601String()},
+        });
+      case '/customer/auth/password/reset-confirm':
+        if (body['code'] == resetExpiredCode) return error(401, 'otp_expired');
+        if (body['code'] != resetCode) return error(401, 'otp_invalid');
+        return json(200, {'data': resetDone});
       case '/customer/auth/me':
         return json(200, {'data': _customer});
       case '/customer/auth/logout':
