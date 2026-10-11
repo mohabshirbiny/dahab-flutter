@@ -117,12 +117,23 @@ class FakeBackend {
   /// Backend spec 015: `GET /customer/me/wallet/held` — what each request and order holds.
   Map<String, dynamic> held = {'total': '0.0000', 'items': <Map<String, dynamic>>[]};
 
+  // ---- Backend spec 019: legal acceptance ----
+
+  /// `legal_acceptance_required` of the signed-in customer; accepting the first one removes it.
+  List<Map<String, dynamic>> legalRequired = [];
+
+  /// The `legal_doc_id` of every acceptance the app sent.
+  final legalAccepted = <int>[];
+
   // ---- Backend spec 019: published app texts ----
 
   /// `GET /reference/app-texts`: the published overrides by key (`{en, ar}`), the setting values
   /// the bundle carries, the bundle number, and whether the server answers at all.
   Map<String, Map<String, String>> appTexts = {};
   Map<String, Object?> appTextSettings = {};
+
+  /// The bundle's published Help entries, in order (`key`, `position`, `question`, `answer`).
+  List<Map<String, Object?>> appFaq = [];
   int appTextsVersion = 0;
   bool appTextsDown = false;
 
@@ -545,10 +556,19 @@ class FakeBackend {
   };
 
   Map<String, dynamic> get _customer {
+    final owed = {'legal_acceptance_required': legalRequired};
     if (suspendedReason != null) {
-      return {...customer, 'status': 'suspended', 'is_suspended': true, 'suspended_reason': suspendedReason, 'suspended_at': '2026-09-28T10:00:00+03:00', 'trade_allowed': false};
+      return {
+        ...customer,
+        ...owed,
+        'status': 'suspended',
+        'is_suspended': true,
+        'suspended_reason': suspendedReason,
+        'suspended_at': '2026-09-28T10:00:00+03:00',
+        'trade_allowed': false,
+      };
     }
-    return pendingAccount ? {...customer, 'status': 'pending_verification', 'is_verified': false, 'trade_allowed': false} : customer;
+    return pendingAccount ? {...customer, ...owed, 'status': 'pending_verification', 'is_verified': false, 'trade_allowed': false} : {...customer, ...owed};
   }
 
   static const customer = {
@@ -604,7 +624,7 @@ class FakeBackend {
     if (path.startsWith('/customer/me/phone-change/') && path.endsWith('/confirm')) {
       if (body['code'] != phoneCode) return json(422, {'message': 'change_code_invalid', 'code': 'change_code_invalid', 'tries_left': 4});
       return json(200, {
-        'data': {'customer': customer, 'pause_until': '2026-10-08T10:00:00+03:00', 'cancelled_withdrawals': []},
+        'data': {'customer': customer, 'pause_until': '2099-10-08T10:00:00+03:00', 'cancelled_withdrawals': []},
       });
     }
     if (path == '/customer/me/email-change') {
@@ -615,7 +635,7 @@ class FakeBackend {
     if (path == '/contact-changes/email/read' || path == '/contact-changes/email/confirm') {
       if (body['token'] != emailToken) return error(410, 'change_link_invalid');
       return json(200, {
-        'data': {'email_masked': 'n•••@example.com', 'expires_at': '2026-10-06T10:30:00+03:00', 'pause_until': '2026-10-08T10:00:00+03:00'},
+        'data': {'email_masked': 'n•••@example.com', 'expires_at': '2026-10-06T10:30:00+03:00', 'pause_until': '2099-10-08T10:00:00+03:00'},
       });
     }
     if (path == '/customer/me/password') {
@@ -855,7 +875,7 @@ class FakeBackend {
                 cancelled.add('${w['number']}');
               }
             }
-            pauseUntil = '2026-10-05T10:00:00+03:00';
+            pauseUntil = '2099-10-05T10:00:00+03:00';
           }
         case 'remove':
           if (a['state'] == 'pending_review') {
@@ -975,6 +995,15 @@ class FakeBackend {
     }
     if (path == '/reference/piece-types') return json(200, {'data': pieceTypes});
     // ---- backend spec 015: today's prices and the quote (a stand-in calculator: 20% of the making charge, 14% VAT) ----
+    if (path == '/customer/me/legal-acceptances' && req.method == 'POST') {
+      final id = (body['legal_doc_id'] as num).toInt();
+      if (legalRequired.isEmpty || legalRequired.first['legal_doc_id'] != id) return error(409, 'legal_acceptance_not_required');
+      legalAccepted.add(id);
+      final done = legalRequired.removeAt(0);
+      return json(201, {
+        'data': {'code': done['code'], 'version': done['version'], 'accepted_at': '2026-10-12T10:00:00+03:00', 'legal_acceptance_required': legalRequired},
+      });
+    }
     if (path == '/reference/app-texts') {
       if (appTextsDown) return error(503, 'service_unavailable');
       final tag = appTextsTag;
@@ -987,7 +1016,7 @@ class FakeBackend {
             'version': appTextsVersion,
             'published_at': '2026-10-12T10:00:00+03:00',
             'texts': appTexts,
-            'faq': <Object>[],
+            'faq': appFaq,
             'settings': appTextSettings,
           },
         }),

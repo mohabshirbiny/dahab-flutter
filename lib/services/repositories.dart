@@ -20,6 +20,9 @@ abstract interface class CatalogRepository {
 
   /// One piece on the market. Throws `not_found` once it has left it.
   Future<PieceDetail> detail(String id);
+
+  /// For a market-maker account: the pieces Dahab approved for market makers (backend spec 019 6B).
+  Future<Set<String>> approvedIds();
 }
 
 /// What the sell form reads before a listing exists (backend spec 010,
@@ -61,7 +64,7 @@ abstract interface class BuyRequestsRepository {
 
   /// Joins the line: holds the deposit and locks the price. Throws `insufficient_funds`
   /// (with the shortfall), `price_moved` (with the fresh price) and the other refusals.
-  Future<BuyRequest> send({required String listingId, required String confirmedPrice, required int termsId, required String idempotencyKey});
+  Future<BuyRequest> send({required String listingId, required String confirmedPrice, required int termsId, required String idempotencyKey, String? promoCode});
 
   /// Newest first; optionally one listing and/or one state. Empty when signed out.
   Future<List<BuyRequest>> mine({String? listingId, String? state});
@@ -258,7 +261,5 @@ abstract interface class PayoutRepository {
 }
 
 abstract interface class ContentRepository {
-  Future<List<FaqItem>> faq();
-  Future<List<Branch>> branches();
   PromoCode? promo(String code);
 }

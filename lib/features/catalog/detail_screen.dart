@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/texts_controller.dart';
 import '../../core/utils/idempotency.dart';
 import '../../models/buy_request.dart';
 import '../../models/listing.dart';
@@ -242,8 +243,14 @@ class _DetailBody extends StatelessWidget {
     if (!context.mounted) return;
     final ok = await ask(context, title: 'Before you send', body: arabic ? terms.bodyAr : terms.bodyEn, yes: 'Agree and send');
     if (!ok || !context.mounted) return;
+    // A market maker may use the code of their own account (backend spec 019 6B).
+    String? promoCode;
+    if (context.read<AuthController>().customer?.isMarketMaker ?? false) {
+      promoCode = await _askCode(context);
+      if (!context.mounted) return;
+    }
     try {
-      final request = await repo.send(listingId: d.piece.id, confirmedPrice: price, termsId: terms.id, idempotencyKey: newIdempotencyKey());
+      final request = await repo.send(listingId: d.piece.id, confirmedPrice: price, termsId: terms.id, idempotencyKey: newIdempotencyKey(), promoCode: promoCode);
       session.requestSent(request);
       if (context.mounted) context.nav(R.reqsent);
     } on ApiException catch (e) {
@@ -258,6 +265,28 @@ class _DetailBody extends StatelessWidget {
       showToast(context, buyRequestErrorMessage(e));
       if (e.code == 'price_moved' || e.code == 'already_in_queue' || e.code == 'listing_not_purchasable') onChanged();
     }
+  }
+
+  /// The market maker's code, or nothing: an empty answer sends the request as any other.
+  Future<String?> _askCode(BuildContext context) async {
+    final controller = TextEditingController();
+    final code = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(ctx.t('Your market maker code')),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.characters,
+          decoration: InputDecoration(hintText: ctx.t('Leave empty to send without a code')),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(controller.text.trim()), child: Text(ctx.t('Continue'))),
+        ],
+      ),
+    );
+    controller.dispose();
+    return code == null || code.isEmpty ? null : code.toUpperCase();
   }
 
   /// The buyer's own request, in words (spec 011); the prototype's text for mock pieces.
@@ -511,8 +540,10 @@ class _DetailBody extends StatelessWidget {
                       "You only pay the balance after IGI confirms the karat, weight and condition match this listing. If they don't, you can walk away and your deposit comes back.",
                 ),
                 const Gap(16),
-                DButton.ghost('Share this piece', small: true, expand: true, onTap: () => _share(context)),
-                const Gap(12),
+                if (context.watch<TextsController?>()?.controls.shows('sharing') ?? true) ...[
+                  DButton.ghost('Share this piece', small: true, expand: true, onTap: () => _share(context)),
+                  const Gap(12),
+                ],
               ],
               if (!_owner && !_cancelled) ...[
                 Center(

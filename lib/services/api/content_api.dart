@@ -1,3 +1,4 @@
+import '../../core/text/app_controls.dart';
 import '../../core/text/text_bundle.dart';
 import 'api_client.dart';
 
@@ -15,5 +16,13 @@ class ContentApi {
     final data = res.json?['data'];
     if (data is! Map) return null;
     return TextBundle.fromJson(data.cast<String, dynamic>(), tag: res.etag);
+  }
+
+  /// `GET /reference/controls`: null when it cannot be read (an older backend, offline).
+  Future<AppControls?> controls() async {
+    final res = await _client.getConditional('/reference/controls');
+    final data = res.json?['data'];
+    if (res.status != 200 || data is! Map) return null;
+    return AppControls.fromJson(data.cast<String, dynamic>());
   }
 }

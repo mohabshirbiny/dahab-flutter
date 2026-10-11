@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../models/account.dart';
 import '../../services/live_rates.dart';
 import '../../services/pricing.dart';
-import '../../services/repositories.dart';
 import '../../widgets/widgets.dart';
 
 /// Small "what this is about" card at the top of several flows.
@@ -29,91 +27,6 @@ class OrderContextCard extends StatelessWidget {
             T(sub, style: DText.tiny),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// `#s-branch` — choose the IGI branch after accepting a request.
-class BranchScreen extends StatefulWidget {
-  const BranchScreen({super.key});
-
-  @override
-  State<BranchScreen> createState() => _BranchScreenState();
-}
-
-class _BranchScreenState extends State<BranchScreen> {
-  int? _picked;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppPage(
-      id: R.branch,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const T('Choose where to take the piece. Your deadline is counted in working hours at the branch you pick.', style: DText.muted),
-          const Gap(16),
-          AsyncView<List<Branch>>(
-            load: context.read<ContentRepository>().branches,
-            loadingHeight: 200,
-            builder: (context, branches) => Column(
-              children: [
-                for (var i = 0; i < branches.length; i++)
-                  Padding(
-                    padding: EdgeInsets.only(bottom: i == branches.length - 1 ? 14 : 10),
-                    child: _BranchCard(b: branches[i], picked: _picked == i, onTap: () => setState(() => _picked = i)),
-                  ),
-              ],
-            ),
-          ),
-          const DNote(icon: 'clock', text: 'You accepted at 16:00 on Thursday. With 12 working hours and the weekend closed, your deadline at Nasr City is Sunday at 14:00.'),
-          const Gap(14),
-          DButton(
-            'Confirm the branch',
-            onTap: () async {
-              await tell(context, title: 'Branch chosen', body: 'Your deadline and directions are in the order. We will remind you before it runs out.');
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BranchCard extends StatelessWidget {
-  const _BranchCard({required this.b, required this.picked, required this.onTap});
-
-  final Branch b;
-  final bool picked;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return DCard(
-      onTap: onTap,
-      borderColor: picked ? DColors.gold : null,
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    T(b.name, style: DText.title),
-                    const Gap(3),
-                    T(b.address, style: DText.tiny),
-                  ],
-                ),
-              ),
-              DPill(b.status, kind: b.open ? PillKind.ok : PillKind.wait),
-            ],
-          ),
-          const Gap(11),
-          DSoft.paper(child: Column(children: [DRow('Open', b.hours), DRow('Closed', b.closed), DRow('Usually done in', b.duration)])),
-        ],
       ),
     );
   }

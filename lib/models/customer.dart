@@ -19,6 +19,8 @@ class CustomerProfile {
     required this.suspendedReason,
     required this.tradeAllowed,
     required this.createdAt,
+    this.legalAcceptanceRequired = const [],
+    this.customerType = 'ordinary',
   });
 
   final String id;
@@ -41,6 +43,13 @@ class CustomerProfile {
   final bool tradeAllowed;
   final DateTime? createdAt;
 
+  /// Terms or privacy owed before any write is allowed (backend spec 019). Empty when none.
+  final List<LegalRequirement> legalAcceptanceRequired;
+
+  /// `ordinary` or `market_maker` (backend spec 019 6B).
+  final String customerType;
+  bool get isMarketMaker => customerType == 'market_maker';
+
   factory CustomerProfile.fromJson(Map<String, dynamic> j) => CustomerProfile(
     id: j['id'] as String,
     displayRef: (j['display_ref'] ?? '') as String,
@@ -56,6 +65,32 @@ class CustomerProfile {
     suspendedReason: j['suspended_reason'] as String?,
     tradeAllowed: j['trade_allowed'] == true,
     createdAt: _date(j['created_at']),
+    customerType: (j['customer_type'] ?? 'ordinary') as String,
+    legalAcceptanceRequired: [
+      for (final e in (j['legal_acceptance_required'] as List?) ?? const []) LegalRequirement.fromJson((e as Map).cast<String, dynamic>()),
+    ],
+  );
+}
+
+/// A legal document the customer must accept (`legal_acceptance_required`, backend spec 019).
+class LegalRequirement {
+  const LegalRequirement({required this.code, required this.version, required this.legalDocId, required this.reason});
+
+  /// `terms` or `privacy`.
+  final String code;
+  final int version;
+  final int legalDocId;
+
+  /// `first` (nothing accepted yet) or `material` (a material change since the last acceptance).
+  final String reason;
+
+  bool get isMaterial => reason == 'material';
+
+  factory LegalRequirement.fromJson(Map<String, dynamic> j) => LegalRequirement(
+    code: '${j['code'] ?? ''}',
+    version: (j['version'] as num?)?.toInt() ?? 0,
+    legalDocId: (j['legal_doc_id'] as num?)?.toInt() ?? 0,
+    reason: '${j['reason'] ?? 'first'}',
   );
 }
 

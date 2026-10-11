@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/piece.dart';
+import '../../services/auth/auth_controller.dart';
 import '../../services/repositories.dart';
 import '../../widgets/widgets.dart';
 import '../shared/piece_card.dart';
@@ -24,6 +25,22 @@ class _BrowseScreenState extends State<BrowseScreen> {
   final _on = <String>{};
   String _query = '';
 
+  /// For a market-maker account: the pieces approved for market makers (backend spec 019 6B).
+  Set<String> _approved = const {};
+  bool _approvedLoaded = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_approvedLoaded) return;
+    _approvedLoaded = true;
+    if (context.read<AuthController>().customer?.isMarketMaker ?? false) {
+      context.read<CatalogRepository>().approvedIds().then((ids) {
+        if (mounted) setState(() => _approved = ids);
+      });
+    }
+  }
+
   void _toggle(String chip) => setState(() => _on.contains(chip) ? _on.remove(chip) : _on.add(chip));
 
   List<Piece> _apply(List<Piece> all) {
@@ -31,6 +48,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
     var list = all.where((p) {
       if (kinds.isNotEmpty && !kinds.contains(p.kind)) return false;
       if (_on.contains('21K') && p.karat != 21) return false;
+      if (_on.contains('Approved for market makers') && !_approved.contains(p.id)) return false;
       if (_query.isNotEmpty) {
         final q = _query.toLowerCase();
         final hay = '${p.title} ${p.titleAr ?? ''} ${p.specLine} ${p.kind} ${p.price}'.toLowerCase();
@@ -64,6 +82,8 @@ class _BrowseScreenState extends State<BrowseScreen> {
                     children: [
                       for (final c in const ['Rings', '21K', 'Earrings', 'Origin']) DChip(c, on: _on.contains(c), onTap: () => _toggle(c)),
                       DChip('Making charge', leadingIcon: 'arrows-sort', on: _on.contains('Making charge'), onTap: () => _toggle('Making charge')),
+                      if (_approved.isNotEmpty)
+                        DChip('Approved for market makers', on: _on.contains('Approved for market makers'), onTap: () => _toggle('Approved for market makers')),
                     ],
                   ),
                 ),
@@ -87,7 +107,20 @@ class _BrowseScreenState extends State<BrowseScreen> {
                     if (items.isEmpty)
                       const DEmpty(icon: 'search', title: 'Nothing here', body: 'No pieces match this search.')
                     else
-                      Grid2(children: [for (final p in items) PieceCard(piece: p)]),
+                      Grid2(
+                        children: [
+                          for (final p in items)
+                            if (_approved.contains(p.id))
+                              Stack(
+                                children: [
+                                  PieceCard(piece: p),
+                                  const Positioned(top: 6, left: 6, child: DPill('Approved', kind: PillKind.ok)),
+                                ],
+                              )
+                            else
+                              PieceCard(piece: p),
+                        ],
+                      ),
                   ],
                 );
               },

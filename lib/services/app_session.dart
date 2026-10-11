@@ -60,13 +60,4 @@ class AppSession extends ChangeNotifier {
     shortfall = value;
     notifyListeners();
   }
-
-  // ---- admin toggle on the review screen ----
-  bool _payStatsVisible = false;
-  bool get payStatsVisible => _payStatsVisible;
-
-  void togglePayStats() {
-    _payStatsVisible = !_payStatsVisible;
-    notifyListeners();
-  }
 }

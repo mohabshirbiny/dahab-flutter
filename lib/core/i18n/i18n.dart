@@ -4,6 +4,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
+import '../text/texts_controller.dart';
 import '../utils/format.dart' show arabicDates;
 import 'ar_extra.dart';
 
@@ -177,11 +178,20 @@ class LangController extends ChangeNotifier {
 }
 
 extension I18nContext on BuildContext {
-  /// Translate and subscribe to language changes.
-  String t(String en) => watch<LangController>().t(en);
+  /// Translate and subscribe to language and published-text changes. A sentence staff
+  /// published in App text replaces the app's own wording (backend spec 019).
+  String t(String en) {
+    final lang = watch<LangController>();
+    final texts = Provider.of<TextsController?>(this);
+    return texts?.published(en, lang) ?? lang.t(en);
+  }
 
   /// Translate without subscribing (for callbacks, dialogs, toasts).
-  String tr(String en) => read<LangController>().t(en);
+  String tr(String en) {
+    final lang = read<LangController>();
+    final texts = Provider.of<TextsController?>(this, listen: false);
+    return texts?.published(en, lang) ?? lang.t(en);
+  }
 
   bool get isArabic => watch<LangController>().isArabic;
 }

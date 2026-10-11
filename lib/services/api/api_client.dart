@@ -60,6 +60,10 @@ class ApiClient {
   /// Called when the refresh token is rejected — the session is over.
   void Function()? onSessionExpired;
 
+  /// Called when a write is refused `legal_acceptance_required` (backend spec 019): the app
+  /// reloads the customer, whose requirement list sends them to the acceptance screen.
+  void Function()? onLegalAcceptanceRequired;
+
   Future<SessionTokens>? _refreshing;
 
   Map<String, String> get _deviceHeaders => {'Accept': 'application/json', 'X-Device-Id': _tokens.deviceId, 'X-Device-Platform': AppConfig.devicePlatform};
@@ -236,6 +240,7 @@ class ApiClient {
         if (v is List) errors['$k'] = v.map((e) => '$e').toList();
       });
     }
+    if (json?['code'] == 'legal_acceptance_required') onLegalAcceptanceRequired?.call();
     throw ApiException(
       status: res.statusCode,
       code: (json?['code'] as String?) ?? 'server_error',

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../core/i18n/i18n.dart';
+import '../core/text/texts_controller.dart';
 import '../core/theme/tokens.dart';
 import '../routing/nav.dart';
 import '../routing/routes.dart';
@@ -9,7 +11,6 @@ import 'buttons.dart';
 import 'd_icon.dart';
 import '../services/auth/auth_controller.dart';
 import '../services/inbox_controller.dart';
-import 'package:provider/provider.dart';
 import 'dahab_logo.dart';
 import 'mock_flag.dart';
 
@@ -48,6 +49,7 @@ class AppPage extends StatelessWidget {
         children: [
           if (showTop) _TopBar(id: id, title: title),
           if (mockScreens.contains(id)) const MockScreenBanner(),
+          if (showTop) const _StoppedBanner(),
           Expanded(child: body),
           if (showTabs) _TabBar(current: id),
         ],
@@ -274,6 +276,30 @@ class _BellState extends State<_Bell> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// "Dahab is paused for a short while": shown on every screen while everything is stopped
+/// (backend spec 019 US7, D5). The words are staff's, in the customer's language.
+class _StoppedBanner extends StatelessWidget {
+  const _StoppedBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final texts = Provider.of<TextsController?>(context);
+    final controls = texts?.controls;
+    if (controls == null || !controls.stopped) return const SizedBox.shrink();
+    final arabic = context.isArabic;
+    final words = controls.stopMessage.text(arabic: arabic);
+    return Container(
+      width: double.infinity,
+      color: DColors.bad,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+      child: Text(
+        words.isNotEmpty ? words : context.tr('Dahab is paused for a short while. Your money and pieces are safe.'),
+        style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.5),
       ),
     );
   }

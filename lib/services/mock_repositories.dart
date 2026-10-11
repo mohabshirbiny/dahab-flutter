@@ -23,6 +23,9 @@ class MockCatalogRepository implements CatalogRepository {
 
   @override
   Future<PieceDetail> detail(String id) => _later(mockDetailFor(id), 200);
+
+  @override
+  Future<Set<String>> approvedIds() async => {};
 }
 
 /// No buy requests without the backend: empty lines and refusals.
@@ -31,7 +34,7 @@ class MockBuyRequestsRepository implements BuyRequestsRepository {
   Future<DepositTerms> depositTerms() async => const DepositTerms(id: 0, bodyEn: '', bodyAr: '');
 
   @override
-  Future<BuyRequest> send({required String listingId, required String confirmedPrice, required int termsId, required String idempotencyKey}) =>
+  Future<BuyRequest> send({required String listingId, required String confirmedPrice, required int termsId, required String idempotencyKey, String? promoCode}) =>
       throw UnsupportedError('No buy requests without the backend.');
 
   @override
@@ -263,10 +266,6 @@ class MockAccountRepository implements AccountRepository {
 
 class MockContentRepository implements ContentRepository {
   @override
-  Future<List<FaqItem>> faq() => _later(mockFaq, 0);
-
-  @override
-  Future<List<Branch>> branches() => _later(mockBranches, 0);
 
   @override
   PromoCode? promo(String code) {

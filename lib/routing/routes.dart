@@ -60,13 +60,8 @@ abstract final class R {
   static const report = 'report';
   static const inspection = 'inspection';
   static const proxy = 'proxy';
-  static const compensate = 'compensate';
-  static const codes = 'codes';
-  static const codeuses = 'codeuses';
-  static const mmapprove = 'mmapprove';
   static const reqsent = 'reqsent';
   static const topup = 'topup';
-  static const branch = 'branch';
 
   /// Added for the API (backend spec 012): one order, `?id=`.
   static const order = 'order';
@@ -77,8 +72,11 @@ abstract final class R {
   static const emailConfirm = 'email-confirm';
   static const legalDoc = 'legal-doc';
 
+  /// Backend spec 019: accept the live terms / privacy before anything else.
+  static const legalAccept = 'legal-accept';
+
   /// `AUTH` — no bottom tabs.
-  static const auth = {splash, login, otp, signup1, signup2, signup3, signupEmail, signupDone, withdrawConfirm, emailConfirm};
+  static const auth = {splash, login, otp, signup1, signup2, signup3, signupEmail, signupDone, withdrawConfirm, emailConfirm, legalAccept};
 
   /// `ROOT` — tab roots; navigating to one resets the back stack.
   static const roots = {home, browse, sell1, orders, account};
@@ -101,13 +99,8 @@ abstract final class R {
     orders: 'Your orders',
     account: 'Account',
     weight: 'Not sure of the weight',
-    branch: 'Choose a branch',
     reqsent: 'Request sent',
     topup: 'Add funds first',
-    codes: 'Promo codes',
-    codeuses: 'Code use log',
-    mmapprove: 'Approve for market makers',
-    compensate: 'Pay compensation',
     proxy: 'Someone else collects',
     inspection: 'Inspection result',
     order: 'Your order',
@@ -128,6 +121,7 @@ abstract final class R {
     changeEmail: 'Change your email',
     emailConfirm: 'Confirm your new email',
     legalDoc: 'Terms and privacy',
+    legalAccept: 'Please accept our terms',
     addfunds: 'Add funds',
     topups: 'Your top-ups',
     invoices: 'Invoices',

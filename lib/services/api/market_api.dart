@@ -27,6 +27,19 @@ class ApiCatalogRepository implements CatalogRepository {
 
   bool get _signedIn => _tokens.accessToken != null || _tokens.refreshToken != null;
 
+  /// The ids of the pieces approved for market makers, for a market-maker account
+  /// (`GET /customer/me/market/listings?mm_approved=1`); empty for anyone else or on a failure.
+  @override
+  Future<Set<String>> approvedIds() async {
+    if (!_signedIn) return {};
+    try {
+      final res = await _get('/customer/me/market/listings?mm_approved=1&per_page=100');
+      return {for (final row in (res?['data'] as List? ?? const [])) (row as Map)['id'] as String};
+    } on ApiException {
+      return {};
+    }
+  }
+
   @override
   Future<List<Piece>> pieces() async {
     final rows = <Piece>[];

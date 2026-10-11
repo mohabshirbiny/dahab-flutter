@@ -58,8 +58,12 @@ void main() {
   });
 
   test('the catalogue source lists every key it declares', () {
-    final source = File('lib/core/text/keys/orders_after_collection.dart').readAsStringSync();
-    final declared = RegExp(r'static const (\w+) = TextKey\(').allMatches(source).length;
+    final declared = Directory('lib/core/text/keys')
+        .listSync()
+        .whereType<File>()
+        .where((f) => !f.path.endsWith('all_keys.dart'))
+        .map((f) => RegExp(r'static const (\w+) = TextKey\(').allMatches(f.readAsStringSync()).length)
+        .fold<int>(0, (a, b) => a + b);
     final listed = allTextKeys.length;
     expect(listed, declared, reason: 'a TextKey was declared but is missing from `all`, or the other way round');
   });
@@ -98,7 +102,23 @@ void main() {
     ];
     // Spec 018 left "You rated this order N out of 5." without Arabic; it shows in English today and
     // keeps doing so until the owner approves the Arabic (spec 019 Appendix B).
-    expect(untranslated, ['order.rating.given_note']);
+    // The sentences the screens show in English even in Arabic mode today (tool/gen_text_catalogue.py,
+    // ENGLISH_ONLY): catalogued so staff can edit them, with no Arabic until the owner approves one.
+    const englishOnly = {
+      'ID not approved',
+      'Waiting for verification',
+      'We are checking your ID. You can sign in and look around now; buying and selling open as soon as it is approved — usually in under an hour.',
+      'Choose where to take the piece',
+      'Your deadline is counted in working hours at the branch you pick.',
+      'Nobody is in line right now.',
+      'A buy request at',
+      'From buyer',
+    };
+    final bySentence = {for (final e in built['keys'] as List) (e as Map)['default_en'] as String: e['key'] as String};
+    final allowed = {'order.rating.given_note', for (final s in englishOnly) bySentence[s]!};
+    final unexpected = untranslated.toSet().difference(allowed);
+    expect(unexpected, isEmpty, reason: 'these have no Arabic default; add one to assets/i18n/ar.json or ar_extra.dart');
+    expect(untranslated, contains('order.rating.given_note'));
   });
 
   test('the Backend copy is the same file', () {

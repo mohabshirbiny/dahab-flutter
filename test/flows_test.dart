@@ -1406,7 +1406,7 @@ void main() {
     final api = FakeBackend()
       ..wallet = {'available': '30000.0000', 'held': '0.0000', 'total': '30000.0000', 'currency': 'EGP'}
       ..payoutAccounts = [FakeBackend.payoutAccount('pa-a', inUse: true)]
-      ..pauseUntil = '2026-10-05T10:00:00+03:00';
+      ..pauseUntil = '2099-10-05T10:00:00+03:00';
     await _start(tester, backend: api);
     await signIn(tester);
     final lang = tester.element(find.byType(Navigator).first).read<LangController>()..setLang(AppLang.ar);
@@ -1422,13 +1422,37 @@ void main() {
     await _end(tester);
   });
 
-  testWidgets('FAQ expands and collapses', (tester) async {
-    await _start(tester);
+  testWidgets('Help shows the published questions, and each expands and collapses (spec 019)', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final api = FakeBackend()
+      ..appTextsVersion = 1
+      ..appFaq = [
+        {
+          'key': 'help.faq.jeweller',
+          'position': 1,
+          'question': {'en': 'Why would I get more than a jeweller?', 'ar': 'ليه هاخد أكتر من الصايغ؟'},
+          'answer': {'en': 'A jeweller melts the piece, so he pays for the metal only.', 'ar': 'الصايغ بيدوّب القطعة.'},
+        },
+      ];
+    final lang = (await tester.runAsync(LangController.load))!;
+    await tester.pumpWidget((await tester.runAsync(() => testApp(lang, backend: api, liveTexts: true)))!);
+    await tester.pump(const Duration(milliseconds: 300));
     _go(tester, '/help');
     await _settle(tester);
     expect(find.textContaining('A jeweller melts the piece'), findsNothing);
     await _tap(tester, 'Why would I get more than a jeweller?');
     expect(find.textContaining('A jeweller melts the piece'), findsOneWidget);
+    await _end(tester);
+  });
+
+  testWidgets('Help with nothing published says so and offers Contact us', (tester) async {
+    await _start(tester);
+    _go(tester, '/help');
+    await _settle(tester);
+    expect(find.text('Nothing here yet. Contact us if you have a question.'), findsOneWidget);
+    expect(find.text('Contact us'), findsWidgets);
     await _end(tester);
   });
 }
