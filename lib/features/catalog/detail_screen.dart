@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/listing_price.dart';
 import '../../core/text/texts_controller.dart';
 import '../../core/utils/idempotency.dart';
 import '../../models/buy_request.dart';
@@ -359,7 +360,12 @@ class _DetailBody extends StatelessWidget {
                           ),
                         ],
                       ),
-                      if (own != null && own.state == ListingState.reserved) ...[const Gap(10), _SellerQueueCard(listing: own, onChanged: onChanged)],
+                      if (own != null && own.state == ListingState.reserved) ...[
+                        const Gap(10),
+                        _SellerQueueCard(listing: own, onChanged: onChanged),
+                        const Gap(10),
+                        T(context.k(ListingPriceKeys.reservedNote), style: DText.tiny),
+                      ],
                       if (own?.order != null) ...[const Gap(10), _OrderNote(order: own!.order!)],
                       if (own?.staffMessage?.isNotEmpty ?? false) ...[
                         const Gap(10),
@@ -370,7 +376,15 @@ class _DetailBody extends StatelessWidget {
                       const Gap(10),
                       DActsRow(
                         children: [
-                          if (!d.live) MockMark(child: DButton.ghost('Change fee', small: true, onTap: () => context.nav(R.editprice))),
+                          if (own != null && own.canChangePrice)
+                            DButton.ghost(
+                              own.category == 'gold' ? 'Change fee' : context.k(ListingPriceKeys.changePrice),
+                              small: true,
+                              onTap: () async {
+                                await context.navAndWait(R.editprice, query: {'id': own.id});
+                                if (context.mounted) onChanged();
+                              },
+                            ),
                           if (own != null && own.canEdit)
                             DButton.ghost(
                               'Fix and resend',

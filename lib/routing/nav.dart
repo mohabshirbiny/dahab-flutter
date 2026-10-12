@@ -17,6 +17,10 @@ extension DahabNav on BuildContext {
     }
   }
 
+  /// Opens [id] on top of this screen and completes when it is closed, so the caller can
+  /// refresh what the screen may have changed (backend spec 022: the price form).
+  Future<void> navAndWait(String id, {Map<String, String>? query}) => push<void>(Uri(path: '/$id', queryParameters: query).toString());
+
   /// `enterApp(s)` — replace the whole stack.
   void enterApp(String id) => go('/$id');
 

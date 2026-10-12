@@ -53,6 +53,11 @@ abstract interface class ListingsRepository {
 
   /// Takes a live listing off the market. Final.
   Future<Listing> withdraw(String id, {required String idempotencyKey});
+
+  /// Changes the price of a live piece nobody has asked for (backend spec 022):
+  /// `{making_charge_per_g}` for gold, `{asking_price}` for stones. Throws
+  /// `listing_has_requests`, `listing_price_locked`, `listing_not_live`, `platform_stopped`.
+  Future<Listing> changePrice(String id, Map<String, dynamic> body, {required String idempotencyKey});
 }
 
 /// Buy requests (backend spec 011): the buyer's side (`/customer/me/buy-requests*`)
