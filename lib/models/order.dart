@@ -3,6 +3,7 @@
 /// hard-coding each one. A real API would map its order states onto these.
 library;
 
+import 'promo.dart';
 import 'dispute.dart';
 
 enum OrderStage { action, waiting, done }
@@ -385,6 +386,8 @@ class CustomerOrder {
     this.freeRelist = FreeRelistOffer.none,
     this.rating = OrderRatingState.none,
     this.noFee = false,
+    this.advance,
+    this.commission,
   });
 
   final String id;
@@ -465,6 +468,12 @@ class CustomerOrder {
   /// Backend spec 018: this sale was a free relist, so Dahab charged the seller no fee (seller only).
   final bool noFee;
 
+  /// The seller's first-sale advance on this order (backend spec 023); null for a buyer and when none was paid.
+  final OrderAdvance? advance;
+
+  /// What the commission was and what a code or credit took off it (the seller only).
+  final OrderCommission? commission;
+
   bool get isSeller => side == OrderSide.seller;
   bool can(String action) => actions.contains(action);
 
@@ -517,6 +526,8 @@ class CustomerOrder {
       freeRelist: FreeRelistOffer.fromJson(j['free_relist']),
       rating: OrderRatingState.fromJson(j['rating']),
       noFee: j['no_fee'] == true,
+      advance: OrderAdvance.fromJson(j['advance']),
+      commission: OrderCommission.fromJson(j['commission']),
     );
   }
 }

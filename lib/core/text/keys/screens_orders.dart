@@ -26,7 +26,6 @@ abstract final class ScreensOrdersKeys {
   static const buyOneStepBeforeYouBuy = TextKey('buy.one_step_before_you_buy', 'One step before you buy', area: 'Orders', where: 'Buying a piece');
   static const buyOptionalButItHelpsUsLook = TextKey('buy.optional_but_it_helps_us_look', 'Optional, but it helps us look faster.', area: 'Orders', where: 'Buying a piece');
   static const buyOtherBuyersMayBeInThe = TextKey('buy.other_buyers_may_be_in_the', 'Other buyers may be in the queue for this piece, and the price follows the gold rate until you send your request.', area: 'Orders', where: 'Buying a piece');
-  static const buyRemove = TextKey('buy.remove', 'Remove', area: 'Orders', where: 'Buying a piece');
   static const buySaveItForLater = TextKey('buy.save_it_for_later', 'Save it for later', area: 'Orders', where: 'Buying a piece');
   static const buySavedPiecesDontLockAPrice = TextKey('buy.saved_pieces_dont_lock_a_price', 'Saved pieces don\'t lock a price. Send a request when you\'re ready.', area: 'Orders', where: 'Buying a piece');
   static const buySavedYouWillFindItUnder = TextKey('buy.saved_you_will_find_it_under', 'Saved. You will find it under saved pieces.', area: 'Orders', where: 'Buying a piece');
@@ -80,7 +79,6 @@ abstract final class ScreensOrdersKeys {
   static const ordersCollectItMyselfInstead = TextKey('orders.collect_it_myself_instead', 'Collect it myself instead', area: 'Orders', where: 'Order help screens');
   static const ordersCollectItYourself = TextKey('orders.collect_it_yourself', 'Collect it yourself', area: 'Orders', where: 'Order help screens');
   static const ordersCollectingNow = TextKey('orders.collecting_now', 'Collecting now', area: 'Orders', where: 'Order help screens');
-  static const ordersDahabCommission = TextKey('orders.dahab_commission', 'Dahab commission', area: 'Orders', where: 'Order steps');
   static const ordersDahabDoesNotVerifyTheRelationsh = TextKey('orders.dahab_does_not_verify_the_relationsh', 'Dahab does not verify the relationship between you. Choosing this person is your decision, and the piece is handed over once their ID and the code match.', area: 'Orders', where: 'Order help screens');
   static const ordersDahabLookedIntoAProblemOn = TextKey('orders.dahab_looked_into_a_problem_on', 'Dahab looked into a problem on this order. It is moving again, and every deadline got back the time it was on hold.', area: 'Orders', where: 'Order screen');
   static const ordersDahabSetTheNewPrice = TextKey('orders.dahab_set_the_new_price', 'Dahab set the new price', area: 'Orders', where: 'Order screen');
@@ -104,8 +102,6 @@ abstract final class ScreensOrdersKeys {
   static const ordersFixWhatWeAskedForAnd = TextKey('orders.fix_what_we_asked_for_and', 'Fix what we asked for and send it again.', area: 'Orders', where: 'Orders list');
   static const ordersFrontOfTheirId = TextKey('orders.front_of_their_id', 'Front of their ID', area: 'Orders', where: 'Order help screens');
   static const ordersFullNameAsWrittenOnTheir = TextKey('orders.full_name_as_written_on_their', 'Full name, as written on their ID', area: 'Orders', where: 'Order help screens');
-  static const ordersGoldBracelet18k520G = TextKey('orders.gold_bracelet_18k_5_20_g', 'Gold bracelet, 18K, 5.20 g', area: 'Orders', where: 'Order steps');
-  static const ordersGoldValue = TextKey('orders.gold_value', 'Gold value', area: 'Orders', where: 'Order steps');
   static const ordersIAlreadySoldItElsewhere = TextKey('orders.i_already_sold_it_elsewhere', 'I already sold it elsewhere', area: 'Orders', where: 'Order help screens');
   static const ordersIAuthoriseThisPersonToCollect = TextKey('orders.i_authorise_this_person_to_collect', 'I authorise this person to collect the piece on my behalf, and I take responsibility for that choice.', area: 'Orders', where: 'Order help screens');
   static const ordersINeedMoreTime = TextKey('orders.i_need_more_time', 'I need more time', area: 'Orders', where: 'Order screen');
@@ -118,8 +114,6 @@ abstract final class ScreensOrdersKeys {
   static const ordersKaratListed = TextKey('orders.karat_listed', 'Karat listed', area: 'Orders', where: 'Order screen');
   static const ordersKaratMeasured = TextKey('orders.karat_measured', 'Karat measured', area: 'Orders', where: 'Order screen');
   static const ordersListItAgain = TextKey('orders.list_it_again', 'List it again', area: 'Orders', where: 'Order card');
-  static const ordersMakingChargeBack = TextKey('orders.making_charge_back', 'Making charge back', area: 'Orders', where: 'Order steps');
-  static const ordersMakingChargeUpdated = TextKey('orders.making_charge_updated', 'Making charge updated.', area: 'Orders', where: 'Order steps');
   static const ordersMoreTimeCanBeAskedOnly = TextKey('orders.more_time_can_be_asked_only', 'More time can be asked only while you are bringing the piece, before the deadline.', area: 'Orders', where: 'Order help screens');
   static const ordersName = TextKey('orders.name', 'Name', area: 'Orders', where: 'Order screen');
   static const ordersNameSomeoneElseInstead = TextKey('orders.name_someone_else_instead', 'Name someone else instead', area: 'Orders', where: 'Order help screens');
@@ -237,14 +231,18 @@ abstract final class ScreensOrdersKeys {
   static const ordersYouAreBuying = TextKey('orders.you_are_buying', 'You are buying', area: 'Orders', where: 'Order screen');
   static const ordersYouAreSelling = TextKey('orders.you_are_selling', 'You are selling', area: 'Orders', where: 'Order screen');
   static const ordersYouAskedForMoreTimeWe = TextKey('orders.you_asked_for_more_time_we', 'You asked for more time. We will answer soon; the deadline below still applies until then.', area: 'Orders', where: 'Order screen');
-  static const ordersYouCanChangeYourMakingCharge = TextKey('orders.you_can_change_your_making_charge', 'You can change your making charge whenever no one has an open request on the piece. The listing keeps its history, so you don\'t lose the views it has built up.', area: 'Orders', where: 'Order steps');
   static const ordersYouCollectedThePiece = TextKey('orders.you_collected_the_piece', 'You collected the piece.', area: 'Orders', where: 'Order screen');
   static const ordersYouCollectedThePieceTheSale = TextKey('orders.you_collected_the_piece_the_sale', 'You collected the piece. The sale is complete.', area: 'Orders', where: 'Order screen');
   static const ordersYourAccountIsSuspendedSoThis = TextKey('orders.your_account_is_suspended_so_this', 'Your account is suspended, so this piece is hidden from buyers. It returns when the account is reinstated.', area: 'Orders', where: 'Orders list');
   static const ordersYourAskingPrice = TextKey('orders.your_asking_price', 'Your asking price', area: 'Orders', where: 'Orders list');
-  static const ordersYourCode = TextKey('orders.your_code', 'Your code', area: 'Orders', where: 'Order screen');
   static const ordersYourMakingCharge = TextKey('orders.your_making_charge', 'Your making charge', area: 'Orders', where: 'Orders list');
   static const ordersYourPieceIsWaitingForYou = TextKey('orders.your_piece_is_waiting_for_you', 'Your piece is waiting for you at the branch. Collect it with your code, or put it back on the market.', area: 'Orders', where: 'Order screen');
+
+  static const buyRemove = TextKey('buy.remove', 'Remove', area: 'Orders', where: 'Buying a piece');
+  static const ordersGoldBracelet18k520G = TextKey('orders.gold_bracelet_18k_5_20_g', 'Gold bracelet, 18K, 5.20 g', area: 'Orders', where: 'Order steps');
+  static const ordersMakingChargeUpdated = TextKey('orders.making_charge_updated', 'Making charge updated.', area: 'Orders', where: 'Order steps');
+  static const ordersYouCanChangeYourMakingCharge = TextKey('orders.you_can_change_your_making_charge', 'You can change your making charge whenever no one has an open request on the piece. The listing keeps its history, so you don\'t lose the views it has built up.', area: 'Orders', where: 'Order steps');
+  static const ordersYourCode = TextKey('orders.your_code', 'Your code', area: 'Orders', where: 'Order screen');
 
   static const all = <TextKey>[
     buyAddAtLeast,
@@ -267,7 +265,6 @@ abstract final class ScreensOrdersKeys {
     buyOneStepBeforeYouBuy,
     buyOptionalButItHelpsUsLook,
     buyOtherBuyersMayBeInThe,
-    buyRemove,
     buySaveItForLater,
     buySavedPiecesDontLockAPrice,
     buySavedYouWillFindItUnder,
@@ -321,7 +318,6 @@ abstract final class ScreensOrdersKeys {
     ordersCollectItMyselfInstead,
     ordersCollectItYourself,
     ordersCollectingNow,
-    ordersDahabCommission,
     ordersDahabDoesNotVerifyTheRelationsh,
     ordersDahabLookedIntoAProblemOn,
     ordersDahabSetTheNewPrice,
@@ -345,8 +341,6 @@ abstract final class ScreensOrdersKeys {
     ordersFixWhatWeAskedForAnd,
     ordersFrontOfTheirId,
     ordersFullNameAsWrittenOnTheir,
-    ordersGoldBracelet18k520G,
-    ordersGoldValue,
     ordersIAlreadySoldItElsewhere,
     ordersIAuthoriseThisPersonToCollect,
     ordersINeedMoreTime,
@@ -359,8 +353,6 @@ abstract final class ScreensOrdersKeys {
     ordersKaratListed,
     ordersKaratMeasured,
     ordersListItAgain,
-    ordersMakingChargeBack,
-    ordersMakingChargeUpdated,
     ordersMoreTimeCanBeAskedOnly,
     ordersName,
     ordersNameSomeoneElseInstead,
@@ -478,13 +470,16 @@ abstract final class ScreensOrdersKeys {
     ordersYouAreBuying,
     ordersYouAreSelling,
     ordersYouAskedForMoreTimeWe,
-    ordersYouCanChangeYourMakingCharge,
     ordersYouCollectedThePiece,
     ordersYouCollectedThePieceTheSale,
     ordersYourAccountIsSuspendedSoThis,
     ordersYourAskingPrice,
-    ordersYourCode,
     ordersYourMakingCharge,
     ordersYourPieceIsWaitingForYou,
+    buyRemove,
+    ordersGoldBracelet18k520G,
+    ordersMakingChargeUpdated,
+    ordersYouCanChangeYourMakingCharge,
+    ordersYourCode,
   ];
 }

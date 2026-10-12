@@ -6,6 +6,8 @@ import '../text_key.dart';
 /// the English the screen always showed and the Arabic default is the app's dictionary, so
 /// nothing a customer reads changes. Keys are never renamed. Staff change the wording from App text.
 abstract final class ScreensSellingKeys {
+  static const ordersGoldValue = TextKey('orders.gold_value', 'Gold value', area: 'Selling', where: 'Sell: step 1');
+  static const ordersMakingChargeBack = TextKey('orders.making_charge_back', 'Making charge back', area: 'Selling', where: 'Sell: step 1');
   static const selling21kGoldRingWornTwiceSmall = TextKey('selling.21k_gold_ring_worn_twice_small', '21K gold ring, worn twice, small scratch on the inner band. Bought 2021, box included.', area: 'Selling', where: 'Sell: step 2');
   static const sellingAClearPhotoOrAPdf = TextKey('selling.a_clear_photo_or_a_pdf', 'A clear photo or a PDF', area: 'Selling', where: 'Sell: step 1');
   static const sellingAGuessIsOnlyAStarting = TextKey('selling.a_guess_is_only_a_starting', 'A guess is only a starting point. Buyers compare on price, so a piece listed at the wrong weight usually sits unsold or gets adjusted at inspection.', area: 'Selling', where: 'Sell: review and list');
@@ -21,7 +23,6 @@ abstract final class ScreensSellingKeys {
   static const sellingAnIgiCertificateCostsYouNothing = TextKey('selling.an_igi_certificate_costs_you_nothing', 'An IGI certificate costs you nothing. We check it against the stone at handover.', area: 'Selling', where: 'Sell: step 1');
   static const sellingAnotherLab = TextKey('selling.another_lab', 'Another lab', area: 'Selling', where: 'Sell: step 1');
   static const sellingAnyPharmacyOrJewellerWillWeigh = TextKey('selling.any_pharmacy_or_jeweller_will_weigh', 'Any pharmacy or jeweller will weigh it for you in a minute, for nothing.', area: 'Selling', where: 'Sell: review and list');
-  static const sellingApply = TextKey('selling.apply', 'Apply', area: 'Selling', where: 'Sell: step 1');
   static const sellingBeforeItGoesLive = TextKey('selling.before_it_goes_live', 'Before it goes live', area: 'Selling', where: 'Sell: review and list');
   static const sellingBetterThanAGuess = TextKey('selling.better_than_a_guess', 'Better than a guess', area: 'Selling', where: 'Sell: review and list');
   static const sellingCarat = TextKey('selling.carat', 'Carat', area: 'Selling', where: 'Sell: step 1');
@@ -36,17 +37,13 @@ abstract final class ScreensSellingKeys {
   static const sellingDaylightNearAWindowNoFlash = TextKey('selling.daylight_near_a_window_no_flash', 'Daylight near a window, no flash', area: 'Selling', where: 'Sell: step 2');
   static const sellingDescription = TextKey('selling.description', 'Description', area: 'Selling', where: 'Sell: step 2');
   static const sellingDiamond = TextKey('selling.diamond', 'Diamond', area: 'Selling', where: 'Sell: step 1');
-  static const sellingEGDahab50 = TextKey('selling.e_g_dahab50', 'e.g. DAHAB50', area: 'Selling', where: 'Sell: review and list');
-  static const sellingEnterACodeFirst = TextKey('selling.enter_a_code_first', 'Enter a code first.', area: 'Selling', where: 'Sell: review and list');
   static const sellingExcellent = TextKey('selling.excellent', 'Excellent', area: 'Selling', where: 'Sell: step 1');
   static const sellingGold = TextKey('selling.gold', 'Gold', area: 'Selling', where: 'Sell: step 1');
   static const sellingGoldAndDiamond = TextKey('selling.gold_and_diamond', 'Gold and diamond', area: 'Selling', where: 'Sell: step 1');
   static const sellingGood = TextKey('selling.good', 'Good', area: 'Selling', where: 'Sell: step 1');
-  static const sellingHaveAPromoCode = TextKey('selling.have_a_promo_code', 'Have a promo code?', area: 'Selling', where: 'Sell: review and list');
   static const sellingHowToShoot = TextKey('selling.how_to_shoot', 'How to shoot', area: 'Selling', where: 'Sell: step 2');
   static const sellingIfIgiFindsADifferentWeight = TextKey('selling.if_igi_finds_a_different_weight', 'If IGI finds a different weight or karat, we tell the buyer and they decide. You can leave the piece at IGI and go, and we will tell you the result. If the buyer declines, the piece goes back on the market at the corrected weight and Dahab covers the second inspection.', area: 'Selling', where: 'Sell: review and list');
   static const sellingIfTheBuyerDoesNotPay = TextKey('selling.if_the_buyer_does_not_pay', 'If the buyer does not pay within the deadline, your piece comes back to you and you keep 50% of their deposit, as compensation for your time and the trip.', area: 'Selling', where: 'Sell: review and list');
-  static const sellingIfYouHaveAPromoCode = TextKey('selling.if_you_have_a_promo_code', 'If you have a promo code, enter it here.', area: 'Selling', where: 'Sell: step 1');
   static const sellingIgiCertificate = TextKey('selling.igi_certificate', 'IGI certificate', area: 'Selling', where: 'Sell: step 1');
   static const sellingIgiIssuesOneForYouThe = TextKey('selling.igi_issues_one_for_you_the', 'IGI issues one for you. The full cost is taken from your settlement when the piece sells.', area: 'Selling', where: 'Sell: step 1');
   static const sellingIgiWeighsThePieceBeforeSettleme = TextKey('selling.igi_weighs_the_piece_before_settleme', 'IGI weighs the piece before settlement either way. If the real weight differs, the price is adjusted and both sides are told.', area: 'Selling', where: 'Sell: review and list');
@@ -54,6 +51,7 @@ abstract final class ScreensSellingKeys {
   static const sellingInspectionCost = TextKey('selling.inspection_cost', 'Inspection cost', area: 'Selling', where: 'Sell: review and list');
   static const sellingIsWhatReachesYourWalletIf = TextKey('selling.is_what_reaches_your_wallet_if', 'is what reaches your wallet if it sells today', area: 'Selling', where: 'Sell: review and list');
   static const sellingListingFee = TextKey('selling.listing_fee', 'Listing fee', area: 'Selling', where: 'Sell: review and list');
+  static const sellingMinimum = TextKey('selling.minimum', 'minimum', area: 'Selling', where: 'Promo card screen');
   static const sellingMoneyReleasedAfterThat = TextKey('selling.money_released_after_that', 'Money released (after that)', area: 'Selling', where: 'Sell: review and list');
   static const sellingMoneyReleasedFirstGoldSale = TextKey('selling.money_released_first_gold_sale', 'Money released (first gold sale)', area: 'Selling', where: 'Sell: review and list');
   static const sellingNoBranchIsOpenForInspections = TextKey('selling.no_branch_is_open_for_inspections', 'No branch is open for inspections right now. Try again later.', area: 'Selling', where: 'Sell: review and list');
@@ -70,8 +68,6 @@ abstract final class ScreensSellingKeys {
   static const sellingPlainRing = TextKey('selling.plain_ring', 'Plain ring', area: 'Selling', where: 'Sell: review and list');
   static const sellingPricesArePausedRightNow = TextKey('selling.prices_are_paused_right_now', 'Prices are paused right now.', area: 'Selling', where: 'Sell: review and list');
   static const sellingPricesArePausedRightNowYour = TextKey('selling.prices_are_paused_right_now_your', 'Prices are paused right now. Your estimate shows again as soon as they are back.', area: 'Selling', where: 'Sell: step 1');
-  static const sellingPromoCode = TextKey('selling.promo_code', 'Promo code', area: 'Selling', where: 'Sell: step 1');
-  static const sellingPromoSaving = TextKey('selling.promo_saving', 'Promo saving', area: 'Selling', where: 'Sell: step 1');
   static const sellingRecord10To15Seconds = TextKey('selling.record_10_to_15_seconds', 'Record 10 to 15 seconds', area: 'Selling', where: 'Sell: step 2');
   static const sellingRequired = TextKey('selling.required', 'Required', area: 'Selling', where: 'Sell: step 2');
   static const sellingRequiredAdded = TextKey('selling.required_added', 'Required, added', area: 'Selling', where: 'Sell: step 2');
@@ -87,15 +83,11 @@ abstract final class ScreensSellingKeys {
   static const sellingStoneValue = TextKey('selling.stone_value', 'Stone value', area: 'Selling', where: 'Sell: step 1');
   static const sellingSuggestedPriceForThisStone = TextKey('selling.suggested_price_for_this_stone', 'Suggested price for this stone', area: 'Selling', where: 'Sell: step 1');
   static const sellingTapToReplace = TextKey('selling.tap_to_replace', 'Tap to replace', area: 'Selling', where: 'Sell: step 2');
-  static const sellingThatCodeIsNotValid = TextKey('selling.that_code_is_not_valid', 'That code is not valid.', area: 'Selling', where: 'Sell: step 1');
-  static const sellingThatCodeIsNotValidOr = TextKey('selling.that_code_is_not_valid_or', 'That code is not valid or has expired.', area: 'Selling', where: 'Sell: review and list');
   static const sellingTheBuyerPaysTheBalance = TextKey('selling.the_buyer_pays_the_balance', 'The buyer pays the balance', area: 'Selling', where: 'Sell: review and list');
   static const sellingTheMoneyLandsInYourWallet = TextKey('selling.the_money_lands_in_your_wallet', 'The money lands in your wallet', area: 'Selling', where: 'Sell: review and list');
   static const sellingThePieceReachesIgi = TextKey('selling.the_piece_reaches_igi', 'The piece reaches IGI', area: 'Selling', where: 'Sell: review and list');
   static const sellingTheyHaveUpTo10Days = TextKey('selling.they_have_up_to_10_days', 'They have up to 10 days', area: 'Selling', where: 'Sell: review and list');
   static const sellingThisCannotChangeOnceAListing = TextKey('selling.this_cannot_change_once_a_listing', 'This cannot change once a listing exists. To sell something else, start a new listing.', area: 'Selling', where: 'Sell: step 1');
-  static const sellingThisIsYourFirstSaleSo = TextKey('selling.this_is_your_first_sale_so', 'This is your first sale, so you are paid differently.', area: 'Selling', where: 'Sell: review and list');
-  static const sellingTryWelcomeOrEid25 = TextKey('selling.try_welcome_or_eid25', 'Try WELCOME or EID25.', area: 'Selling', where: 'Sell: step 1');
   static const sellingTurnThePieceSlowlySoEvery = TextKey('selling.turn_the_piece_slowly_so_every', 'Turn the piece slowly so every side shows', area: 'Selling', where: 'Sell: step 2');
   static const sellingTypeOfPiece = TextKey('selling.type_of_piece', 'Type of piece', area: 'Selling', where: 'Sell: step 1');
   static const sellingTypicalWeights = TextKey('selling.typical_weights', 'Typical weights', area: 'Selling', where: 'Sell: review and list');
@@ -112,7 +104,6 @@ abstract final class ScreensSellingKeys {
   static const sellingWeCheckYourPhotosAndDescription = TextKey('selling.we_check_your_photos_and_description', 'We check your photos and description before the piece goes live. Usually within a few hours. We may ask for a clearer photo or a fuller description.', area: 'Selling', where: 'Sell: review and list');
   static const sellingWearScratchesOrAMissingStone = TextKey('selling.wear_scratches_or_a_missing_stone', 'Wear, scratches or a missing stone must be visible. Damage you don\'t show cancels the sale at inspection.', area: 'Selling', where: 'Sell: step 2');
   static const sellingWhatAreYouSelling = TextKey('selling.what_are_you_selling', 'What are you selling', area: 'Selling', where: 'Sell: step 1');
-  static const sellingWhenDahabReceivesThePiece = TextKey('selling.when_dahab_receives_the_piece', 'When Dahab receives the piece', area: 'Selling', where: 'Sell: review and list');
   static const sellingWhenTheBuyerPays = TextKey('selling.when_the_buyer_pays', 'When the buyer pays', area: 'Selling', where: 'Sell: review and list');
   static const sellingWhenYourMoneyReachesYou = TextKey('selling.when_your_money_reaches_you', 'When your money reaches you', area: 'Selling', where: 'Sell: review and list');
   static const sellingWhereCanYouBringThePiece = TextKey('selling.where_can_you_bring_the_piece', 'Where can you bring the piece?', area: 'Selling', where: 'Sell: review and list');
@@ -126,7 +117,22 @@ abstract final class ScreensSellingKeys {
   static const sellingYourOriginalInvoiceUsuallyHasTh = TextKey('selling.your_original_invoice_usually_has_th', 'Your original invoice usually has the weight and the karat on it.', area: 'Selling', where: 'Sell: review and list');
   static const sellingYourPriceForTheWholePiece = TextKey('selling.your_price_for_the_whole_piece', 'Your price for the whole piece', area: 'Selling', where: 'Sell: step 1');
 
+  static const sellingApply = TextKey('selling.apply', 'Apply', area: 'Selling', where: 'Sell: step 1');
+  static const sellingEGDahab50 = TextKey('selling.e_g_dahab50', 'e.g. DAHAB50', area: 'Selling', where: 'Sell: review and list');
+  static const sellingEnterACodeFirst = TextKey('selling.enter_a_code_first', 'Enter a code first.', area: 'Selling', where: 'Sell: review and list');
+  static const sellingHaveAPromoCode = TextKey('selling.have_a_promo_code', 'Have a promo code?', area: 'Selling', where: 'Sell: review and list');
+  static const sellingIfYouHaveAPromoCode = TextKey('selling.if_you_have_a_promo_code', 'If you have a promo code, enter it here.', area: 'Selling', where: 'Sell: step 1');
+  static const sellingPromoCode = TextKey('selling.promo_code', 'Promo code', area: 'Selling', where: 'Sell: step 1');
+  static const sellingPromoSaving = TextKey('selling.promo_saving', 'Promo saving', area: 'Selling', where: 'Sell: step 1');
+  static const sellingThatCodeIsNotValid = TextKey('selling.that_code_is_not_valid', 'That code is not valid.', area: 'Selling', where: 'Sell: step 1');
+  static const sellingThatCodeIsNotValidOr = TextKey('selling.that_code_is_not_valid_or', 'That code is not valid or has expired.', area: 'Selling', where: 'Sell: review and list');
+  static const sellingThisIsYourFirstSaleSo = TextKey('selling.this_is_your_first_sale_so', 'This is your first sale, so you are paid differently.', area: 'Selling', where: 'Sell: review and list');
+  static const sellingTryWelcomeOrEid25 = TextKey('selling.try_welcome_or_eid25', 'Try WELCOME or EID25.', area: 'Selling', where: 'Sell: step 1');
+  static const sellingWhenDahabReceivesThePiece = TextKey('selling.when_dahab_receives_the_piece', 'When Dahab receives the piece', area: 'Selling', where: 'Sell: review and list');
+
   static const all = <TextKey>[
+    ordersGoldValue,
+    ordersMakingChargeBack,
     selling21kGoldRingWornTwiceSmall,
     sellingAClearPhotoOrAPdf,
     sellingAGuessIsOnlyAStarting,
@@ -142,7 +148,6 @@ abstract final class ScreensSellingKeys {
     sellingAnIgiCertificateCostsYouNothing,
     sellingAnotherLab,
     sellingAnyPharmacyOrJewellerWillWeigh,
-    sellingApply,
     sellingBeforeItGoesLive,
     sellingBetterThanAGuess,
     sellingCarat,
@@ -157,17 +162,13 @@ abstract final class ScreensSellingKeys {
     sellingDaylightNearAWindowNoFlash,
     sellingDescription,
     sellingDiamond,
-    sellingEGDahab50,
-    sellingEnterACodeFirst,
     sellingExcellent,
     sellingGold,
     sellingGoldAndDiamond,
     sellingGood,
-    sellingHaveAPromoCode,
     sellingHowToShoot,
     sellingIfIgiFindsADifferentWeight,
     sellingIfTheBuyerDoesNotPay,
-    sellingIfYouHaveAPromoCode,
     sellingIgiCertificate,
     sellingIgiIssuesOneForYouThe,
     sellingIgiWeighsThePieceBeforeSettleme,
@@ -175,6 +176,7 @@ abstract final class ScreensSellingKeys {
     sellingInspectionCost,
     sellingIsWhatReachesYourWalletIf,
     sellingListingFee,
+    sellingMinimum,
     sellingMoneyReleasedAfterThat,
     sellingMoneyReleasedFirstGoldSale,
     sellingNoBranchIsOpenForInspections,
@@ -191,8 +193,6 @@ abstract final class ScreensSellingKeys {
     sellingPlainRing,
     sellingPricesArePausedRightNow,
     sellingPricesArePausedRightNowYour,
-    sellingPromoCode,
-    sellingPromoSaving,
     sellingRecord10To15Seconds,
     sellingRequired,
     sellingRequiredAdded,
@@ -208,15 +208,11 @@ abstract final class ScreensSellingKeys {
     sellingStoneValue,
     sellingSuggestedPriceForThisStone,
     sellingTapToReplace,
-    sellingThatCodeIsNotValid,
-    sellingThatCodeIsNotValidOr,
     sellingTheBuyerPaysTheBalance,
     sellingTheMoneyLandsInYourWallet,
     sellingThePieceReachesIgi,
     sellingTheyHaveUpTo10Days,
     sellingThisCannotChangeOnceAListing,
-    sellingThisIsYourFirstSaleSo,
-    sellingTryWelcomeOrEid25,
     sellingTurnThePieceSlowlySoEvery,
     sellingTypeOfPiece,
     sellingTypicalWeights,
@@ -233,7 +229,6 @@ abstract final class ScreensSellingKeys {
     sellingWeCheckYourPhotosAndDescription,
     sellingWearScratchesOrAMissingStone,
     sellingWhatAreYouSelling,
-    sellingWhenDahabReceivesThePiece,
     sellingWhenTheBuyerPays,
     sellingWhenYourMoneyReachesYou,
     sellingWhereCanYouBringThePiece,
@@ -246,5 +241,17 @@ abstract final class ScreensSellingKeys {
     sellingYouWithdrawToYourBank,
     sellingYourOriginalInvoiceUsuallyHasTh,
     sellingYourPriceForTheWholePiece,
+    sellingApply,
+    sellingEGDahab50,
+    sellingEnterACodeFirst,
+    sellingHaveAPromoCode,
+    sellingIfYouHaveAPromoCode,
+    sellingPromoCode,
+    sellingPromoSaving,
+    sellingThatCodeIsNotValid,
+    sellingThatCodeIsNotValidOr,
+    sellingThisIsYourFirstSaleSo,
+    sellingTryWelcomeOrEid25,
+    sellingWhenDahabReceivesThePiece,
   ];
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/promo.dart';
+import '../../core/text/texts_controller.dart';
 import '../../models/reference.dart';
 import '../../services/api/api_client.dart';
 import '../../services/api/market_api.dart';
@@ -10,6 +12,7 @@ import '../../services/sell_draft.dart';
 import '../../widgets/widgets.dart';
 import '../shared/listing_ui.dart';
 import '../shared/piece_card.dart';
+import 'promo_card.dart';
 
 /// `#s-sell3` — review, payout timeline, ownership confirmation.
 class Sell3Screen extends StatefulWidget {
@@ -20,30 +23,10 @@ class Sell3Screen extends StatefulWidget {
 }
 
 class _Sell3ScreenState extends State<Sell3Screen> {
-  final _promo = TextEditingController();
-  String? _promoMsg;
-  bool _promoOk = false;
   bool _own = false;
   String? _error;
   bool _busy = false;
   int _reload = 0;
-
-  @override
-  void dispose() {
-    _promo.dispose();
-    super.dispose();
-  }
-
-  void _applyPromo() {
-    final draft = context.read<SellDraft>();
-    final code = _promo.text.trim();
-    final p = code.isEmpty ? null : context.read<ContentRepository>().promo(code);
-    draft.update((d) => d.promo = p);
-    setState(() {
-      _promoOk = p != null;
-      _promoMsg = p != null ? '${context.tr(p.label)} ${context.tr('applied.')}' : (code.isEmpty ? 'Enter a code first.' : 'That code is not valid or has expired.');
-    });
-  }
 
   /// Uploads the files, creates (or edits) the listing and sends it for
   /// review (backend spec 010). A retry after a failure repeats nothing.
@@ -59,8 +42,9 @@ class _Sell3ScreenState extends State<Sell3Screen> {
     });
     final reference = context.read<ReferenceRepository>();
     final listings = context.read<ListingsRepository>();
+    final promos = context.read<PromoRepository>();
     try {
-      await draft.send(listings, await reference.sellReference());
+      await draft.send(listings, await reference.sellReference(), promos: promos);
       if (!mounted) return;
       draft.reset();
       setState(() => _busy = false);
@@ -91,6 +75,9 @@ class _Sell3ScreenState extends State<Sell3Screen> {
   Widget build(BuildContext context) {
     final d = context.watch<SellDraft>();
     final q = d.quote(context.watch<LiveRates>());
+    // Paid ahead only when the backend says this sale qualifies and can be advanced now (spec 023).
+    final advance = d.promoPreview?.paysAdvance;
+    final paidAhead = advance != null && advance.available;
     return AppPage(
       id: R.sell3,
       child: Column(
@@ -113,7 +100,7 @@ class _Sell3ScreenState extends State<Sell3Screen> {
                       if (q == null)
                         const T('Prices are paused right now.', style: DText.tiny)
                       else ...[
-                        T(money(q.net), style: DText.price),
+                        T(money(q.net + d.promoSaving), style: DText.price),
                         const Gap(3),
                         const T('is what reaches your wallet if it sells today', style: DText.tiny),
                       ],
@@ -125,29 +112,22 @@ class _Sell3ScreenState extends State<Sell3Screen> {
           ),
           const Gap(16),
           const DLabel('Before it goes live'),
-          const DSoft.bordered(
+          DSoft.bordered(
             child: Column(
               children: [
-                DRow('Listing fee', 'None'),
-                DRow('Inspection cost', 'Paid by Dahab'),
-                DRow('Money released (first gold sale)', 'When Dahab receives the piece'),
-                DRow('Money released (after that)', 'When the buyer pays'),
+                const DRow('Listing fee', 'None'),
+                const DRow('Inspection cost', 'Paid by Dahab'),
+                if (paidAhead) ...[
+                  const DRow('Money released (first gold sale)', 'When IGI confirms the piece'),
+                  const DRow('Money released (after that)', 'When the buyer pays'),
+                ] else
+                  DRow(context.k(PromoKeys.releasedLabel), context.t('When the buyer pays')),
               ],
             ),
           ),
           const Gap(14),
-          const DLabel('Have a promo code?'),
-          Row(
-            children: [
-              Expanded(
-                child: DInput(controller: _promo, hint: 'e.g. DAHAB50', uppercase: true),
-              ),
-              const SizedBox(width: 9),
-              DButton('Apply', small: true, onTap: _applyPromo),
-            ],
-          ),
-          const Gap(8),
-          if (_promoMsg != null) ...[T(_promoMsg!, style: TextStyle(fontSize: 12, color: _promoOk ? DColors.ok : DColors.bad)), const Gap(14)] else const Gap(6),
+          const PromoCard(),
+          const Gap(14),
           const DNote(
             icon: 'clock',
             text: 'We check your photos and description before the piece goes live. Usually within a few hours. We may ask for a clearer photo or a fuller description.',
@@ -171,21 +151,16 @@ class _Sell3ScreenState extends State<Sell3Screen> {
             ),
           ),
           const Gap(12),
-          DNote(
-            icon: 'circle-check',
-            kind: NoteKind.ok,
-            spans: [
-              TextSpan(
-                text: context.t('This is your first sale, so you are paid differently.'),
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              TextSpan(
-                text:
-                    ' ${context.t('For gold, the full amount reaches your wallet as soon as Dahab receives your piece, before the buyer pays. From your second sale on, and for anything with diamonds, the money comes the moment the buyer pays the balance.')}',
-              ),
-            ],
-          ),
-          const Gap(12),
+          // Spec 023: said only when the backend confirms it, and honestly when it cannot be paid early.
+          if (advance != null)
+            DNote(
+              icon: paidAhead ? 'circle-check' : 'info-circle',
+              kind: paidAhead ? NoteKind.ok : NoteKind.wait,
+              text: paidAhead
+                  ? context.k(PromoKeys.advanceAvailable, {'cap': moneyOf(advance.capEgp)})
+                  : context.k(advance.reason == 'not_first_gold' ? PromoKeys.advanceNotFirstGold : PromoKeys.advanceUnavailable),
+            ),
+          if (advance != null) const Gap(12),
           const DNote(
             icon: 'shield-check',
             text: 'If the buyer does not pay within the deadline, your piece comes back to you and you keep 50% of their deposit, as compensation for your time and the trip.',

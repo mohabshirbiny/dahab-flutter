@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import '../core/utils/idempotency.dart';
-import '../models/account.dart';
 import '../models/listing.dart';
 import '../models/prices.dart';
+import '../models/promo.dart';
 import '../models/reference.dart';
 import 'api/api_client.dart' show UploadFile;
 import 'live_rates.dart';
@@ -38,7 +38,17 @@ class SellDraft extends ChangeNotifier {
 
   String cert = 'igi';
 
-  PromoCode? promo;
+  /// The code the seller typed and the backend accepted (backend spec 023); sent with the listing.
+  String? promoCode;
+
+  /// What the backend said that code does for this piece, for the estimate and the paid-early note.
+  PromoPreview? promoPreview;
+
+  /// The code already recorded on the listing being fixed, to tell a change from no change.
+  String? _recordedCode;
+
+  /// What the code takes off the commission, added to "You receive" (the backend's figure).
+  double get promoSaving => promoPreview?.saved ?? 0;
 
   /// Files picked on this device, by slot key (`full`, `hall`, `stone`,
   /// `x0`…, `inv`, `video`, `cert`).
@@ -178,7 +188,9 @@ class SellDraft extends ChangeNotifier {
     _stoneTouched = false;
     totalAsk = 90000;
     cert = 'igi';
-    promo = null;
+    promoCode = null;
+    promoPreview = null;
+    _recordedCode = null;
     files.clear();
     tokens.clear();
     kept.clear();
@@ -211,6 +223,9 @@ class SellDraft extends ChangeNotifier {
     if (ask != null && type == SellType.mixed) totalAsk = ask.clamp(0, 300000).toDouble();
     description = l.description ?? '';
     branchIds.addAll(l.branchIds);
+    final recorded = l.promo;
+    _recordedCode = recorded != null && recorded.status == 'active' && recorded.kind != 'referral' ? recorded.code : null;
+    promoCode = _recordedCode;
     _adopt(l);
     if (type != SellType.gold) cert = kept.containsKey('cert') ? 'other' : 'none';
     notifyListeners();
@@ -267,7 +282,7 @@ class SellDraft extends ChangeNotifier {
   /// Uploads what is new, creates or edits the listing, and sends it for
   /// review. Safe to call again after a failure: what already succeeded is
   /// not repeated, and each write reuses its idempotency key.
-  Future<Listing> send(ListingsRepository repo, SellReference ref) async {
+  Future<Listing> send(ListingsRepository repo, SellReference ref, {PromoRepository? promos}) async {
     for (final key in files.keys.toList()) {
       if (tokens.containsKey(key) || !_inUse(key)) continue;
       tokens[key] = await repo.uploadMedia(kindOf(key).purpose, files[key]!);
@@ -285,6 +300,7 @@ class SellDraft extends ChangeNotifier {
         if (certOn && tokens.containsKey('cert')) 'stone_certificate_token': tokens['cert'],
         'ownership_declaration_accepted': true,
         'ownership_legal_doc_id': ref.declaration.id,
+        if (promoCode != null) 'promo_code': promoCode,
       };
       l = await repo.create(body, idempotencyKey: _key('create', jsonEncode(body)));
     } else {
@@ -323,6 +339,13 @@ class SellDraft extends ChangeNotifier {
         final order = {'photo_order': wanted};
         l = await repo.update(id, order, idempotencyKey: _key('order', jsonEncode(order)));
       }
+    }
+    // A listing being fixed: a code added, replaced or removed is recorded on it before it is sent.
+    if (promos != null && editing != null && promoCode != _recordedCode) {
+      l = promoCode == null
+          ? await promos.remove(l.id, idempotencyKey: _key('promo-remove', l.id))
+          : await promos.apply(l.id, promoCode!, idempotencyKey: _key('promo-apply', '${l.id}|$promoCode'));
+      _recordedCode = promoCode;
     }
     _adopt(l);
 

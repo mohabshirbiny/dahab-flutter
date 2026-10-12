@@ -6,6 +6,9 @@ import '../models/listing.dart';
 import '../models/order.dart';
 import '../models/payout.dart';
 import '../models/piece.dart';
+import '../models/prices.dart' show QuoteParams;
+import '../models/promo.dart';
+import '../models/referral.dart';
 import '../models/reference.dart';
 import '../models/wallet.dart';
 import 'api/api_client.dart' show UploadFile;
@@ -265,6 +268,25 @@ abstract interface class PayoutRepository {
   Future<LinkConfirmation> confirmLink(String token);
 }
 
-abstract interface class ContentRepository {
-  PromoCode? promo(String code);
+/// Codes on the sell form (backend spec 023, `/customer/me/commission-preview` and
+/// `/customer/me/listings/{id}/promo`). Asking what a code does records nothing.
+abstract interface class PromoRepository {
+  /// What [code] (or the seller's credit pool, when null) would do to a sale of this piece. Throws
+  /// `promo_code_invalid` with `details.reason` when the code cannot be used.
+  Future<PromoPreview> preview(QuoteParams piece, {String? code});
+
+  /// Records [code] on one of the seller's listings (replacing an earlier one); throws
+  /// `promo_code_invalid` and `listing_promo_locked`.
+  Future<Listing> apply(String listingId, String code, {required String idempotencyKey});
+
+  Future<Listing> remove(String listingId, {required String idempotencyKey});
+}
+
+/// *Invite a friend* and the customer's commission credits (backend spec 023 Story 4).
+abstract interface class ReferralRepository {
+  /// Any signed-in customer. `enabled` is false while the programme is closed.
+  Future<ReferralSummary> summary();
+
+  /// Counts one Share or Copy tap; returns the number counted.
+  Future<int> share({required String idempotencyKey});
 }

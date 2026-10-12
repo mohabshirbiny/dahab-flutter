@@ -11,15 +11,6 @@ const mockProfile = UserProfile(
   inviteCode: 'MONA4417',
 );
 
-/// Promo codes the mock accepts (both code sets that appear in the prototype).
-const mockPromoCodes = <PromoCode>[
-  PromoCode(code: 'WELCOME', off: 0.50, label: 'Welcome, 50% off commission', firstSaleOnly: true),
-  PromoCode(code: 'EID25', off: 0.25, label: 'Eid campaign, 25% off commission'),
-  PromoCode(code: 'DAHAB50', off: 0.5, label: '50% off the commission'),
-  PromoCode(code: 'FIRSTSALE', off: 1, label: 'No commission on your first sale'),
-  PromoCode(code: 'RAMADAN25', off: 0.25, label: '25% off the commission'),
-];
-
 /// Countries offered in the phone-number pickers.
 const mockCountryCodes = <(String, String)>[
   ('+20', '🇪🇬 +20'),

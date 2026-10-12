@@ -85,7 +85,6 @@ SellQuote sellQuoteFromJson(Map<String, dynamic> j) {
     stone: category == 'diamond' ? asking : 0,
     ask: category == 'gold_with_diamond' ? asking : 0,
     commission: (_num(j['commission']) + _num(j['vat'])).toDouble(),
-    promoSaving: 0,
     net: _num(j['payout']).toDouble(),
     jewellerPays: _num(j['gold_value']).toDouble(),
     commissionNote: minimum ? '(minimum)' : '(${rate.round()}% of ${gold ? 'the making charge' : 'the value you add'})',

@@ -21,7 +21,6 @@ abstract final class ScreensAccountKeys {
   static const accountAskForANewOneFrom = TextKey('account.ask_for_a_new_one_from', 'Ask for a new one from Your details in the app.', area: 'Account', where: 'Change phone or email');
   static const accountAtLeast8Characters = TextKey('account.at_least_8_characters', 'At least 8 characters', area: 'Account', where: 'Settings and legal screens');
   static const accountAuthentication = TextKey('account.authentication', 'Authentication', area: 'Account', where: 'Settings and legal screens');
-  static const accountBothOfYouPayLessCommission = TextKey('account.both_of_you_pay_less_commission', 'Both of you pay less commission', area: 'Account', where: 'Account');
   static const accountChangeMyNumber = TextKey('account.change_my_number', 'Change my number', area: 'Account', where: 'Change phone or email');
   static const accountChangePassword = TextKey('account.change_password', 'Change password', area: 'Account', where: 'Settings and legal screens');
   static const accountChangeYourEmailTo = TextKey('account.change_your_email_to', 'Change your email to', area: 'Account', where: 'Change phone or email');
@@ -30,7 +29,6 @@ abstract final class ScreensAccountKeys {
   static const accountChooseAReasonBeforeClosingYour = TextKey('account.choose_a_reason_before_closing_your', 'Choose a reason before closing your account.', area: 'Account', where: 'Settings and legal screens');
   static const accountCloseMyAccount = TextKey('account.close_my_account', 'Close my account', area: 'Account', where: 'Account');
   static const accountCloseYourAccount = TextKey('account.close_your_account', 'Close your account', area: 'Account', where: 'Settings and legal screens');
-  static const accountCode = TextKey('account.code', 'Code', area: 'Account', where: 'Change phone or email');
   static const accountConfirmThisEmail = TextKey('account.confirm_this_email', 'Confirm this email', area: 'Account', where: 'Change phone or email');
   static const accountContactUs = TextKey('account.contact_us', 'Contact us', area: 'Account', where: 'Account');
   static const accountCurrent = TextKey('account.current', 'Current', area: 'Account', where: 'Settings and legal screens');
@@ -77,7 +75,6 @@ abstract final class ScreensAccountKeys {
   static const accountMyListings = TextKey('account.my_listings', 'My listings', area: 'Account', where: 'Account');
   static const accountNationalId = TextKey('account.national_id', 'National ID', area: 'Account', where: 'Account');
   static const accountNewEmailAddress = TextKey('account.new_email_address', 'New email address', area: 'Account', where: 'Change phone or email');
-  static const accountNewPassword = TextKey('account.new_password', 'New password', area: 'Account', where: 'Settings and legal screens');
   static const accountNewPhoneNumber = TextKey('account.new_phone_number', 'New phone number', area: 'Account', where: 'Change phone or email');
   static const accountNoDeviceIsSignedIn = TextKey('account.no_device_is_signed_in', 'No device is signed in.', area: 'Account', where: 'Settings and legal screens');
   static const accountNoNotificationsYet = TextKey('account.no_notifications_yet', 'No notifications yet', area: 'Account', where: 'Settings and legal screens');
@@ -103,7 +100,6 @@ abstract final class ScreensAccountKeys {
   static const accountSavedPieces = TextKey('account.saved_pieces', 'Saved pieces', area: 'Account', where: 'Account');
   static const accountSecurityAndMoney = TextKey('account.security_and_money', 'Security and money', area: 'Account', where: 'Settings and legal screens');
   static const accountSeeWhatsOpen = TextKey('account.see_whats_open', 'See what\'s open', area: 'Account', where: 'Settings and legal screens');
-  static const accountSendTheCode = TextKey('account.send_the_code', 'Send the code', area: 'Account', where: 'Change phone or email');
   static const accountSendTheLink = TextKey('account.send_the_link', 'Send the link', area: 'Account', where: 'Change phone or email');
   static const accountSettings = TextKey('account.settings', 'Settings', area: 'Account', where: 'Account');
   static const accountSignInToSeeYourAccount = TextKey('account.sign_in_to_see_your_account', 'Sign in to see your account', area: 'Account', where: 'Account');
@@ -156,6 +152,12 @@ abstract final class ScreensAccountKeys {
   static const accountYourNumberIsChanged = TextKey('account.your_number_is_changed', 'Your number is changed', area: 'Account', where: 'Change phone or email');
   static const accountYourOrdersYourWalletAndYour = TextKey('account.your_orders_your_wallet_and_your', 'Your orders, your wallet and your listings are here once you sign in.', area: 'Account', where: 'Account');
   static const accountYourPasswordNeedsAtLeast8 = TextKey('account.your_password_needs_at_least_8', 'Your password needs at least 8 characters.', area: 'Account', where: 'Settings and legal screens');
+  static const ordersDahabCommission = TextKey('orders.dahab_commission', 'Dahab commission', area: 'Account', where: 'Settings and legal screens');
+
+  static const accountBothOfYouPayLessCommission = TextKey('account.both_of_you_pay_less_commission', 'Both of you pay less commission', area: 'Account', where: 'Account');
+  static const accountCode = TextKey('account.code', 'Code', area: 'Account', where: 'Change phone or email');
+  static const accountNewPassword = TextKey('account.new_password', 'New password', area: 'Account', where: 'Settings and legal screens');
+  static const accountSendTheCode = TextKey('account.send_the_code', 'Send the code', area: 'Account', where: 'Change phone or email');
 
   static const all = <TextKey>[
     account16000ChatWhatsappOrEmail,
@@ -173,7 +175,6 @@ abstract final class ScreensAccountKeys {
     accountAskForANewOneFrom,
     accountAtLeast8Characters,
     accountAuthentication,
-    accountBothOfYouPayLessCommission,
     accountChangeMyNumber,
     accountChangePassword,
     accountChangeYourEmailTo,
@@ -182,7 +183,6 @@ abstract final class ScreensAccountKeys {
     accountChooseAReasonBeforeClosingYour,
     accountCloseMyAccount,
     accountCloseYourAccount,
-    accountCode,
     accountConfirmThisEmail,
     accountContactUs,
     accountCurrent,
@@ -229,7 +229,6 @@ abstract final class ScreensAccountKeys {
     accountMyListings,
     accountNationalId,
     accountNewEmailAddress,
-    accountNewPassword,
     accountNewPhoneNumber,
     accountNoDeviceIsSignedIn,
     accountNoNotificationsYet,
@@ -255,7 +254,6 @@ abstract final class ScreensAccountKeys {
     accountSavedPieces,
     accountSecurityAndMoney,
     accountSeeWhatsOpen,
-    accountSendTheCode,
     accountSendTheLink,
     accountSettings,
     accountSignInToSeeYourAccount,
@@ -308,5 +306,10 @@ abstract final class ScreensAccountKeys {
     accountYourNumberIsChanged,
     accountYourOrdersYourWalletAndYour,
     accountYourPasswordNeedsAtLeast8,
+    ordersDahabCommission,
+    accountBothOfYouPayLessCommission,
+    accountCode,
+    accountNewPassword,
+    accountSendTheCode,
   ];
 }

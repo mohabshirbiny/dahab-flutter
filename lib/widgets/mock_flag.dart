@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme/tokens.dart';
-import '../routing/routes.dart';
 
 /// Red markers on everything that still runs on mock data, so nobody mistakes it
 /// for the real thing. On by default; a production build turns them off with
@@ -10,9 +9,7 @@ import '../routing/routes.dart';
 const bool kShowMockFlags = bool.fromEnvironment('SHOW_MOCK_FLAGS', defaultValue: true);
 
 /// Screens that are entirely mock (no backend behind them yet).
-const Set<String> mockScreens = {
-  R.invite, // referral rules are not defined (backend spec 019 OD-2)
-};
+const Set<String> mockScreens = <String>{};
 
 /// The small red "MOCK" flag.
 class MockFlag extends StatelessWidget {

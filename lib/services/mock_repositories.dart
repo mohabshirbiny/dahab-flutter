@@ -263,15 +263,3 @@ class MockAccountRepository implements AccountRepository {
   @override
   Future<SupportContacts> supportContacts() => _live();
 }
-
-class MockContentRepository implements ContentRepository {
-  @override
-
-  @override
-  PromoCode? promo(String code) {
-    for (final p in mockPromoCodes) {
-      if (p.code == code.trim().toUpperCase()) return p;
-    }
-    return null;
-  }
-}

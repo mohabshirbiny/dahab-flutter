@@ -11,7 +11,7 @@ import 'test_app.dart';
 void main() {
   setUpAll(loadAppFonts);
 
-  testWidgets('a mock screen shows the red strip, a live one does not', (tester) async {
+  testWidgets('no screen is wholly mock; live screens carry no red strip', (tester) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -26,10 +26,10 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(find.byType(MockScreenBanner), findsNothing);
 
+    // Backend spec 023: Invite a friend is live; no screen is wholly mock any more.
     go('/invite');
     await tester.pump(const Duration(seconds: 1));
-    expect(find.byType(MockScreenBanner), findsOneWidget);
-    expect(find.text('MOCK — this screen is not connected to the backend yet'), findsOneWidget);
+    expect(find.byType(MockScreenBanner), findsNothing);
 
     // Backend spec 017: saved pieces are live.
     go('/saved');

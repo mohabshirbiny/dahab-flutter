@@ -13,6 +13,7 @@ import 'services/api/market_api.dart';
 import 'services/api/orders_api.dart';
 import 'services/api/payout_api.dart';
 import 'services/api/prices_api.dart';
+import 'services/api/promo_api.dart';
 import 'services/api/token_store.dart';
 import 'services/api/wallet_api.dart';
 import 'services/app_session.dart';
@@ -21,7 +22,6 @@ import 'services/auth/auth_controller.dart';
 import 'services/inbox_controller.dart';
 import 'services/live_rates.dart';
 import 'services/media_picker.dart';
-import 'services/mock_repositories.dart';
 import 'services/payout_controller.dart';
 import 'services/repositories.dart';
 import 'services/sell_draft.dart';
@@ -70,7 +70,8 @@ Future<void> main() async {
         // Backend spec 013: payout accounts and withdrawals are live.
         Provider<PayoutRepository>.value(value: payouts),
         Provider<AccountRepository>.value(value: accountRepo),
-        Provider<ContentRepository>.value(value: MockContentRepository()),
+        Provider<PromoRepository>.value(value: ApiPromoRepository(client)),
+        Provider<ReferralRepository>.value(value: ApiReferralRepository(client, tokens)),
         ChangeNotifierProvider(create: (_) => AppSession()),
         // Backend spec 015: today's prices and the seller's quote are live.
         ChangeNotifierProvider(create: (_) => LiveRates(api: PricesApi(client))),

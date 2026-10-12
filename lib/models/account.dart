@@ -193,14 +193,3 @@ class FaqItem {
   final String question;
   final String answer;
 }
-
-class PromoCode {
-  const PromoCode({required this.code, required this.off, required this.label, this.firstSaleOnly = false});
-
-  final String code;
-
-  /// Fraction of the commission waived (0.5 = 50% off).
-  final double off;
-  final String label;
-  final bool firstSaleOnly;
-}

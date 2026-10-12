@@ -90,7 +90,6 @@ abstract final class ScreensWalletKeys {
   static const walletConfirmedFromYourEmail = TextKey('wallet.confirmed_from_your_email', 'Confirmed from your email', area: 'Wallet', where: 'Wallet screens');
   static const walletConfirmedGoBackToTheWithdraw = TextKey('wallet.confirmed_go_back_to_the_withdraw', 'Confirmed. Go back to the Withdraw screen in the app and tap Withdraw.', area: 'Wallet', where: 'Confirm a withdrawal');
   static const walletConfirmedYouCanWithdrawNow = TextKey('wallet.confirmed_you_can_withdraw_now', 'Confirmed. You can withdraw now.', area: 'Wallet', where: 'Wallet screens');
-  static const walletCopied = TextKey('wallet.copied', 'Copied.', area: 'Wallet', where: 'Wallet screens');
   static const walletCorrections = TextKey('wallet.corrections', 'Corrections', area: 'Wallet', where: 'Wallet screens');
   static const walletDahabCharges = TextKey('wallet.dahab_charges', 'Dahab charges', area: 'Wallet', where: 'Wallet screens');
   static const walletDailyLimit = TextKey('wallet.daily_limit', 'Daily limit', area: 'Wallet', where: 'Wallet screens');
@@ -177,6 +176,8 @@ abstract final class ScreensWalletKeys {
   static const walletYourTopUps = TextKey('wallet.your_top_ups', 'Your top-ups', area: 'Wallet', where: 'Wallet screens');
   static const walletYourWithdrawals = TextKey('wallet.your_withdrawals', 'Your withdrawals', area: 'Wallet', where: 'Wallet screens');
 
+  static const walletCopied = TextKey('wallet.copied', 'Copied.', area: 'Wallet', where: 'Wallet screens');
+
   static const all = <TextKey>[
     bankAPersonChecksTheNameAgainst,
     bankAccountHolderName,
@@ -262,7 +263,6 @@ abstract final class ScreensWalletKeys {
     walletConfirmedFromYourEmail,
     walletConfirmedGoBackToTheWithdraw,
     walletConfirmedYouCanWithdrawNow,
-    walletCopied,
     walletCorrections,
     walletDahabCharges,
     walletDailyLimit,
@@ -348,5 +348,6 @@ abstract final class ScreensWalletKeys {
     walletYourReceiptExpiredBeforeItWas,
     walletYourTopUps,
     walletYourWithdrawals,
+    walletCopied,
   ];
 }

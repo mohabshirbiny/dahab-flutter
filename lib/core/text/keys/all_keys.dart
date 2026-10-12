@@ -5,6 +5,8 @@ import 'auth_reset.dart';
 import 'listing_price.dart';
 import 'orders_after_collection.dart';
 import 'patterns.dart';
+import 'promo.dart';
+import 'referral.dart';
 import 'screens_account.dart';
 import 'screens_home.dart';
 import 'screens_orders.dart';
@@ -24,6 +26,8 @@ const List<TextKey> allTextKeys = [
   ...AccountHelpKeys.all,
   ...AuthResetKeys.all,
   ...ListingPriceKeys.all,
+  ...PromoKeys.all,
+  ...ReferralKeys.all,
   ...ScreensHomeKeys.all,
   ...ScreensOrdersKeys.all,
   ...ScreensSellingKeys.all,

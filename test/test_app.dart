@@ -13,6 +13,7 @@ import 'package:dahab_app/services/api/listings_api.dart';
 import 'package:dahab_app/services/api/market_api.dart';
 import 'package:dahab_app/services/api/payout_api.dart';
 import 'package:dahab_app/services/api/prices_api.dart';
+import 'package:dahab_app/services/api/promo_api.dart';
 import 'package:dahab_app/services/api/token_store.dart';
 import 'package:dahab_app/services/api/wallet_api.dart';
 import 'package:dahab_app/services/app_session.dart';
@@ -20,7 +21,6 @@ import 'package:dahab_app/services/auth/auth_api.dart';
 import 'package:dahab_app/services/auth/auth_controller.dart';
 import 'package:dahab_app/services/live_rates.dart';
 import 'package:dahab_app/services/media_picker.dart';
-import 'package:dahab_app/services/mock_repositories.dart';
 import 'package:dahab_app/services/payout_controller.dart';
 import 'package:dahab_app/services/repositories.dart';
 import 'package:dahab_app/services/sell_draft.dart';
@@ -70,6 +70,7 @@ class FakeBackend {
 
   /// Saved listing ids; a saved id that is not on the market shows as gone.
   final saved = <String>[];
+  var referralShares = 0;
 
   /// What stops closing (`{code, count}`); empty = the account may close.
   List<Map<String, dynamic>> closeBlockers = [];
@@ -698,6 +699,48 @@ class FakeBackend {
         for (final n in inbox) n['id'] == id ? {...n, 'read_at': n['read_at'] ?? '2026-10-06T10:00:00+03:00'} : n,
       ];
       return json(200, {'data': inbox.firstWhere((n) => n['id'] == id)});
+    }
+    // Backend spec 023: Invite a friend (switch on in the fake) and the sell form's code preview.
+    if (path == '/customer/me/referral' && req.method == 'GET') {
+      return json(200, {
+        'data': {
+          'enabled': true,
+          'code': 'REF-TEST01',
+          'invites_sent': referralShares,
+          'joined': 1,
+          'sold': 0,
+          'earned_egp': '0.0000',
+          'used_egp': '0.0000',
+          'available_egp': '0.0000',
+          'available_until': null,
+          'terms': {
+            'friend_percent_off': '50.0000',
+            'friend_sales_covered': 1,
+            'inviter_reward_egp': '100.0000',
+            'credit_expiry_days': 90,
+            'min_friend_sale_egp': '1000.0000',
+          },
+        },
+      });
+    }
+    if (path == '/customer/me/referral/shares' && req.method == 'POST') {
+      referralShares += 1;
+      return json(200, {
+        'data': {'invites_sent': referralShares},
+      });
+    }
+    if (path == '/customer/me/commission-preview' && req.method == 'POST') {
+      final code = body['code'];
+      if (code == 'BADCODE') return json(422, {'code': 'promo_code_invalid', 'message': 'That code is not valid.'});
+      return json(200, {
+        'data': {
+          'code': code == null ? null : {'value': '$code', 'kind': 'first_sale', 'commission': {'mode': 'percent', 'percent': '50.0000'}, 'first_sale_only': true},
+          'commission': {'ordinary_egp': '200.0000', 'charged_egp': '100.0000', 'saved_egp': '100.0000', 'minimum_egp': '50.0000', 'floor_applied': false},
+          'you_receive': {'without_promo_egp': '4000.0000', 'with_promo_egp': '4100.0000'},
+          'waiver': {'kind': 'none'},
+          'pays_advance': {'available': false, 'cap_egp': '0.0000', 'reason': 'switch_off'},
+        },
+      });
     }
     if (path == '/customer/me/saved-pieces' && req.method == 'POST') {
       final id = '${body['listing_id']}';
@@ -1661,7 +1704,8 @@ Future<Widget> testApp(LangController lang, {FakeBackend? backend, bool liveText
       Provider<WalletRepository>.value(value: ApiWalletRepository(client, tokens)),
       Provider<PayoutRepository>.value(value: payouts),
       Provider<AccountRepository>.value(value: accountRepo),
-      Provider<ContentRepository>.value(value: MockContentRepository()),
+      Provider<PromoRepository>.value(value: ApiPromoRepository(client)),
+      Provider<ReferralRepository>.value(value: ApiReferralRepository(client, tokens)),
       ChangeNotifierProvider(create: (_) => AppSession()),
       ChangeNotifierProvider(create: (_) => LiveRates(api: PricesApi(client))),
       ChangeNotifierProvider(create: (_) => SellDraft()),
