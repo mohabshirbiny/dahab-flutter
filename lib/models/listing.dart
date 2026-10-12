@@ -87,6 +87,7 @@ class Listing {
     required this.canEdit,
     required this.canSubmit,
     required this.canWithdraw,
+    this.canChangePrice = false,
     this.queueCount = 0,
     this.order,
   });
@@ -132,6 +133,9 @@ class Listing {
   final bool canSubmit;
   final bool canWithdraw;
 
+  /// Spec 022: live and the price is not fixed; the Backend decides (`can_change_price`).
+  final bool canChangePrice;
+
   List<ListingMedia> get photos => media.where((m) => m.kind == 'photo').toList();
 
   ListingMedia? mediaOf(String kind) {
@@ -168,6 +172,7 @@ class Listing {
       canEdit: j['can_edit'] == true,
       canSubmit: j['can_submit'] == true,
       canWithdraw: j['can_withdraw'] == true,
+      canChangePrice: j['can_change_price'] == true,
       queueCount: (j['queue_count'] as num?)?.toInt() ?? 0,
       order: OrderSummary.fromJson(j['order']),
     );

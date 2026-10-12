@@ -314,6 +314,9 @@ class FakeBackend {
   /// The signed-in seller's listings, newest first (contract "Listing (seller view)").
   List<Map<String, dynamic>> listings = [];
 
+  /// Backend spec 022: when set, `POST /customer/me/listings/{id}/price` answers this 409 code.
+  String? priceRefusal;
+
   /// The `purpose` of every file sent to `POST /customer/me/uploads`.
   final uploads = <String>[];
 
@@ -519,10 +522,11 @@ class FakeBackend {
       'can_edit': editable,
       'can_submit': editable,
       'can_withdraw': state == 'live',
+      'can_change_price': state == 'live',
     };
   }
 
-  Map<String, dynamic> _moved(Map<String, dynamic> l, String state) => {...l, 'state': state, 'can_edit': false, 'can_submit': false, 'can_withdraw': state == 'live'};
+  Map<String, dynamic> _moved(Map<String, dynamic> l, String state) => {...l, 'state': state, 'can_edit': false, 'can_submit': false, 'can_withdraw': state == 'live', 'can_change_price': false};
 
   /// A 1×1 PNG, served for every media file.
   static final png = base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
@@ -1428,7 +1432,7 @@ class FakeBackend {
       listings.insert(0, created);
       return json(201, {'data': created});
     }
-    final mine = RegExp(r'^/customer/me/listings/([^/]+)(?:/(submit|withdraw))?$').firstMatch(path);
+    final mine = RegExp(r'^/customer/me/listings/([^/]+)(?:/(submit|withdraw|price))?$').firstMatch(path);
     if (mine != null) {
       final i = listings.indexWhere((l) => l['id'] == mine.group(1));
       if (i < 0) return error(404, 'not_found');
@@ -1443,6 +1447,28 @@ class FakeBackend {
         case 'withdraw':
           if (l['state'] != 'live') return error(409, 'illegal_listing_transition');
           listings[i] = _moved(l, 'withdrawn');
+        case 'price':
+          // Spec 022: the live piece's one figure; the answer carries the moved prices.
+          if (priceRefusal != null) return error(409, priceRefusal!);
+          if (l['state'] == 'reserved') return error(409, 'listing_has_requests');
+          if (l['state'] != 'live') return error(409, 'listing_not_live');
+          final next = double.parse('${body['making_charge_per_g']}');
+          if (next == double.parse('${l['making_charge_per_g']}')) {
+            return json(422, {
+              'message': 'The given data was invalid.',
+              'code': 'validation_failed',
+              'errors': {
+                'making_charge_per_g': ['This is already the price.'],
+              },
+            });
+          }
+          final shift = (next - 300) * 8;
+          listings[i] = {
+            ...l,
+            'making_charge_per_g': next.toStringAsFixed(4),
+            'current_price': (58200 + shift).toStringAsFixed(4),
+            'you_would_receive': (57744 + shift).toStringAsFixed(4),
+          };
         default:
           if (l['can_edit'] != true) return error(409, 'listing_not_editable');
           listings[i] = {...l, if (body.containsKey('description')) 'description': body['description']};

@@ -55,7 +55,7 @@ final Map<String, Widget Function(GoRouterState s)> _screens = {
   R.weight: (_) => const WeightGuideScreen(),
   R.orders: (_) => const OrdersScreen(),
   R.listings: (_) => const ListingsScreen(),
-  R.editprice: (_) => const EditPriceScreen(),
+  R.editprice: (s) => EditPriceScreen(listingId: s.uri.queryParameters['id'] ?? ''),
   R.extend: (s) => ExtendScreen(orderId: s.uri.queryParameters['id'] ?? ''),
   R.dispute: (s) => DisputeScreen(orderId: s.uri.queryParameters['id'] ?? ''),
   R.inspection: _liveOrder,

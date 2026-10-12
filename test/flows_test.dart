@@ -1061,6 +1061,83 @@ void main() {
     await _end(tester);
   });
 
+  // Backend spec 022: the seller changes the figure of a live piece; the Backend decides when.
+  testWidgets('the seller changes the making charge of a live piece and sees the new price', (tester) async {
+    const id = '0199b000-0000-7000-8000-0000000000c1';
+    final api = FakeBackend()..listings = [FakeBackend.listing(id, 'live')];
+    await _start(tester, backend: api);
+    await signIn(tester);
+    _go(tester, '/detail?id=$id&view=owner');
+    await _settle(tester);
+    expect(find.text('58,200 EGP'), findsOneWidget);
+
+    await _tap(tester, 'Change fee');
+    expect(find.text('Making charge now'), findsOneWidget);
+    expect(find.text('This is already the price.'), findsNothing);
+
+    await tester.enterText(find.byType(TextField), '250');
+    await tester.pump();
+    await _tap(tester, 'Save');
+
+    final change = api.requests.singleWhere((r) => r.url.path.endsWith('/price'));
+    expect(change.method, 'POST');
+    expect(jsonDecode(change.body), {'making_charge_per_g': '250'});
+    expect(change.headers['Idempotency-Key'], isNotEmpty);
+    expect(api.listings.single['making_charge_per_g'], '250.0000');
+
+    // Back on the piece page, loaded again with the new price.
+    await _settle(tester);
+    expect(find.text('57,800 EGP'), findsOneWidget);
+    await _end(tester);
+  });
+
+  testWidgets('the price form says why the backend refused, and the same figure is not sent as new', (tester) async {
+    const id = '0199b000-0000-7000-8000-0000000000c2';
+    final api = FakeBackend()..listings = [FakeBackend.listing(id, 'live')];
+    await _start(tester, backend: api);
+    await signIn(tester);
+    _go(tester, '/editprice?id=$id');
+    await _settle(tester);
+
+    await tester.enterText(find.byType(TextField), '300');
+    await tester.pump();
+    await _tap(tester, 'Save');
+    expect(find.text('This is already the price.'), findsOneWidget);
+
+    api.priceRefusal = 'listing_has_requests';
+    await tester.enterText(find.byType(TextField), '280');
+    await tester.pump();
+    await _tap(tester, 'Save');
+    expect(find.text("Someone has already asked to buy this piece, so its price can't change."), findsOneWidget);
+    await _end(tester);
+  });
+
+  testWidgets('a piece that is not open for a price change shows no button, and a reserved one says why', (tester) async {
+    const live = '0199b000-0000-7000-8000-0000000000c3';
+    const reserved = '0199b000-0000-7000-8000-0000000000c4';
+    final api = FakeBackend()
+      ..listings = [
+        {...FakeBackend.listing(live, 'live'), 'can_change_price': false},
+        {...FakeBackend.listing(reserved, 'reserved'), 'queue_count': 1, 'order': null},
+      ]
+      ..queues = {reserved: []};
+    await _start(tester, backend: api);
+    await signIn(tester);
+
+    // Approved for market makers: the backend says no, the app shows nothing to press.
+    _go(tester, '/detail?id=$live&view=owner');
+    await _settle(tester);
+    expect(find.text('Change fee'), findsNothing);
+
+    _go(tester, '/listings');
+    await _settle(tester);
+    _go(tester, '/detail?id=$reserved&view=owner');
+    await _settle(tester);
+    expect(find.text('Change fee'), findsNothing);
+    expect(find.text("Someone is in line for this piece, so its price can't change. You can change it again if the line empties."), findsOneWidget);
+    await _end(tester);
+  });
+
   testWidgets('the seller accepts the first in line at a branch they named', (tester) async {
     const id = '0199b000-0000-7000-8000-0000000000b1';
     final api = FakeBackend()
