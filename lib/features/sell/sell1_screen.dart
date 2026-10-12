@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/promo.dart';
+import '../../core/text/texts_controller.dart';
 import '../../models/reference.dart';
 import '../../services/live_rates.dart';
 import '../../services/pricing.dart';
@@ -8,6 +10,7 @@ import '../../services/repositories.dart';
 import '../../services/sell_draft.dart';
 import '../../widgets/widgets.dart';
 import '../shared/listing_ui.dart';
+import 'promo_card.dart';
 
 /// `#s-sell1` — what are you selling, and what you would receive.
 class Sell1Screen extends StatelessWidget {
@@ -234,14 +237,14 @@ class _Sell1Body extends StatelessWidget {
                     style: const TextStyle(fontSize: 13, color: DColors.ink2),
                   ),
                 ),
-                if (d.promo != null) DRow('Promo saving', '+ ${money(q.promoSaving)}', keyColor: DColors.ok, valueColor: DColors.ok),
+                if (d.promoSaving > 0) DRow(context.k(PromoKeys.estimateSaving), '+ ${money(d.promoSaving)}', keyColor: DColors.ok, valueColor: DColors.ok),
                 DRow(
                   'You receive',
                   '',
                   rule: true,
                   keyIsLabel: false,
                   keyWidget: const T('You receive', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-                  valueWidget: T(money(q.net), style: DText.price),
+                  valueWidget: T(money(q.net + d.promoSaving), style: DText.price),
                 ),
               ],
             ),
@@ -256,7 +259,7 @@ class _Sell1Body extends StatelessWidget {
                 DRow('A jeweller pays gold only', money(q.jewellerPays), keyColor: DColors.ok, valueColor: DColors.ok, padding: const EdgeInsets.symmetric(vertical: 2)),
                 DRow(
                   'You get extra',
-                  money(q.net - q.jewellerPays),
+                  money(q.net + d.promoSaving - q.jewellerPays),
                   keyColor: DColors.okDark,
                   valueColor: DColors.okDark,
                   valueStyle: const TextStyle(fontWeight: FontWeight.w600),
@@ -285,74 +288,10 @@ class _Sell1Body extends StatelessWidget {
             ],
           ),
         const Gap(16),
-        MockMark(child: _PromoCard()),
+        const PromoCard(),
         const Gap(16),
         DButton('Continue to photos', onTap: () => context.nav(R.sell2)),
       ],
-    );
-  }
-}
-
-class _PromoCard extends StatefulWidget {
-  @override
-  State<_PromoCard> createState() => _PromoCardState();
-}
-
-class _PromoCardState extends State<_PromoCard> {
-  final _c = TextEditingController();
-  String _msg = 'If you have a promo code, enter it here.';
-  Color? _color;
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  void _apply() {
-    final draft = context.read<SellDraft>();
-    final code = _c.text.trim();
-    if (code.isEmpty) {
-      draft.update((d) => d.promo = null);
-      return setState(() {
-        _msg = 'Try WELCOME or EID25.';
-        _color = null;
-      });
-    }
-    final p = context.read<ContentRepository>().promo(code);
-    draft.update((d) => d.promo = p);
-    setState(() {
-      if (p == null) {
-        _msg = 'That code is not valid.';
-        _color = DColors.bad;
-      } else {
-        _msg = '${context.tr(p.label)}. ${context.tr('The 200 EGP minimum still applies.')}';
-        _color = DColors.ok;
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return DCard(
-      padding: const EdgeInsets.all(13),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const DLabel('Promo code', bottom: 8),
-          Row(
-            children: [
-              Expanded(
-                child: DInput(controller: _c, hint: 'WELCOME', uppercase: true),
-              ),
-              const SizedBox(width: 8),
-              DButton.ghost('Apply', small: true, onTap: _apply),
-            ],
-          ),
-          const Gap(8),
-          T(_msg, style: DText.tiny.copyWith(color: _color)),
-        ],
-      ),
     );
   }
 }

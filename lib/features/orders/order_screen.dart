@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/text/keys/orders_after_collection.dart';
+import '../../core/text/keys/promo.dart';
 import '../../core/text/texts_controller.dart';
 import '../../core/utils/idempotency.dart';
 import '../../models/dispute.dart';
@@ -180,6 +181,7 @@ class _OrderBody extends StatelessWidget {
         const Gap(14),
         ..._problem(context),
         ..._stage(context),
+        ..._promoNotes(context),
         ..._afterCollection(context),
         if (o.inspection != null) ...[const Gap(16), _InspectionPanel(order: o)],
         if (o.invoiceId != null) ...[
@@ -241,6 +243,31 @@ class _OrderBody extends StatelessWidget {
       ] else if (o.disputeOutcome == 'resumed' && !o.frozen) ...[
         const DNote(icon: 'info-circle', text: 'Dahab looked into a problem on this order. It is moving again, and every deadline got back the time it was on hold.'),
         const Gap(14),
+      ],
+    ];
+  }
+
+  /// Spec 023: the first-sale advance and what a code or credit took off the seller's commission.
+  List<Widget> _promoNotes(BuildContext context) {
+    final o = order;
+    return [
+      // Spec 023: the first-sale advance and what a code or credit took off the commission.
+      if (o.isSeller && o.advance != null) ...[
+        const Gap(16),
+        DNote(
+          icon: 'circle-check',
+          kind: NoteKind.ok,
+          text: '${context.k(PromoKeys.orderAdvancePaid)} · ${context.k(PromoKeys.orderAdvanceNote, {'amount': moneyOf(o.advance!.amountEgp)})}',
+        ),
+      ],
+      if (o.isSeller && !o.noFee && o.commission != null && o.commission!.saved > 0) ...[
+        const Gap(16),
+        DNote(
+          icon: 'circle-check',
+          kind: NoteKind.ok,
+          text: '${context.k(PromoKeys.orderCommissionSaved, {'amount': moneyOf(o.commission!.savedEgp!)})}'
+              ' ${o.commission!.code != null ? context.k(PromoKeys.orderWithCode, {'code': o.commission!.code}) : context.k(PromoKeys.orderWithCredit)}',
+        ),
       ],
     ];
   }

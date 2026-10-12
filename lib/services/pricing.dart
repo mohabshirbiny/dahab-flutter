@@ -23,20 +23,19 @@ abstract final class Pricing {
   /// `BASE_CT` — Rapaport-style base value of a 1ct VS / very good stone.
   static const baseCaratValue = 55000;
 
-  /// Commission on [base] at [pct], never below the minimum, never above the
-  /// base itself, then reduced by a promo.
-  static double commission(double base, double pct, {double promoOff = 0}) {
+  /// Commission on [base] at [pct], never below the minimum, never above the base itself.
+  static double commission(double base, double pct) {
     if (base <= 0) return 0;
     var c = math.max(base * pct, minCommission.toDouble());
     if (c > base) c = base;
-    return c * (1 - promoOff);
+    return c;
   }
 
   /// Home calculator: what a gold seller receives.
-  static GoldQuote gold({required int rate, required double weight, required double makingPerGram, double promoOff = 0}) {
+  static GoldQuote gold({required int rate, required double weight, required double makingPerGram}) {
     final gold = rate * weight;
     final making = makingPerGram * weight;
-    final comm = commission(making, commGold, promoOff: promoOff);
+    final comm = commission(making, commGold);
     return GoldQuote(rate: rate, goldValue: gold, making: making, commission: comm);
   }
 
@@ -51,7 +50,6 @@ abstract final class Pricing {
     required double makingPerGram,
     required double stoneAsk,
     required double totalAsk,
-    double promoOff = 0,
   }) {
     final isGold = type == SellType.gold;
     final gold = type == SellType.diamond ? 0.0 : rate * weight;
@@ -75,8 +73,7 @@ abstract final class Pricing {
         jeweller = gold + base * jewellerStoneShare;
     }
     final pct = isGold ? commGold : commStone;
-    final comm = commission(base, pct, promoOff: promoOff);
-    final fullComm = commission(base, pct);
+    final comm = commission(base, pct);
     final atMinimum = base > 0 && base * pct < minCommission;
     return SellQuote(
       goldValue: gold,
@@ -84,7 +81,6 @@ abstract final class Pricing {
       stone: stone,
       ask: ask,
       commission: comm,
-      promoSaving: fullComm - comm,
       net: gross - comm,
       jewellerPays: jeweller,
       commissionNote: atMinimum ? '(minimum $minCommission EGP)' : '(${(pct * 100).round()}% of ${isGold ? 'the making charge' : 'the value you add'})',
@@ -116,7 +112,6 @@ class SellQuote {
     required this.stone,
     required this.ask,
     required this.commission,
-    required this.promoSaving,
     required this.net,
     required this.jewellerPays,
     required this.commissionNote,
@@ -127,7 +122,6 @@ class SellQuote {
   final double stone;
   final double ask;
   final double commission;
-  final double promoSaving;
   final double net;
   final double jewellerPays;
   final String commissionNote;

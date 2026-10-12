@@ -18,9 +18,6 @@ void main() {
       expect(Pricing.commission(0, 0.2), 0);
     });
 
-    test('promo reduces commission', () {
-      expect(Pricing.commission(2400, 0.2, promoOff: 0.5), 240);
-    });
 
     test('diamond suggestion for 0.7ct VS very good', () {
       expect(Pricing.suggestedStone(0.7, 1, 1).round(), 33381);

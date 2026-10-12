@@ -47,7 +47,6 @@ abstract final class ScreensHomeKeys {
   static const homeWhatWillIGetForMy = TextKey('home.what_will_i_get_for_my', 'What will I get for my piece?', area: 'Home', where: 'Home screen');
   static const homeWherePricesComeFrom = TextKey('home.where_prices_come_from', 'where prices come from', area: 'Home', where: 'Home screen');
   static const homeYouGetExtra = TextKey('home.you_get_extra', 'You get extra', area: 'Home', where: 'Home screen');
-  static const homeYouWouldReceive = TextKey('home.you_would_receive', 'You would receive', area: 'Home', where: 'Home screen');
   static const piece2BuyersAreAlreadyInThe = TextKey('piece.2_buyers_are_already_in_the', '2 buyers are already in the queue for this piece. If you send a request you join the queue, and the seller answers requests in the order they arrived.', area: 'Browse', where: 'Piece page');
   static const piece84Views2BuyersInThe = TextKey('piece.84_views_2_buyers_in_the', '84 views, 2 buyers in the queue', area: 'Browse', where: 'Piece page');
   static const pieceABuyRequestAt = TextKey('piece.a_buy_request_at', 'A buy request at', area: 'Browse', where: 'Piece page');
@@ -112,7 +111,6 @@ abstract final class ScreensHomeKeys {
   static const pieceReplyBefore = TextKey('piece.reply_before', 'Reply before', area: 'Browse', where: 'Piece page');
   static const pieceReportThisListing = TextKey('piece.report_this_listing', 'Report this listing', area: 'Browse', where: 'Piece page');
   static const pieceRing = TextKey('piece.ring', 'Ring', area: 'Browse', where: 'Piece page');
-  static const pieceSave = TextKey('piece.save', 'Save', area: 'Browse', where: 'Piece page');
   static const pieceSaved = TextKey('piece.saved', 'Saved', area: 'Browse', where: 'Piece page');
   static const pieceSellersDescription = TextKey('piece.sellers_description', 'Seller\'s description', area: 'Browse', where: 'Piece page');
   static const pieceSendBuyRequest = TextKey('piece.send_buy_request', 'Send buy request', area: 'Browse', where: 'Piece page');
@@ -135,7 +133,6 @@ abstract final class ScreensHomeKeys {
   static const pieceTheSellerAcceptedYourRequestYou = TextKey('piece.the_seller_accepted_your_request_you', 'The seller accepted your request. Your deposit is held and the piece is on its way to IGI.', area: 'Browse', where: 'Piece page');
   static const pieceThisAccountIsSuspendedContactUs = TextKey('piece.this_account_is_suspended_contact_us', 'This account is suspended. Contact us for help.', area: 'Browse', where: 'Piece cards and listing details');
   static const pieceThisCodeBelongsToAnotherAccount = TextKey('piece.this_code_belongs_to_another_account', 'This code belongs to another account.', area: 'Browse', where: 'Piece cards and listing details');
-  static const pieceThisCodeHasReachedItsLimit = TextKey('piece.this_code_has_reached_its_limit', 'This code has reached its limit for the month.', area: 'Browse', where: 'Piece cards and listing details');
   static const pieceThisCodeIsNotActive = TextKey('piece.this_code_is_not_active', 'This code is not active.', area: 'Browse', where: 'Piece cards and listing details');
   static const pieceThisIsYourListing = TextKey('piece.this_is_your_listing', 'This is your listing', area: 'Browse', where: 'Piece page');
   static const pieceThisListingHasMovedOnSo = TextKey('piece.this_listing_has_moved_on_so', 'This listing has moved on, so that is no longer possible. Open My listings to see where it is.', area: 'Browse', where: 'Piece cards and listing details');
@@ -161,6 +158,10 @@ abstract final class ScreensHomeKeys {
   static const pieceYourMarketMakerCode = TextKey('piece.your_market_maker_code', 'Your market maker code', area: 'Browse', where: 'Piece page');
   static const pieceYourRequestIsInTheQueue = TextKey('piece.your_request_is_in_the_queue', 'Your request is in the queue. There is 1 buyer ahead of you. If the seller takes someone ahead of you, your deposit comes back in full at once.', area: 'Browse', where: 'Piece page');
   static const pieceYours = TextKey('piece.yours', 'Yours', area: 'Browse', where: 'Piece cards and listing details');
+
+  static const homeYouWouldReceive = TextKey('home.you_would_receive', 'You would receive', area: 'Home', where: 'Home screen');
+  static const pieceSave = TextKey('piece.save', 'Save', area: 'Browse', where: 'Piece page');
+  static const pieceThisCodeHasReachedItsLimit = TextKey('piece.this_code_has_reached_its_limit', 'This code has reached its limit for the month.', area: 'Browse', where: 'Piece cards and listing details');
 
   static const all = <TextKey>[
     authContinue,
@@ -204,7 +205,6 @@ abstract final class ScreensHomeKeys {
     homeWhatWillIGetForMy,
     homeWherePricesComeFrom,
     homeYouGetExtra,
-    homeYouWouldReceive,
     piece2BuyersAreAlreadyInThe,
     piece84Views2BuyersInThe,
     pieceABuyRequestAt,
@@ -269,7 +269,6 @@ abstract final class ScreensHomeKeys {
     pieceReplyBefore,
     pieceReportThisListing,
     pieceRing,
-    pieceSave,
     pieceSaved,
     pieceSellersDescription,
     pieceSendBuyRequest,
@@ -292,7 +291,6 @@ abstract final class ScreensHomeKeys {
     pieceTheSellerAcceptedYourRequestYou,
     pieceThisAccountIsSuspendedContactUs,
     pieceThisCodeBelongsToAnotherAccount,
-    pieceThisCodeHasReachedItsLimit,
     pieceThisCodeIsNotActive,
     pieceThisIsYourListing,
     pieceThisListingHasMovedOnSo,
@@ -318,5 +316,8 @@ abstract final class ScreensHomeKeys {
     pieceYourMarketMakerCode,
     pieceYourRequestIsInTheQueue,
     pieceYours,
+    homeYouWouldReceive,
+    pieceSave,
+    pieceThisCodeHasReachedItsLimit,
   ];
 }

@@ -9,24 +9,20 @@ abstract final class ScreensSharedKeys {
   static const authAcceptTheTermsToCreateYour = TextKey('auth.accept_the_terms_to_create_your', 'Accept the terms to create your account.', area: 'Auth', where: 'Sign up');
   static const authAddThePhotosOfYourId = TextKey('auth.add_the_photos_of_your_id', 'Add the photos of your ID first.', area: 'Auth', where: 'Sign up');
   static const authAlreadyHaveAnAccount = TextKey('auth.already_have_an_account', 'Already have an account?', area: 'Auth', where: 'Sign up');
-  static const authAtLeast10Characters = TextKey('auth.at_least_10_characters', 'At least 10 characters', area: 'Auth', where: 'Sign up');
   static const authBack = TextKey('auth.back', 'Back', area: 'Auth', where: 'Sign up');
   static const authBeforeYouContinue = TextKey('auth.before_you_continue', 'Before you continue', area: 'Auth', where: 'Sign up');
   static const authChooseAPassword = TextKey('auth.choose_a_password', 'Choose a password', area: 'Auth', where: 'Sign up');
-  static const authCodeSentAgain = TextKey('auth.code_sent_again', 'Code sent again.', area: 'Auth', where: 'Sign in');
   static const authConfirmYourEmail = TextKey('auth.confirm_your_email', 'Confirm your email', area: 'Auth', where: 'Sign up');
   static const authConfirmYourNumber = TextKey('auth.confirm_your_number', 'Confirm your number', area: 'Auth', where: 'Sign up');
   static const authCreateAccount = TextKey('auth.create_account', 'Create account', area: 'Auth', where: 'Sign up');
   static const authDahabIsTheMiddlePartyBetween = TextKey('auth.dahab_is_the_middle_party_between', 'Dahab is the middle party between you and the other side. We hold the money, we don\'t own the piece.', area: 'Auth', where: 'Sign up');
   static const authDeadlinesAreRealMissingOneCan = TextKey('auth.deadlines_are_real_missing_one_can', 'Deadlines are real. Missing one can cancel the sale or cost you your deposit.', area: 'Auth', where: 'Sign up');
-  static const authDidntArrive = TextKey('auth.didnt_arrive', 'Didn\'t arrive?', area: 'Auth', where: 'Sign in');
   static const authEgyptianId = TextKey('auth.egyptian_id', 'Egyptian ID', area: 'Auth', where: 'Sign up');
   static const authEmailAddress = TextKey('auth.email_address', 'Email address', area: 'Auth', where: 'Sign up');
   static const authEnterAValidEmailAddress = TextKey('auth.enter_a_valid_email_address', 'Enter a valid email address.', area: 'Auth', where: 'Sign up');
   static const authEnterTheCodeWeSentYou = TextKey('auth.enter_the_code_we_sent_you', 'Enter the code we sent you.', area: 'Auth', where: 'Sign in');
   static const authEnterYourCode = TextKey('auth.enter_your_code', 'Enter your code', area: 'Auth', where: 'Sign in');
   static const authEnterYourEmailAddress = TextKey('auth.enter_your_email_address', 'Enter your email address.', area: 'Auth', where: 'Sign up');
-  static const authEnterYourPhoneNumber = TextKey('auth.enter_your_phone_number', 'Enter your phone number.', area: 'Auth', where: 'Sign in');
   static const authEveryoneOnDahabIsVerifiedThat = TextKey('auth.everyone_on_dahab_is_verified_that', 'Everyone on Dahab is verified. That is what makes it safe to trade gold with someone you have never met.', area: 'Auth', where: 'Sign up');
   static const authFillInEveryFieldToContinue = TextKey('auth.fill_in_every_field_to_continue', 'Fill in every field to continue.', area: 'Auth', where: 'Sign up');
   static const authForgotYourPassword = TextKey('auth.forgot_your_password', 'Forgot your password?', area: 'Auth', where: 'Sign in');
@@ -44,11 +40,10 @@ abstract final class ScreensSharedKeys {
   static const authNewHere = TextKey('auth.new_here', 'New here?', area: 'Auth', where: 'Sign in');
   static const authOurPartners = TextKey('auth.our_partners', 'Our partners', area: 'Auth', where: 'Splash');
   static const authPassport = TextKey('auth.passport', 'Passport', area: 'Auth', where: 'Sign up');
-  static const authPhoneNumber = TextKey('auth.phone_number', 'Phone number', area: 'Auth', where: 'Sign in');
+  static const authPhoneNumber = TextKey('auth.phone_number', 'Phone number', area: 'Auth', where: 'Forgot password screen');
   static const authPhotographTheWholeCardAvoidGlar = TextKey('auth.photograph_the_whole_card_avoid_glar', 'Photograph the whole card, avoid glare, and make sure the text is readable.', area: 'Auth', where: 'Sign up');
   static const authPricesInEgpPerGramUpdated = TextKey('auth.prices_in_egp_per_gram_updated', 'Prices in EGP per gram, updated live.', area: 'Auth', where: 'Splash');
   static const authReadTheFullTerms = TextKey('auth.read_the_full_terms', 'Read the full terms', area: 'Auth', where: 'Sign up');
-  static const authSendItAgain = TextKey('auth.send_it_again', 'Send it again', area: 'Auth', where: 'Sign in');
   static const authSendMeACode = TextKey('auth.send_me_a_code', 'Send me a code', area: 'Auth', where: 'Sign up');
   static const authSignInAgain = TextKey('auth.sign_in_again', 'Sign in again.', area: 'Auth', where: 'Sign in');
   static const authSignInWithThePhoneNumber = TextKey('auth.sign_in_with_the_phone_number', 'Sign in with the phone number on your account.', area: 'Auth', where: 'Sign in');
@@ -204,7 +199,6 @@ abstract final class ScreensSharedKeys {
   static const sharedConfirmYourNewEmail = TextKey('shared.confirm_your_new_email', 'Confirm your new email', area: 'Shared', where: 'Screen titles');
   static const sharedConfirmYourWithdrawal = TextKey('shared.confirm_your_withdrawal', 'Confirm your withdrawal', area: 'Shared', where: 'Screen titles');
   static const sharedContactUsToFindOutMore = TextKey('shared.contact_us_to_find_out_more', 'Contact us to find out more.', area: 'Shared', where: 'Shared widgets');
-  static const sharedCopy = TextKey('shared.copy', 'Copy', area: 'Shared', where: 'Shared texts');
   static const sharedCopyAddress = TextKey('shared.copy_address', 'Copy address', area: 'Shared', where: 'Shared texts');
   static const sharedCopyDetails = TextKey('shared.copy_details', 'Copy details', area: 'Shared', where: 'Shared texts');
   static const sharedCopyNumber = TextKey('shared.copy_number', 'Copy number', area: 'Shared', where: 'Shared texts');
@@ -348,28 +342,31 @@ abstract final class ScreensSharedKeys {
   static const sharedYourOrder = TextKey('shared.your_order', 'Your order', area: 'Shared', where: 'Screen titles');
   static const sharedYourOrders = TextKey('shared.your_orders', 'Your orders', area: 'Shared', where: 'Screen titles');
 
+  static const authAtLeast10Characters = TextKey('auth.at_least_10_characters', 'At least 10 characters', area: 'Auth', where: 'Sign up');
+  static const authCodeSentAgain = TextKey('auth.code_sent_again', 'Code sent again.', area: 'Auth', where: 'Sign in');
+  static const authDidntArrive = TextKey('auth.didnt_arrive', 'Didn\'t arrive?', area: 'Auth', where: 'Sign in');
+  static const authEnterYourPhoneNumber = TextKey('auth.enter_your_phone_number', 'Enter your phone number.', area: 'Auth', where: 'Sign in');
+  static const authSendItAgain = TextKey('auth.send_it_again', 'Send it again', area: 'Auth', where: 'Sign in');
+  static const sharedCopy = TextKey('shared.copy', 'Copy', area: 'Shared', where: 'Shared texts');
+
   static const all = <TextKey>[
     authAcceptTheTermsToCreateYour,
     authAddThePhotosOfYourId,
     authAlreadyHaveAnAccount,
-    authAtLeast10Characters,
     authBack,
     authBeforeYouContinue,
     authChooseAPassword,
-    authCodeSentAgain,
     authConfirmYourEmail,
     authConfirmYourNumber,
     authCreateAccount,
     authDahabIsTheMiddlePartyBetween,
     authDeadlinesAreRealMissingOneCan,
-    authDidntArrive,
     authEgyptianId,
     authEmailAddress,
     authEnterAValidEmailAddress,
     authEnterTheCodeWeSentYou,
     authEnterYourCode,
     authEnterYourEmailAddress,
-    authEnterYourPhoneNumber,
     authEveryoneOnDahabIsVerifiedThat,
     authFillInEveryFieldToContinue,
     authForgotYourPassword,
@@ -391,7 +388,6 @@ abstract final class ScreensSharedKeys {
     authPhotographTheWholeCardAvoidGlar,
     authPricesInEgpPerGramUpdated,
     authReadTheFullTerms,
-    authSendItAgain,
     authSendMeACode,
     authSignInAgain,
     authSignInWithThePhoneNumber,
@@ -547,7 +543,6 @@ abstract final class ScreensSharedKeys {
     sharedConfirmYourNewEmail,
     sharedConfirmYourWithdrawal,
     sharedContactUsToFindOutMore,
-    sharedCopy,
     sharedCopyAddress,
     sharedCopyDetails,
     sharedCopyNumber,
@@ -690,5 +685,11 @@ abstract final class ScreensSharedKeys {
     sharedYourFirstGoldSaleWasPaid,
     sharedYourOrder,
     sharedYourOrders,
+    authAtLeast10Characters,
+    authCodeSentAgain,
+    authDidntArrive,
+    authEnterYourPhoneNumber,
+    authSendItAgain,
+    sharedCopy,
   ];
 }

@@ -5,6 +5,7 @@
 library;
 
 import 'buy_request.dart';
+import 'promo.dart';
 
 /// A `listing_state` value. The backend has more states than this app acts on
 /// (at inspection, sold, …, for later features), so anything unknown is kept
@@ -90,7 +91,15 @@ class Listing {
     this.canChangePrice = false,
     this.queueCount = 0,
     this.order,
+    this.promo,
+    this.paysAdvance,
   });
+
+  /// The code recorded on this sale, if any (backend spec 023).
+  final ListingPromo? promo;
+
+  /// Whether this sale would be paid ahead (a first-sale code or a staff enablement), and if not, why.
+  final PaysAdvance? paysAdvance;
 
   /// Buyers in line (spec 011).
   final int queueCount;
@@ -175,6 +184,8 @@ class Listing {
       canChangePrice: j['can_change_price'] == true,
       queueCount: (j['queue_count'] as num?)?.toInt() ?? 0,
       order: OrderSummary.fromJson(j['order']),
+      promo: ListingPromo.fromJson(j['promo']),
+      paysAdvance: PaysAdvance.fromJson(j['pays_advance']),
     );
   }
 }

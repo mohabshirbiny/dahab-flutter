@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/referral.dart';
+import '../../core/text/texts_controller.dart';
 import '../../models/account.dart';
 import '../../models/wallet.dart';
 import '../../models/customer.dart';
 import '../../models/listing.dart';
 import '../../models/order.dart';
+import '../../models/referral.dart';
 import '../../services/auth/auth_controller.dart';
 import '../../services/auth/auth_messages.dart';
 import '../../services/payout_controller.dart';
@@ -13,6 +16,35 @@ import '../../services/repositories.dart';
 import '../../widgets/widgets.dart';
 import '../shared/suspended_notice.dart';
 import '../wallet/wallet_screens.dart';
+
+/// The *Invite a friend* entry: shown only while the backend's referral switch is on (spec 023).
+class _InviteMenu extends StatefulWidget {
+  const _InviteMenu();
+
+  @override
+  State<_InviteMenu> createState() => _InviteMenuState();
+}
+
+class _InviteMenuState extends State<_InviteMenu> {
+  late final Future<ReferralSummary> _summary = context.read<ReferralRepository>().summary();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<ReferralSummary>(
+      future: _summary,
+      builder: (context, snap) {
+        final s = snap.data;
+        if (s == null || !s.enabled) return const SizedBox.shrink();
+        return DMenu(
+          icon: 'users',
+          title: context.k(ReferralKeys.title),
+          sub: context.k(ReferralKeys.menuSub),
+          onTap: () => context.nav(R.invite),
+        );
+      },
+    );
+  }
+}
 
 /// `#s-account`
 class AccountScreen extends StatelessWidget {
@@ -259,13 +291,7 @@ class AccountScreen extends StatelessWidget {
                     sub: 'Tax invoices for what you sold and bought',
                     onTap: () => context.nav(R.invoices),
                   ),
-                  DMenu(
-                    icon: 'users',
-                    title: 'Invite a friend',
-                    sub: 'Both of you pay less commission',
-                    onTap: () => context.nav(R.invite),
-                    mock: true,
-                  ),
+                  const _InviteMenu(),
                   DMenu(
                     icon: 'heart',
                     title: 'Saved pieces',
