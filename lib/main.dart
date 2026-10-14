@@ -45,6 +45,8 @@ Future<void> main() async {
   await texts.loadSaved();
   texts.start();
   await auth.restore();
+  // Backend testing fixes item 4: reload the customer when the app comes back to the foreground.
+  auth.watchLifecycle();
   // Backend spec 017: the account, the inbox, saved pieces, reports, legal and support are live.
   final accountRepo = ApiAccountRepository(client, tokens);
   final buyRequests = ApiBuyRequestsRepository(client, tokens);
@@ -76,7 +78,7 @@ Future<void> main() async {
         // Backend spec 015: today's prices and the seller's quote are live.
         ChangeNotifierProvider(create: (_) => LiveRates(api: PricesApi(client))),
         ChangeNotifierProvider(create: (_) => SellDraft()),
-        ChangeNotifierProvider(create: (_) => InboxController(accountRepo)),
+        ChangeNotifierProvider(create: (_) => InboxController(accountRepo, onCountChanged: auth.refreshVerification)),
         ChangeNotifierProvider(create: (_) => PayoutController(payouts)),
       ],
       child: const DahabApp(),

@@ -98,6 +98,21 @@ class AuthApi {
     return CustomerProfile.fromJson(json!['data'] as Map<String, dynamic>);
   }
 
+  /// Backend testing fixes item 5: one identity photo, `POST /customer/me/uploads`
+  /// (`purpose=identity`). Returns the upload token.
+  Future<String> uploadIdentity(UploadFile file) async {
+    final json = await _client.postMultipart('/customer/me/uploads', fields: {'purpose': 'identity'}, files: [file], auth: true);
+    return '${(json!['data'] as Map)['upload_token']}';
+  }
+
+  /// A new identity attempt: `POST /customer/me/identity-documents`. Refusals:
+  /// `document_already_pending` (409), `upload_token_invalid`, `unsupported_doc_kind` (422).
+  Future<void> submitIdentity({required String docKind, required String frontToken, String? backToken}) => _client.post(
+    '/customer/me/identity-documents',
+    body: {'doc_kind': docKind, 'front_upload_token': frontToken, 'back_upload_token': ?backToken},
+    auth: true,
+  );
+
   Future<void> logout() => _client.post('/customer/auth/logout', auth: true);
 
   /// Revokes every token issued to the customer, this device's too.

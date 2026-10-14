@@ -21,6 +21,7 @@ class CustomerProfile {
     required this.createdAt,
     this.legalAcceptanceRequired = const [],
     this.customerType = 'ordinary',
+    this.verification = CustomerVerification.none,
   });
 
   final String id;
@@ -50,6 +51,9 @@ class CustomerProfile {
   final String customerType;
   bool get isMarketMaker => customerType == 'market_maker';
 
+  /// Where the identity check stands, from the latest document (backend testing fixes, item 4).
+  final CustomerVerification verification;
+
   factory CustomerProfile.fromJson(Map<String, dynamic> j) => CustomerProfile(
     id: j['id'] as String,
     displayRef: (j['display_ref'] ?? '') as String,
@@ -69,6 +73,66 @@ class CustomerProfile {
     legalAcceptanceRequired: [
       for (final e in (j['legal_acceptance_required'] as List?) ?? const []) LegalRequirement.fromJson((e as Map).cast<String, dynamic>()),
     ],
+    verification: j['verification'] is Map ? CustomerVerification.fromJson((j['verification'] as Map).cast<String, dynamic>()) : CustomerVerification.none,
+  );
+}
+
+/// `verification` on `CustomerProfile` (`CustomerVerificationState`): the latest identity
+/// document as the app needs it. Never the images.
+class CustomerVerification {
+  const CustomerVerification({
+    required this.documentStatus,
+    required this.docKind,
+    required this.reasons,
+    required this.note,
+    required this.attemptNumber,
+    required this.submittedAt,
+    required this.reviewedAt,
+    required this.canSubmit,
+  });
+
+  /// An older backend that does not send the object: nothing known, nothing to send.
+  static const none = CustomerVerification(
+    documentStatus: null,
+    docKind: null,
+    reasons: [],
+    note: null,
+    attemptNumber: null,
+    submittedAt: null,
+    reviewedAt: null,
+    canSubmit: false,
+  );
+
+  /// pending · needs_resubmission · verified · rejected; null when no document was ever sent.
+  final String? documentStatus;
+
+  /// egyptian_id · passport
+  final String? docKind;
+
+  /// The reviewer's reason codes (`blurred_or_glare`, …) for "upload again" or a rejection.
+  final List<String> reasons;
+  final String? note;
+  final int? attemptNumber;
+  final DateTime? submittedAt;
+  final DateTime? reviewedAt;
+
+  /// `POST /customer/me/identity-documents` would take a new attempt.
+  final bool canSubmit;
+
+  bool get isVerified => documentStatus == 'verified';
+  bool get isWaiting => documentStatus == 'pending';
+  bool get isUploadAgain => documentStatus == 'needs_resubmission';
+  bool get isRejected => documentStatus == 'rejected';
+
+  factory CustomerVerification.fromJson(Map<String, dynamic> j) => CustomerVerification(
+    documentStatus: j['document_status'] as String?,
+    docKind: j['doc_kind'] as String?,
+    reasons: [for (final r in (j['reasons'] as List?) ?? const []) '$r'],
+    note: j['note'] as String?,
+    attemptNumber: (j['attempt_number'] as num?)?.toInt(),
+    submittedAt: _date(j['submitted_at']),
+    reviewedAt: _date(j['reviewed_at']),
+    canSubmit: j['can_submit'] == true,
   );
 }
 

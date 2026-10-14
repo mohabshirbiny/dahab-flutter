@@ -60,6 +60,27 @@ class FakeBackend {
   /// They can still sign in and read; trading is refused with `account_suspended`.
   String? suspendedReason;
 
+  /// Backend testing fixes item 4: the `verification` object of `/customer/auth/me`. Null = derived
+  /// from [pendingAccount] (pending, attempt 1) or a verified account.
+  Map<String, dynamic>? verification;
+
+  /// Bodies sent to `POST /customer/me/identity-documents`.
+  final identitySubmissions = <Map<String, dynamic>>[];
+
+  /// The verification object of a customer who was asked to upload again (or rejected).
+  static Map<String, dynamic> identityState(String status, {List<String> reasons = const [], String? note, int attempt = 1}) => {
+    'document_status': status,
+    'doc_kind': 'egyptian_id',
+    'reasons': reasons,
+    'note': note,
+    'attempt_number': attempt,
+    'submitted_at': '2026-10-10T10:00:00+03:00',
+    'reviewed_at': status == 'pending' ? null : '2026-10-11T10:00:00+03:00',
+    'can_submit': status == 'needs_resubmission' || status == 'rejected',
+  };
+
+  Map<String, dynamic> get _verification => verification ?? identityState(pendingAccount ? 'pending' : 'verified');
+
   /// `POST /customer/auth/logout-all` was called.
   bool loggedOutEverywhere = false;
 
@@ -573,7 +594,7 @@ class FakeBackend {
   };
 
   Map<String, dynamic> get _customer {
-    final owed = {'legal_acceptance_required': legalRequired};
+    final owed = {'legal_acceptance_required': legalRequired, 'verification': _verification};
     if (suspendedReason != null) {
       return {
         ...customer,
@@ -1527,12 +1548,23 @@ class FakeBackend {
         if (refused != null) return error(403, refused);
         return json(200, {'data': topUpMethods});
       case '/customer/me/uploads':
-        final refused = tradeRefusal();
-        if (refused != null) return error(403, refused);
         final purpose = RegExp(r'name="purpose"\s+([a-z_]+)').firstMatch(latin1.decode(req.bodyBytes))?.group(1) ?? 'topup_receipt';
+        // An ID photo is open to an unverified customer (backend: no trade gate on identity uploads).
+        final refused = purpose == 'identity' ? null : tradeRefusal();
+        if (refused != null) return error(403, refused);
         uploads.add(purpose);
         return json(201, {
           'data': {'upload_token': purpose == 'topup_receipt' ? 'receipt-token-1' : '$purpose-token-${uploads.length}', 'purpose': purpose, 'expires_in': 3600},
+        });
+      case '/customer/me/identity-documents':
+        final v = _verification;
+        if (v['document_status'] == 'pending') return error(409, 'document_already_pending');
+        if (body['doc_kind'] == 'egyptian_id' && body['back_upload_token'] == null) return error(422, 'unsupported_doc_kind');
+        identitySubmissions.add(body);
+        final attempt = ((v['attempt_number'] as int?) ?? 0) + 1;
+        verification = {...identityState('pending', attempt: attempt), 'doc_kind': body['doc_kind']};
+        return json(201, {
+          'data': {'document_id': 'doc-$attempt', 'doc_kind': body['doc_kind'], 'status': 'pending', 'attempt_number': attempt, 'created_at': '2026-10-12T10:00:00+03:00'},
         });
       case '/customer/me/wallet/topups':
         if (req.method == 'GET') {
@@ -1709,7 +1741,7 @@ Future<Widget> testApp(LangController lang, {FakeBackend? backend, bool liveText
       ChangeNotifierProvider(create: (_) => AppSession()),
       ChangeNotifierProvider(create: (_) => LiveRates(api: PricesApi(client))),
       ChangeNotifierProvider(create: (_) => SellDraft()),
-      ChangeNotifierProvider(create: (_) => InboxController(accountRepo)),
+      ChangeNotifierProvider(create: (_) => InboxController(accountRepo, onCountChanged: auth.refreshVerification)),
       ChangeNotifierProvider(create: (_) => PayoutController(payouts)),
     ],
     child: const DahabApp(),

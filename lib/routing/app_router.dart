@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../features/account/account_screen.dart';
 import '../features/account/bank_screens.dart';
 import '../features/account/contact_change_screens.dart';
+import '../features/account/identity_again_screen.dart';
 import '../features/account/invite_screen.dart';
 import '../features/account/legal_accept_screen.dart';
 import '../features/account/settings_screens.dart';
@@ -66,6 +67,7 @@ final Map<String, Widget Function(GoRouterState s)> _screens = {
   R.rate: (s) => RateScreen(orderId: s.uri.queryParameters['id'] ?? ''),
   R.freeRelist: (s) => FreeRelistScreen(orderId: s.uri.queryParameters['id'] ?? ''),
   R.account: (_) => const AccountScreen(),
+  R.idAgain: (_) => const IdentityAgainScreen(),
   R.wallet: (_) => const WalletScreen(),
   R.held: (_) => const HeldScreen(),
   R.txn: (s) => TxnScreen(id: s.uri.queryParameters['id'] ?? 't1'),

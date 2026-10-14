@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -246,27 +248,7 @@ class _InboxScreenState extends State<InboxScreen> {
       }
     }
     if (!mounted) return;
-    final id = n.linkId;
-    switch (n.linkKind) {
-      case 'order':
-        if (id != null) context.nav(R.order, query: {'id': id});
-      case 'listing':
-        if (id != null) context.openPiece(id: id);
-      case 'invoice':
-        if (id != null) context.nav(R.invoice, query: {'id': id});
-      case 'credit_note':
-        context.nav(R.invoices);
-      case 'wallet' || 'withdrawal':
-        context.nav(R.wallet);
-      case 'topup':
-        context.nav(R.topups);
-      case 'payout_account':
-        context.nav(R.bank);
-      case 'dispute' || 'buy_request':
-        context.nav(R.orders);
-      case 'account':
-        context.nav(R.account);
-    }
+    openInboxItem(context, n);
   }
 
   static Map<String, dynamic> _asRead(InboxItem n) => {
@@ -835,5 +817,47 @@ class PricesScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Where an inbox item leads (backend testing fixes item 7): by its type first, then its link.
+/// A seller's listing and new-request messages open their own piece (the owner view, with
+/// *Edit and resubmit* or Accept / Decline), never the market; "free again" opens the market
+/// piece; the ID messages open the re-upload screen; other account messages open Account.
+/// Every account message reloads the customer, whose state it is about.
+void openInboxItem(BuildContext context, InboxItem n) {
+  final id = n.linkId;
+  final type = n.type;
+  final auth = context.read<AuthController>();
+  if (type.startsWith('account.')) {
+    unawaited(auth.refreshVerification(force: true));
+    final again = type == 'account.resubmission_requested' || type == 'account.verification_rejected';
+    return context.nav(again && (auth.customer?.verification.canSubmit ?? true) ? R.idAgain : R.account);
+  }
+  if (id != null && n.linkKind == 'listing' && (type.startsWith('listing.') || type == 'buy_request.new_request')) {
+    return context.openPiece(view: 'owner', id: id);
+  }
+  if (id != null && n.linkKind == 'listing' && type == 'buy_request.free_again') {
+    return context.openPiece(view: 'buyer', id: id);
+  }
+  switch (n.linkKind) {
+    case 'order':
+      if (id != null) context.nav(R.order, query: {'id': id});
+    case 'listing':
+      if (id != null) context.openPiece(id: id);
+    case 'invoice':
+      if (id != null) context.nav(R.invoice, query: {'id': id});
+    case 'credit_note':
+      context.nav(R.invoices);
+    case 'wallet' || 'withdrawal':
+      context.nav(R.wallet);
+    case 'topup':
+      context.nav(R.topups);
+    case 'payout_account':
+      context.nav(R.bank);
+    case 'dispute' || 'buy_request':
+      context.nav(R.orders);
+    case 'account':
+      context.nav(R.account);
   }
 }

@@ -6,9 +6,13 @@ import 'repositories.dart';
 /// shell appears and after the inbox marks something read; a failure keeps
 /// the last count.
 class InboxController extends ChangeNotifier {
-  InboxController(this._repo);
+  InboxController(this._repo, {this.onCountChanged});
 
   final AccountRepository _repo;
+
+  /// Called when the unread count moves: a new message may say the ID was approved or sent
+  /// back, so the app reloads the customer (backend testing fixes item 4).
+  final void Function()? onCountChanged;
 
   int _unread = 0;
   int get unread => _unread;
@@ -23,8 +27,10 @@ class InboxController extends ChangeNotifier {
     try {
       final n = await _repo.unreadCount();
       if (n != _unread) {
+        final grew = n > _unread;
         _unread = n;
         notifyListeners();
+        if (grew) onCountChanged?.call();
       }
     } on Object {
       // Keep the last count.

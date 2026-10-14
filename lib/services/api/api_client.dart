@@ -64,6 +64,10 @@ class ApiClient {
   /// reloads the customer, whose requirement list sends them to the acceptance screen.
   void Function()? onLegalAcceptanceRequired;
 
+  /// Called when a request is refused `verification_required`: the customer's identity state
+  /// may have moved on (approved, asked again), so the app reloads it (backend testing fixes).
+  void Function()? onVerificationRequired;
+
   Future<SessionTokens>? _refreshing;
 
   Map<String, String> get _deviceHeaders => {'Accept': 'application/json', 'X-Device-Id': _tokens.deviceId, 'X-Device-Platform': AppConfig.devicePlatform};
@@ -246,6 +250,7 @@ class ApiClient {
       });
     }
     if (json?['code'] == 'legal_acceptance_required') onLegalAcceptanceRequired?.call();
+    if (json?['code'] == 'verification_required') onVerificationRequired?.call();
     throw ApiException(
       status: res.statusCode,
       code: (json?['code'] as String?) ?? 'server_error',

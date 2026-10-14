@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dahab_app/core/i18n/i18n.dart';
+import 'package:dahab_app/services/auth/auth_controller.dart';
 import 'package:dahab_app/widgets/inputs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -106,7 +107,8 @@ void main() {
     expect(api.requests.where((r) => r.url.path.endsWith('/login')).length, 2);
 
     await _tap(tester, 'Account');
-    expect(find.text('Waiting for verification'), findsOneWidget);
+    // Backend testing fixes item 4: the header pill and the National ID row say the same.
+    expect(find.text('Waiting for review'), findsNWidgets(2));
     await _end(tester);
   });
 
@@ -1530,6 +1532,162 @@ void main() {
     await _settle(tester);
     expect(find.text('Nothing here yet. Contact us if you have a question.'), findsOneWidget);
     expect(find.text('Contact us'), findsWidgets);
+    await _end(tester);
+  });
+
+  // ---- backend testing fixes: the identity state, sending the ID again, the sell gate, inbox links ----
+
+  testWidgets('Account says "Upload again" with the reasons, the ID is sent again, then it waits for review', (tester) async {
+    final api = FakeBackend()
+      ..pendingAccount = true
+      ..verification = FakeBackend.identityState('needs_resubmission', reasons: ['card_expired'], note: 'Use a card that is still valid.');
+    await _start(tester, backend: api);
+    await signIn(tester);
+    await _tap(tester, 'Account');
+    expect(find.text('Upload again'), findsWidgets);
+
+    await _tap(tester, 'National ID');
+    expect(find.text('Send for review'), findsOneWidget);
+    expect(find.textContaining('The card has expired'), findsOneWidget);
+    expect(find.text('Use a card that is still valid.'), findsOneWidget);
+
+    await _tap(tester, 'Send for review');
+    expect(find.text('Add the photos of your ID first.'), findsOneWidget);
+
+    await _tap(tester, 'Front');
+    await _tap(tester, 'Back');
+    await _tap(tester, 'Send for review');
+
+    expect(api.uploads.where((p) => p == 'identity'), hasLength(2));
+    expect(api.identitySubmissions.single, {'doc_kind': 'egyptian_id', 'front_upload_token': 'identity-token-1', 'back_upload_token': 'identity-token-2'});
+    expect(find.text('Waiting for review'), findsOneWidget);
+    expect(find.text('Send for review'), findsNothing);
+    await _end(tester);
+  });
+
+  testWidgets('a waiting customer sees the new state after a refresh (approved meanwhile)', (tester) async {
+    final api = FakeBackend()..pendingAccount = true;
+    await _start(tester, backend: api);
+    await signIn(tester);
+    await _tap(tester, 'Account');
+    expect(find.text('Waiting for review'), findsWidgets);
+
+    // Staff verify the ID; the app learns it on its next reload (resume, inbox, a refusal).
+    api
+      ..pendingAccount = false
+      ..verification = FakeBackend.identityState('verified');
+    final auth = Provider.of<AuthController>(tester.element(find.byType(Navigator).first), listen: false);
+    await tester.runAsync(() => auth.refreshVerification(force: true));
+    await _settle(tester);
+    expect(find.text('Identity verified'), findsOneWidget);
+    expect(find.text('Waiting for review'), findsNothing);
+    await _end(tester);
+  });
+
+  testWidgets('sell step 1 says to verify first instead of showing the form', (tester) async {
+    await _start(tester, backend: FakeBackend()..pendingAccount = true);
+    await signIn(tester);
+    _go(tester, '/sell1');
+    await _settle(tester);
+    expect(find.text('We are checking your ID'), findsOneWidget);
+    expect(find.text('What are you selling'), findsNothing);
+    await _end(tester);
+
+    await _start(
+      tester,
+      backend: FakeBackend()
+        ..pendingAccount = true
+        ..verification = FakeBackend.identityState('needs_resubmission', reasons: ['blurred_or_glare']),
+    );
+    await signIn(tester);
+    _go(tester, '/sell1');
+    await _settle(tester);
+    expect(find.text('Send your ID again to sell'), findsOneWidget);
+    expect(find.textContaining('The photo is blurred or has glare'), findsOneWidget);
+    await _tap(tester, 'Upload your ID again');
+    expect(find.text('Send for review'), findsOneWidget);
+    await _end(tester);
+  });
+
+  testWidgets('inbox items open the right screen by type and link', (tester) async {
+    const owner1 = 'b1000000-0000-4000-8000-000000000001';
+    const owner2 = 'b1000000-0000-4000-8000-000000000002';
+    const market3 = 'b1000000-0000-4000-8000-000000000003';
+    const order4 = 'c1000000-0000-4000-8000-000000000004';
+    Map<String, dynamic> item(String n, String type, String kind, String? id) => {
+      'id': '1a000000-0000-4000-8000-00000000000$n',
+      'type': type,
+      'link': {'kind': kind, 'id': id},
+      'title_en': 'Item $n',
+      'title_ar': 'Item $n',
+      'body_en': 'Body $n',
+      'body_ar': 'Body $n',
+      'created_at': '2026-10-06T09:00:00+03:00',
+      'read_at': '2026-10-06T09:30:00+03:00',
+    };
+    final api = FakeBackend()
+      ..inbox = [
+        item('1', 'listing.changes_requested', 'listing', owner1),
+        item('2', 'buy_request.new_request', 'listing', owner2),
+        item('3', 'buy_request.free_again', 'listing', market3),
+        item('4', 'buy_request.accepted', 'order', order4),
+        item('5', 'account.verified', 'account', null),
+      ];
+    await _start(tester, backend: api);
+    await signIn(tester);
+
+    Future<void> open(String title) async {
+      _go(tester, '/inbox');
+      await _settle(tester);
+      api.requests.clear();
+      await _tap(tester, title);
+    }
+
+    bool asked(bool Function(Uri u) test) => api.requests.any((r) => test(r.url));
+
+    // A seller's listing message and a new request open their own piece, never the market.
+    await open('Item 1');
+    expect(asked((u) => u.path.endsWith('/customer/me/listings/$owner1')), isTrue);
+    expect(asked((u) => u.path.endsWith('/market/listings/$owner1')), isFalse);
+    await open('Item 2');
+    expect(asked((u) => u.path.endsWith('/customer/me/listings/$owner2')), isTrue);
+    // "Free again" is for a buyer: the market piece.
+    await open('Item 3');
+    expect(asked((u) => u.path.endsWith('/market/listings/$market3')), isTrue);
+    // The buyer's accepted request opens the new order.
+    await open('Item 4');
+    expect(asked((u) => u.path.endsWith('/customer/me/orders/$order4')), isTrue);
+    // Any account message reloads the customer and opens Account.
+    await open('Item 5');
+    expect(asked((u) => u.path.endsWith('/customer/auth/me')), isTrue);
+    expect(find.text('National ID'), findsOneWidget);
+    await _end(tester);
+  });
+
+  testWidgets('an "upload again" inbox item opens the re-upload screen', (tester) async {
+    final api = FakeBackend()
+      ..pendingAccount = true
+      ..verification = FakeBackend.identityState('needs_resubmission', reasons: ['card_cut_off'])
+      ..inbox = [
+        {
+          'id': '1a000000-0000-4000-8000-000000000009',
+          'type': 'account.resubmission_requested',
+          'link': {'kind': 'account', 'id': null},
+          'title_en': 'Please upload your ID again',
+          'title_ar': 'Please upload your ID again',
+          'body_en': 'The card was cut off.',
+          'body_ar': 'The card was cut off.',
+          'created_at': '2026-10-06T09:00:00+03:00',
+          'read_at': null,
+        },
+      ];
+    await _start(tester, backend: api);
+    await signIn(tester);
+    _go(tester, '/inbox');
+    await _settle(tester);
+    await _tap(tester, 'Please upload your ID again');
+    expect(find.text('Send for review'), findsOneWidget);
+    expect(find.textContaining('Part of the card is cut off'), findsOneWidget);
     await _end(tester);
   });
 }

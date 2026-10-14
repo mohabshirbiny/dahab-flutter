@@ -79,6 +79,9 @@ abstract final class R {
   /// Backend spec 019: accept the live terms / privacy before anything else.
   static const legalAccept = 'legal-accept';
 
+  /// Backend testing fixes: send the ID again after "upload again" or a rejection.
+  static const idAgain = 'id-again';
+
   /// `AUTH` — no bottom tabs.
   static const auth = {splash, login, otp, forgotPassword, resetPassword, signup1, signup2, signup3, signupEmail, signupDone, withdrawConfirm, emailConfirm, legalAccept};
 
@@ -94,6 +97,7 @@ abstract final class R {
     signup1: 'Create account',
     signup2: 'Create account',
     signup3: 'Create account',
+    idAgain: 'Upload your ID again',
     signupEmail: 'Create account',
     signupDone: 'Create account',
     home: '',
