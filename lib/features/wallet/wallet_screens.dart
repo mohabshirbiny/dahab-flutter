@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/invoice_vat.dart';
 import '../../core/text/keys/wallet_statement.dart';
 import '../../core/text/texts_controller.dart';
 import '../../core/utils/idempotency.dart';
@@ -1294,7 +1295,12 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
               DSoft.bordered(
                 child: Column(
                   children: [
-                    if (d?.goldValue != null) ...[
+                    if (!i.isSeller && d?.priceDifference != null) ...[
+                      // Backend package C item 13: the price difference is Dahab's commission (VAT 0).
+                      DRow('Gold value at ${moneyOf(d!.sellerUnitRate)} per gram', moneyOf(d.goldValueAtSellerRate)),
+                      DRow(context.k(InvoiceVatKeys.commission), moneyOf(d.priceDifference)),
+                      DRow('Making charge', moneyOf(d.makingTotal)),
+                    ] else if (d?.goldValue != null) ...[
                       DRow('Gold value at ${moneyOf(d!.unitRate)} per gram', moneyOf(d.goldValue)),
                       DRow('Making charge', moneyOf(d.makingTotal)),
                     ] else
@@ -1309,9 +1315,16 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                 DSoft.bordered(
                   child: Column(
                     children: [
-                      DRow(d?.commissionPct == null ? 'Commission' : 'Commission, ${_plain(d!.commissionPct!)}%', moneyOf(i.net)),
-                      DRow('VAT at $rate%', moneyOf(i.vat)),
-                      DRow('Total charges', moneyOf(i.gross), rule: true),
+                      if (d?.commissionVatInclusive == true) ...[
+                        // Backend package C: the rate includes VAT; VAT is carved out of it.
+                        DRow(context.k(InvoiceVatKeys.commissionBeforeVat, {'pct': _plain(d!.commissionPct ?? '')}), moneyOf(i.net)),
+                        DRow('VAT at $rate%', moneyOf(i.vat)),
+                        DRow(context.k(InvoiceVatKeys.commissionVatIncluded), moneyOf(i.gross), rule: true),
+                      ] else ...[
+                        DRow(d?.commissionPct == null ? 'Commission' : 'Commission, ${_plain(d!.commissionPct!)}%', moneyOf(i.net)),
+                        DRow('VAT at $rate%', moneyOf(i.vat)),
+                        DRow('Total charges', moneyOf(i.gross), rule: true),
+                      ],
                     ],
                   ),
                 ),

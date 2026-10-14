@@ -98,6 +98,10 @@ class InvoiceDetail {
     this.askingPrice,
     this.commissionPct,
     this.paidToWallet,
+    this.commissionVatInclusive = false,
+    this.sellerUnitRate,
+    this.goldValueAtSellerRate,
+    this.priceDifference,
     this.issuerNameEn,
     this.issuerNameAr,
     this.taxRegistrationNo,
@@ -113,6 +117,15 @@ class InvoiceDetail {
 
   /// Seller only: what reached the wallet at settlement.
   final String? paidToWallet;
+
+  /// Seller invoices issued since the commission rate includes VAT (backend package C).
+  final bool commissionVatInclusive;
+
+  /// Buyer gold invoices (backend package C item 13): gold at the seller's rate, and the price
+  /// difference shown as Dahab's commission (VAT 0). Older invoices have none.
+  final String? sellerUnitRate;
+  final String? goldValueAtSellerRate;
+  final String? priceDifference;
   final String? issuerNameEn;
   final String? issuerNameAr;
   final String? taxRegistrationNo;
@@ -128,6 +141,10 @@ class InvoiceDetail {
       askingPrice: _str(lines['asking_price']),
       commissionPct: _str(lines['commission_pct']),
       paidToWallet: _str(lines['paid_to_wallet']),
+      commissionVatInclusive: lines['commission_vat_inclusive'] == true,
+      sellerUnitRate: _str(lines['seller_unit_rate']),
+      goldValueAtSellerRate: _str(lines['gold_value_at_seller_rate']),
+      priceDifference: _str(lines['price_difference']),
       issuerNameEn: _str(issuer?['legal_name_en']),
       issuerNameAr: _str(issuer?['legal_name_ar']),
       taxRegistrationNo: _str(issuer?['tax_registration_no']),
