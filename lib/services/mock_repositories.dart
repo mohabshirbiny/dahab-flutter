@@ -190,6 +190,12 @@ class MockWalletRepository implements WalletRepository {
 
   @override
   Future<InvoiceFile> creditNotePdf(String id, String number) => Future.error(StateError('Invoices are live.'));
+
+  @override
+  int? get historyCutAt => null;
+
+  @override
+  Future<InvoiceFile> statementPdf({required String from, required String to}) => Future.error(StateError('The statement is live.'));
 }
 
 /// The prototype's sample profile, shown while signed out. Everything else on

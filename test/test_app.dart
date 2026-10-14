@@ -148,6 +148,12 @@ class FakeBackend {
   /// Newest first, the shape of `GET /customer/me/wallet/transactions` rows.
   List<Map<String, dynamic>> walletRows = [];
 
+  /// Every page of the history says there is more (the app stops at its page limit).
+  bool walletHasMore = false;
+
+  /// The query of every `GET /customer/me/wallet/statement.pdf` (wallet statement PDF).
+  final statementQueries = <Map<String, String>>[];
+
   /// Backend spec 015: `GET /customer/me/wallet/held` — what each request and order holds.
   Map<String, dynamic> held = {'total': '0.0000', 'items': <Map<String, dynamic>>[]};
 
@@ -862,6 +868,11 @@ class FakeBackend {
         ],
         'meta': {'per_page': 50, 'next_cursor': null},
       });
+    }
+    if (path == '/customer/me/wallet/statement.pdf') {
+      if (pendingAccount) return error(403, 'verification_required');
+      statementQueries.add(req.url.queryParameters);
+      return http.Response.bytes(utf8.encode('%PDF-fake statement'), 200, headers: {'content-type': 'application/pdf'});
     }
     final invoicePath = RegExp(r'^/customer/me/(invoices|credit-notes)/([^/]+)(/pdf)?$').firstMatch(path);
     if (invoicePath != null) {
@@ -1655,7 +1666,7 @@ class FakeBackend {
         if (pendingAccount) return error(403, 'verification_required');
         return json(200, {
           'data': walletRows,
-          'meta': {'per_page': 100, 'next_cursor': null},
+          'meta': {'per_page': 100, 'next_cursor': walletHasMore ? 'more' : null},
         });
       case '/customer/auth/register/start':
         if ((body['password'] as String).length < 10) {
