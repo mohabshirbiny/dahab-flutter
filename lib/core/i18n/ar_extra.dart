@@ -687,4 +687,6 @@ const Map<String, String> arExtra = {
   'Choose how many stars before sending.': 'اختار عدد النجوم قبل ما تبعت.',
   'Thank you': 'شكراً',
   'It helps more than you think.': 'بتفرق معانا أكتر مما تتخيل.',
+  // Upload your ID again (backend testing fixes). AR-DRAFT: the owner approves the wording.
+  'Upload your ID again': 'ارفع بطاقتك تاني',
 };

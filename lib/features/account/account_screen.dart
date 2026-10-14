@@ -15,6 +15,7 @@ import '../../services/payout_controller.dart';
 import '../../services/repositories.dart';
 import '../../widgets/widgets.dart';
 import '../shared/suspended_notice.dart';
+import 'identity_again_screen.dart';
 import '../wallet/wallet_screens.dart';
 
 /// The *Invite a friend* entry: shown only while the backend's referral switch is on (spec 023).
@@ -135,8 +136,8 @@ class AccountScreen extends StatelessWidget {
           final payoutShort =
               inUse?.short ?? context.t(payouts.view == null ? '' : 'Add one');
           final idVerified = me.isVerified;
-          // A rejected customer can sign in and send new ID photos (backend spec 002).
-          final idRejected = me.status == 'rejected';
+          // A rejected or asked-again customer sends new ID photos (backend testing fixes item 5).
+          final canResubmit = !idVerified && me.verification.canSubmit;
           final emailConfirmed = me.emailVerifiedAt != null;
           const detailPad = EdgeInsets.symmetric(vertical: 13);
           Widget chevronValue(String v) => Row(
@@ -204,17 +205,13 @@ class AccountScreen extends StatelessWidget {
                       spacing: 6,
                       runSpacing: 6,
                       children: [
+                        // Backend testing fixes item 4: the same state as the National ID row.
                         idVerified
                             ? const DPill(
                                 'Identity verified',
                                 icon: 'circle-check',
                               )
-                            : idRejected
-                            ? const DPill('ID not approved', kind: PillKind.bad)
-                            : const DPill(
-                                'Waiting for verification',
-                                kind: PillKind.wait,
-                              ),
+                            : IdentityPill(me),
                         const DPill('Phone confirmed'),
                         if (emailConfirmed) const DPill('Email confirmed'),
                       ],
@@ -250,14 +247,23 @@ class AccountScreen extends StatelessWidget {
                       valueWidget: chevronValue(p.email),
                       onTap: () => _changeContact(context, false),
                     ),
+                    // Backend testing fixes items 4–5: the real state, and the way to send the ID again.
                     DRow(
                       'National ID',
                       '',
                       padding: detailPad,
                       bottomBorder: true,
-                      valueWidget: idVerified
-                          ? const DPill('Verified')
-                          : const DPill('Waiting', kind: PillKind.wait),
+                      valueWidget: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IdentityPill(me),
+                          if (canResubmit) ...[
+                            const SizedBox(width: 4),
+                            const DIcon('chevron-right', size: 13, color: DColors.ink3),
+                          ],
+                        ],
+                      ),
+                      onTap: canResubmit ? () => context.nav(R.idAgain) : null,
                     ),
                     DRow(
                       'Payout account',

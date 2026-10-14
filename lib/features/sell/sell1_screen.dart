@@ -4,11 +4,13 @@ import 'package:provider/provider.dart';
 import '../../core/text/keys/promo.dart';
 import '../../core/text/texts_controller.dart';
 import '../../models/reference.dart';
+import '../../services/auth/auth_controller.dart';
 import '../../services/live_rates.dart';
 import '../../services/pricing.dart';
 import '../../services/repositories.dart';
 import '../../services/sell_draft.dart';
 import '../../widgets/widgets.dart';
+import '../account/identity_again_screen.dart';
 import '../shared/listing_ui.dart';
 import 'promo_card.dart';
 
@@ -18,6 +20,9 @@ class Sell1Screen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Backend testing fixes item 6: an account that may not trade yet is told so before the form.
+    final gate = sellGate(context, context.watch<AuthController>().customer);
+    if (gate != null) return AppPage(id: R.sell1, child: gate);
     // What Dahab accepts now (karats, piece types) comes from the backend.
     return AppPage(
       id: R.sell1,

@@ -12,7 +12,11 @@ enum MediaKind {
 
   /// Spec 014: a photo with a report, and the ID of the person collecting.
   disputePhoto('dispute_photo', ['jpg', 'jpeg', 'png', 'webp'], 8),
-  proxyId('proxy_id', ['jpg', 'jpeg', 'png', 'webp'], 8);
+  proxyId('proxy_id', ['jpg', 'jpeg', 'png', 'webp'], 8),
+
+  /// Backend testing fixes: a photo of the customer's own ID, sent again
+  /// (`dahab-identity.allowed_mimes`, `max_upload_kb` 8192).
+  identity('identity', ['jpg', 'jpeg', 'png', 'webp'], 8);
 
   const MediaKind(this.purpose, this.extensions, this.maxMegabytes);
 
@@ -52,7 +56,7 @@ class FilePickerMediaPicker implements MediaPicker {
     final ext = (picked.extension ?? '').toLowerCase();
     if (!kind.extensions.contains(ext)) {
       return PickedMedia.refused(switch (kind) {
-        MediaKind.photo || MediaKind.disputePhoto || MediaKind.proxyId => 'Use a JPG, PNG or WEBP photo.',
+        MediaKind.photo || MediaKind.disputePhoto || MediaKind.proxyId || MediaKind.identity => 'Use a JPG, PNG or WEBP photo.',
         MediaKind.video => 'Use an MP4, MOV or WEBM video.',
         _ => 'Use a photo (JPG, PNG, WEBP) or a PDF.',
       });
