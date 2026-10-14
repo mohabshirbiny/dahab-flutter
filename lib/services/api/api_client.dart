@@ -142,9 +142,11 @@ class ApiClient {
 
   Uri _mediaUri(String path) {
     final base = Uri.parse(_base);
+    // A query (`?from=…`) stays a query, not part of the path.
+    final asked = Uri.parse(path);
     // The API returns `/api/v1/…`; the base already ends with that prefix.
-    final full = path.startsWith(base.path) ? path : '${base.path}$path';
-    return base.replace(path: full);
+    final full = asked.path.startsWith(base.path) ? asked.path : '${base.path}${asked.path}';
+    return base.replace(path: full, query: asked.hasQuery ? asked.query : null);
   }
 
   /// `auth` sends the access token (customer uploads, e.g. a top-up receipt).

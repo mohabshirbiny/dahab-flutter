@@ -14,6 +14,7 @@ import 'screens_orders.dart';
 import 'screens_selling.dart';
 import 'screens_shared.dart';
 import 'screens_wallet.dart';
+import 'wallet_statement.dart';
 
 /// Every key the app declares, by catalogue. The manifest test reads this list; a stage adds
 /// its catalogue here (backend spec 019 R14).
@@ -30,6 +31,7 @@ const List<TextKey> allTextKeys = [
   ...ListingPriceKeys.all,
   ...PromoKeys.all,
   ...ReferralKeys.all,
+  ...WalletStatementKeys.all,
   ...ScreensHomeKeys.all,
   ...ScreensOrdersKeys.all,
   ...ScreensSellingKeys.all,

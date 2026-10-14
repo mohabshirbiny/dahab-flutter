@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/wallet_statement.dart';
+import '../../core/text/texts_controller.dart';
 import '../../core/utils/idempotency.dart';
 import '../../models/payout.dart';
 import '../../models/topup_words.dart';
@@ -19,8 +21,6 @@ import '../../services/payout_controller.dart';
 import '../../services/text_download.dart';
 import '../../widgets/widgets.dart';
 import '../account/bank_screens.dart' show payoutErrorMessage, pauseLine;
-
-void _download(BuildContext context, String name, String text) => showToast(context, downloadText(name, text) ? 'Downloaded.' : 'Download not available here.');
 
 /// Balance card shared by Account and Wallet.
 class BalanceCard extends StatelessWidget {
@@ -110,6 +110,56 @@ class _WalletScreenState extends State<WalletScreen> {
   int _reload = 0;
   String? _cancelling;
 
+  // The statement PDF (item 10): the period picker under Statement, and its download.
+  bool _statementOpen = false;
+  int _statementDays = 90;
+  bool _statementBusy = false;
+  String? _statementError;
+
+  static String _day(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  Future<void> _downloadStatement() async {
+    if (_statementBusy) return;
+    final today = DateTime.now();
+    final from = today.subtract(Duration(days: _statementDays - 1));
+    setState(() {
+      _statementBusy = true;
+      _statementError = null;
+    });
+    try {
+      final file = await context.read<WalletRepository>().statementPdf(from: _day(from), to: _day(today));
+      if (!mounted) return;
+      showToast(context, downloadBytes(file.filename, file.bytes, 'application/pdf') ? 'Downloaded.' : 'Download not available here.');
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _statementError = context.kr(e.code == 'verification_required' ? WalletStatementKeys.notVerified : WalletStatementKeys.failed));
+    } finally {
+      if (mounted) setState(() => _statementBusy = false);
+    }
+  }
+
+  Widget _statementPanel(BuildContext context) => DCard(
+    margin: const EdgeInsets.only(top: 9),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(context.k(WalletStatementKeys.note), style: DText.tiny),
+        const Gap(10),
+        DSeg<int>(
+          options: [(30, context.k(WalletStatementKeys.last30)), (90, context.k(WalletStatementKeys.last90)), (365, context.k(WalletStatementKeys.lastYear))],
+          value: _statementDays,
+          onChanged: (d) => setState(() {
+            _statementDays = d;
+            _statementError = null;
+          }),
+        ),
+        const Gap(10),
+        DError(_statementError ?? '', visible: _statementError != null),
+        DButton(context.k(WalletStatementKeys.downloadPdf), loading: _statementBusy, onTap: _downloadStatement),
+      ],
+    ),
+  );
+
   /// One key per withdrawal: a retried cancel replays the first answer.
   final _cancelKeys = <String, String>{};
 
@@ -135,21 +185,6 @@ class _WalletScreenState extends State<WalletScreen> {
         });
       }
     }
-  }
-
-  String _statement(WalletSummary s, List<WalletTxn> txns) {
-    String pad(String v, int n) => v.length >= n ? v : v + ' ' * (n - v.length);
-    return [
-      'DAHAB - WALLET STATEMENT',
-      'Mona Hassan Ibrahim',
-      '',
-      'Available   ${money(s.available)}',
-      'Held        ${money(s.heldOnOrders)}',
-      if (s.pendingWithdrawals > 0) 'To bank     ${money(s.pendingWithdrawals)}',
-      'Total       ${money(s.total)}',
-      '',
-      for (final x in txns) '${pad(x.date, 12)}${pad(x.label, 35)}${signedMoney(x.amount).padLeft(18)}  bal ${amount(x.balanceAfter)}',
-    ].join('\n');
   }
 
   @override
@@ -201,9 +236,14 @@ class _WalletScreenState extends State<WalletScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   const Expanded(child: T('Statement', style: DText.label)),
-                  DLink('Download', onTap: () => _download(context, 'dahab-statement.txt', _statement(summary, txns))),
+                  DLink('Download', onTap: () => setState(() => _statementOpen = !_statementOpen)),
                 ],
               ),
+              if (_statementOpen) _statementPanel(context),
+              if (repo.historyCutAt != null) ...[
+                const Gap(8),
+                Text(context.k(WalletStatementKeys.showingLatest, {'count': repo.historyCutAt}), style: DText.tiny),
+              ],
               const Gap(9),
               DChips(
                 children: [

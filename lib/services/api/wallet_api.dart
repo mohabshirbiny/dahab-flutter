@@ -18,8 +18,13 @@ class ApiWalletRepository implements WalletRepository {
   final ApiClient _client;
   final TokenStore _tokens;
 
-  /// Pages read for the history (newest first); older movements are not shown yet.
+  /// Pages read for the history (newest first); older movements are in the statement PDF.
   static const maxPages = 8;
+
+  int? _historyCutAt;
+
+  @override
+  int? get historyCutAt => _historyCutAt;
 
   bool get _signedIn => _tokens.accessToken != null || _tokens.refreshToken != null;
 
@@ -50,6 +55,7 @@ class ApiWalletRepository implements WalletRepository {
 
   @override
   Future<List<WalletTxn>> transactions() async {
+    _historyCutAt = null;
     if (!_signedIn) return const [];
     final rows = <WalletTxn>[];
     String? cursor;
@@ -63,11 +69,21 @@ class ApiWalletRepository implements WalletRepository {
         cursor = (res?['meta'] as Map?)?['next_cursor'] as String?;
         if (cursor == null) break;
       }
+      // Item 11: say so when the list stopped before the oldest movement, never stop silently.
+      if (cursor != null) _historyCutAt = rows.length;
     } on ApiException catch (e) {
       if (e.code == 'verification_required') return const [];
       rethrow;
     }
     return rows;
+  }
+
+  /// `GET /customer/me/wallet/statement.pdf?from=&to=` (wallet statement PDF, item 10): your own
+  /// statement, made by the backend. Throws `verification_required` before the ID is verified.
+  @override
+  Future<InvoiceFile> statementPdf({required String from, required String to}) async {
+    final file = await _client.getBytes('/customer/me/wallet/statement.pdf?from=$from&to=$to', auth: true);
+    return InvoiceFile(filename: 'dahab-statement-$from-to-$to.pdf', bytes: file.bytes);
   }
 
   /// `GET /customer/me/wallet/topup-methods` (backend spec 009). Trade gate:

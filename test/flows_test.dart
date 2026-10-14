@@ -1690,4 +1690,49 @@ void main() {
     expect(find.textContaining('Part of the card is cut off'), findsOneWidget);
     await _end(tester);
   });
+
+  // ---- wallet statement PDF (items 10–11) ----
+
+  testWidgets('the statement downloads the PDF from the backend for the chosen period', (tester) async {
+    final api = FakeBackend();
+    await _start(tester, backend: api);
+    await signIn(tester);
+    _go(tester, '/wallet');
+    await _settle(tester);
+
+    await _tap(tester, 'Download');
+    expect(find.text('Download PDF'), findsOneWidget);
+    await _tap(tester, 'Last 30 days');
+    await _tap(tester, 'Download PDF');
+
+    final q = api.statementQueries.single;
+    final from = DateTime.parse(q['from']!);
+    final to = DateTime.parse(q['to']!);
+    expect(to.difference(from).inDays, 29);
+    expect(find.textContaining('Mona Hassan Ibrahim'), findsNothing);
+    await _end(tester);
+  });
+
+  testWidgets('the history says when it shows only the latest movements', (tester) async {
+    final api = FakeBackend()
+      ..walletHasMore = true
+      ..walletRows = [
+        {
+          'id': 't1',
+          'kind': 'topup',
+          'created_at': '2026-09-24T14:02:00+03:00',
+          'available_change': '10.0000',
+          'held_change': '0.0000',
+          'available_after': '10.0000',
+          'held_after': '0.0000',
+          'reference': null,
+        },
+      ];
+    await _start(tester, backend: api);
+    await signIn(tester);
+    _go(tester, '/wallet');
+    await _settle(tester);
+    expect(find.text('Showing the latest 8 movements. Download the statement to see older ones.'), findsOneWidget);
+    await _end(tester);
+  });
 }

@@ -151,6 +151,13 @@ abstract interface class WalletRepository {
   Future<WalletSummary> summary();
   Future<List<WalletTxn>> transactions();
 
+  /// After [transactions]: the number of rows shown when the list stopped before the oldest
+  /// movement (it reads a limited number of pages); null when everything was read.
+  int? get historyCutAt;
+
+  /// The statement PDF made by the backend for Cairo days [from]–[to] (`YYYY-MM-DD`).
+  Future<InvoiceFile> statementPdf({required String from, required String to});
+
   /// What each buy request and order holds now (backend spec 015).
   Future<HeldItems> held();
 
