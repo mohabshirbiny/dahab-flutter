@@ -832,7 +832,9 @@ void openInboxItem(BuildContext context, InboxItem n) {
   if (type.startsWith('account.')) {
     unawaited(auth.refreshVerification(force: true));
     final again = type == 'account.resubmission_requested' || type == 'account.verification_rejected';
-    return context.nav(again && (auth.customer?.verification.canSubmit ?? true) ? R.idAgain : R.account);
+    // A rejection opens the same screen too: it says to contact customer service.
+    final open = auth.customer?.verification;
+    return context.nav(again && (open == null || open.canSubmit || open.isRejected) ? R.idAgain : R.account);
   }
   if (id != null && n.linkKind == 'listing' && (type.startsWith('listing.') || type == 'buy_request.new_request')) {
     return context.openPiece(view: 'owner', id: id);

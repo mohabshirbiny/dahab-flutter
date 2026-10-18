@@ -78,6 +78,15 @@ Widget? sellGate(BuildContext context, CustomerProfile? me) {
     return _GateCard(title: context.k(AccountIdentityKeys.sellClosedTitle), body: '', icon: 'lock');
   }
   final v = me.verification;
+  if (v.isRejected && !v.canSubmit) {
+    return _GateCard(
+      title: context.k(AccountIdentityKeys.rejectedTitle),
+      body: context.k(AccountIdentityKeys.rejectedBody),
+      icon: 'shield-lock',
+      verification: v,
+      action: DButton(context.k(AccountIdentityKeys.contactSupport), onTap: () => context.nav(R.support)),
+    );
+  }
   if (v.canSubmit) {
     return _GateCard(
       title: context.k(AccountIdentityKeys.sellAgainTitle),
@@ -164,11 +173,12 @@ class _IdentityAgainScreenState extends State<IdentityAgainScreen> {
       if (!mounted) return;
       final message = switch (e.code) {
         'document_already_pending' => context.kr(AccountIdentityKeys.alreadyPending),
+        'identity_rejected_contact_support' => context.kr(AccountIdentityKeys.rejectedBody),
         'upload_token_invalid' => context.kr(AccountIdentityKeys.uploadExpired),
         'unsupported_doc_kind' => context.kr(AccountIdentityKeys.unsupportedKind),
         _ => e.fieldError('front_upload_token') ?? e.fieldError('file') ?? authErrorMessage(e),
       };
-      if (e.code == 'document_already_pending') await context.read<AuthController>().refreshVerification(force: true);
+      if (e.code == 'document_already_pending' || e.code == 'identity_rejected_contact_support') await context.read<AuthController>().refreshVerification(force: true);
       if (!mounted) return;
       setState(() {
         _error = message;
@@ -200,7 +210,16 @@ class _IdentityAgainScreenState extends State<IdentityAgainScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (_sent || (me != null && !v.canSubmit)) ...[
+          if (!_sent && me != null && v.isRejected && !v.canSubmit) ...[
+            // Not approved: no new upload from the app; customer service can reopen the check.
+            Text(context.k(AccountIdentityKeys.rejectedTitle), style: DText.h2),
+            const Gap(6),
+            Text(context.k(AccountIdentityKeys.rejectedBody), style: DText.muted),
+            const Gap(14),
+            IdentityReasons(v),
+            const Gap(16),
+            DButton(context.k(AccountIdentityKeys.contactSupport), onTap: () => context.nav(R.support)),
+          ] else if (_sent || (me != null && !v.canSubmit)) ...[
             DNote(icon: 'clock', kind: NoteKind.wait, text: context.k(_sent ? AccountIdentityKeys.sent : AccountIdentityKeys.notNeeded)),
             const Gap(14),
             Center(child: IdentityPill(me ?? _placeholder)),

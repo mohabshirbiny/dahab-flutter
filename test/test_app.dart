@@ -67,7 +67,8 @@ class FakeBackend {
   /// Bodies sent to `POST /customer/me/identity-documents`.
   final identitySubmissions = <Map<String, dynamic>>[];
 
-  /// The verification object of a customer who was asked to upload again (or rejected).
+  /// The verification object of a customer who was asked to upload again (or rejected: no new
+  /// upload, backend rejected-identity-reopen).
   static Map<String, dynamic> identityState(String status, {List<String> reasons = const [], String? note, int attempt = 1}) => {
     'document_status': status,
     'doc_kind': 'egyptian_id',
@@ -76,7 +77,7 @@ class FakeBackend {
     'attempt_number': attempt,
     'submitted_at': '2026-10-10T10:00:00+03:00',
     'reviewed_at': status == 'pending' ? null : '2026-10-11T10:00:00+03:00',
-    'can_submit': status == 'needs_resubmission' || status == 'rejected',
+    'can_submit': status == 'needs_resubmission',
   };
 
   Map<String, dynamic> get _verification => verification ?? identityState(pendingAccount ? 'pending' : 'verified');
@@ -1570,6 +1571,7 @@ class FakeBackend {
       case '/customer/me/identity-documents':
         final v = _verification;
         if (v['document_status'] == 'pending') return error(409, 'document_already_pending');
+        if (v['document_status'] == 'rejected') return error(409, 'identity_rejected_contact_support');
         if (body['doc_kind'] == 'egyptian_id' && body['back_upload_token'] == null) return error(422, 'unsupported_doc_kind');
         identitySubmissions.add(body);
         final attempt = ((v['attempt_number'] as int?) ?? 0) + 1;

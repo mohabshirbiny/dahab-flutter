@@ -137,7 +137,8 @@ class AccountScreen extends StatelessWidget {
               inUse?.short ?? context.t(payouts.view == null ? '' : 'Add one');
           final idVerified = me.isVerified;
           // A rejected or asked-again customer sends new ID photos (backend testing fixes item 5).
-          final canResubmit = !idVerified && me.verification.canSubmit;
+          // A rejected one opens the same screen, which says to contact customer service.
+          final canResubmit = !idVerified && (me.verification.canSubmit || me.verification.isRejected);
           final emailConfirmed = me.emailVerifiedAt != null;
           const detailPad = EdgeInsets.symmetric(vertical: 13);
           Widget chevronValue(String v) => Row(

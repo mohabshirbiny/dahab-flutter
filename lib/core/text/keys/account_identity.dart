@@ -134,6 +134,18 @@ abstract final class AccountIdentityKeys {
   static const sellSuspendedTitle = TextKey('account.identity.sell_suspended_title', 'Selling is paused on your account', ar: 'البيع واقف على حسابك', area: _area, where: _sell);
   static const sellClosedTitle = TextKey('account.identity.sell_closed_title', 'This account is closed', ar: 'الحساب ده مقفول', area: _area, where: _sell);
 
+  // ---- Not approved: no new upload, contact customer service (backend rejected-identity-reopen) ----
+
+  static const rejectedTitle = TextKey('account.identity.rejected_title', 'Your ID was not approved', ar: 'بطاقتك مااتقبلتش', area: _area, where: _screen);
+  static const rejectedBody = TextKey(
+    'account.identity.rejected_body',
+    'You cannot send your ID again from the app. Contact customer service and they can look at it again.',
+    ar: 'مش هتقدر تبعت بطاقتك تاني من التطبيق. كلّم خدمة العملاء وهم يقدروا يراجعوها تاني.',
+    area: _area,
+    where: _screen,
+  );
+  static const contactSupport = TextKey('account.identity.contact_support', 'Contact customer service', ar: 'كلّم خدمة العملاء', area: _area, where: _screen);
+
   static const all = <TextKey>[
     pillVerified,
     pillWaiting,
@@ -173,5 +185,8 @@ abstract final class AccountIdentityKeys {
     sellAgainBody,
     sellSuspendedTitle,
     sellClosedTitle,
+    rejectedTitle,
+    rejectedBody,
+    contactSupport,
   ];
 }
