@@ -1,3 +1,4 @@
+import '../../core/data/countries.dart';
 import '../api/api_client.dart';
 
 /// English source text for an API error (translated by the UI with `t()`).
@@ -64,15 +65,13 @@ String toE164(String countryCode, String input) {
 /// The inverse of [toE164]: "+201012344417" → ("+20", "1012344417"). A number with no known
 /// country code comes back whole, with an empty code.
 (String, String) splitE164(String e164) {
-  const codes = ['+971', '+966', '+965', '+974', '+20', '+44', '+39', '+1'];
-  final cc = codes.firstWhere(e164.startsWith, orElse: () => '');
+  final cc = dialPrefixOf(e164);
   return (cc, e164.substring(cc.length));
 }
 
 /// "+201012344417" → "+20 10 •••• 4417" (as shown in the prototype).
 String maskPhone(String e164) {
-  const codes = ['+971', '+966', '+965', '+974', '+20', '+44', '+39', '+1'];
-  final cc = codes.firstWhere(e164.startsWith, orElse: () => '');
+  final cc = dialPrefixOf(e164);
   final rest = e164.substring(cc.length);
   if (cc.isEmpty || rest.length < 7) return e164;
   return '$cc ${rest.substring(0, 2)} •••• ${rest.substring(rest.length - 4)}';

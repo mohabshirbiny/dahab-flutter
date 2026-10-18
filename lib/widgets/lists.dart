@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../core/i18n/i18n.dart';
@@ -233,7 +235,14 @@ class DSlot extends StatelessWidget {
     this.boxHeight = 50,
     this.iconSize = 20,
     this.footer,
+    this.preview,
+    this.previewHeight = 110,
   });
+
+  /// The picked image, shown in place of the check once the slot is [done]
+  /// (see [slotPreview]); null keeps the check (a PDF, a video).
+  final Widget? preview;
+  final double previewHeight;
 
   final String title;
   final bool done;
@@ -257,14 +266,37 @@ class DSlot extends StatelessWidget {
           padding: const EdgeInsets.all(11),
           child: Column(
             children: [
-              Container(
-                height: boxHeight,
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 7),
-                decoration: BoxDecoration(color: DColors.paper, borderRadius: BorderRadius.circular(8)),
-                alignment: Alignment.center,
-                child: DIcon(done ? 'circle-check' : icon, size: iconSize, color: done ? DColors.ok : DColors.line2),
-              ),
+              if (done && preview != null)
+                Container(
+                  height: previewHeight,
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 7),
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(color: DColors.paper, borderRadius: BorderRadius.circular(8)),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      preview!,
+                      const PositionedDirectional(
+                        top: 6,
+                        end: 6,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(color: DColors.white, shape: BoxShape.circle),
+                          child: DIcon('circle-check', size: 18, color: DColors.ok),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Container(
+                  height: boxHeight,
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 7),
+                  decoration: BoxDecoration(color: DColors.paper, borderRadius: BorderRadius.circular(8)),
+                  alignment: Alignment.center,
+                  child: DIcon(done ? 'circle-check' : icon, size: iconSize, color: done ? DColors.ok : DColors.line2),
+                ),
               Text(
                 context.t(title),
                 textAlign: TextAlign.center,
@@ -283,6 +315,18 @@ class DSlot extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The [DSlot.preview] of a file picked on this device: the image itself, or
+/// null when it is not an image (a PDF, a video).
+Widget? slotPreview(List<int> bytes, String contentType) {
+  if (!contentType.startsWith('image/') || bytes.isEmpty) return null;
+  return Image.memory(
+    bytes is Uint8List ? bytes : Uint8List.fromList(bytes),
+    fit: BoxFit.cover,
+    gaplessPlayback: true,
+    errorBuilder: (_, _, _) => const Center(child: DIcon('circle-check', size: 20, color: DColors.ok)),
+  );
 }
 
 class _DashedRRectPainter extends CustomPainter {

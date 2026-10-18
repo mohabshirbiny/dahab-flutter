@@ -460,6 +460,7 @@ class _Signup3ScreenState extends State<Signup3Screen> {
     done: image != null,
     sub: image != null ? 'Added' : 'Tap to add',
     subColor: image != null ? DColors.ok : null,
+    preview: image == null ? null : slotPreview(image.file.bytes, image.file.contentType),
     footer: image != null
         ? [const Gap(2), Text(image.file.filename, maxLines: 1, overflow: TextOverflow.ellipsis, style: DText.tiny), const T('Tap to replace', style: DText.linkTiny)]
         : null,

@@ -10,15 +10,3 @@ const mockProfile = UserProfile(
   payoutShort: 'CIB ••4417',
   inviteCode: 'MONA4417',
 );
-
-/// Countries offered in the phone-number pickers.
-const mockCountryCodes = <(String, String)>[
-  ('+20', '🇪🇬 +20'),
-  ('+971', '🇦🇪 +971'),
-  ('+966', '🇸🇦 +966'),
-  ('+965', '🇰🇼 +965'),
-  ('+974', '🇶🇦 +974'),
-  ('+44', '🇬🇧 +44'),
-  ('+1', '🇺🇸 +1'),
-  ('+39', '🇮🇹 +39'),
-];

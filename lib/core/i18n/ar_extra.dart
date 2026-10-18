@@ -7,6 +7,10 @@
 ///
 /// The prototype dictionary (assets/i18n/ar.json) always wins over this map.
 const Map<String, String> arExtra = {
+  // The country-code picker of the phone fields. AR-DRAFT: the owner approves the wording.
+  'Country code': 'كود الدولة',
+  'Search a country or code': 'دوّر على دولة أو كود',
+  'No country matches.': 'مفيش دولة بالاسم ده.',
   // States added in the Flutter build.
   // Signed-out Account (AR-DRAFT). makers (backend spec 019 6B). AR-DRAFT: the owner approves the wording.
   'Sign in to see your account': 'سجّل دخولك عشان تشوف حسابك',

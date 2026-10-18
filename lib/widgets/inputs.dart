@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../core/data/countries.dart';
 import '../core/i18n/i18n.dart';
 import '../core/theme/tokens.dart';
 import '../core/theme/typography.dart';
@@ -186,6 +187,147 @@ class DSelect<V> extends StatelessWidget {
       onChanged: (v) {
         if (v != null) onChanged(v);
       },
+    );
+  }
+}
+
+/// The calling-code button of a phone field: flag + code, styled like [DSelect].
+/// A tap opens every country with a search box ([countries]); [onChanged] gets the
+/// chosen country, whose `dial` goes in front of the number.
+class DCountryCode extends StatelessWidget {
+  const DCountryCode({super.key, required this.country, required this.onChanged});
+
+  final Country country;
+  final ValueChanged<Country> onChanged;
+
+  Future<void> _open(BuildContext context) async {
+    final picked = await showDialog<Country>(
+      context: context,
+      barrierColor: DColors.modalBarrier,
+      builder: (_) => _CountryDialog(current: country),
+    );
+    if (picked != null) onChanged(picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: '${context.t('Country code')}: ${country.name(context.isArabic)} ${country.dial}',
+      child: Tappable(
+        onTap: () => _open(context),
+        child: InputDecorator(
+          decoration: _decoration(context, padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11)),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${country.flag} ${country.dial}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textDirection: TextDirection.ltr,
+                  style: const TextStyle(fontSize: 14, height: 1.6, color: DColors.ink, fontFamilyFallback: ['Noto Color Emoji']),
+                ),
+              ),
+              const RotatedBox(quarterTurns: 1, child: DIcon('chevron-right', size: 14, color: DColors.ink2)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CountryDialog extends StatefulWidget {
+  const _CountryDialog({required this.current});
+
+  final Country current;
+
+  @override
+  State<_CountryDialog> createState() => _CountryDialogState();
+}
+
+class _CountryDialogState extends State<_CountryDialog> {
+  String _query = '';
+
+  List<Country> _matches(bool arabic) {
+    final q = _query.trim().toLowerCase();
+    if (q.isEmpty) {
+      final popular = [for (final iso in popularCountryIsos) countries.firstWhere((c) => c.iso == iso)];
+      final rest = countries.where((c) => !popularCountryIsos.contains(c.iso)).toList()..sort((a, b) => a.name(arabic).compareTo(b.name(arabic)));
+      return [...popular, ...rest];
+    }
+    final digits = q.replaceAll(RegExp(r'\D'), '');
+    return countries
+        .where((c) => c.en.toLowerCase().contains(q) || c.ar.contains(q) || c.iso.toLowerCase() == q || (digits.isNotEmpty && c.dial.substring(1).startsWith(digits)))
+        .toList()
+      ..sort((a, b) => a.name(arabic).compareTo(b.name(arabic)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final arabic = context.isArabic;
+    final list = _matches(arabic);
+    return Dialog(
+      backgroundColor: DColors.white,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.all(22),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(DRadius.modal)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360, maxHeight: 520),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(context.t('Country code'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 10),
+              TextField(
+                autofocus: true,
+                onChanged: (v) => setState(() => _query = v),
+                cursorColor: DColors.ink,
+                style: const TextStyle(fontSize: 14, height: 1.6, color: DColors.ink),
+                decoration: _decoration(context, hint: 'Search a country or code'),
+              ),
+              const SizedBox(height: 8),
+              Flexible(
+                child: list.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        child: Text(context.t('No country matches.'), style: DText.muted),
+                      )
+                    : ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: list.length,
+                        itemBuilder: (context, i) {
+                          final c = list[i];
+                          final selected = c.iso == widget.current.iso;
+                          return Tappable(
+                            onTap: () => Navigator.of(context).pop(c),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+                              decoration: BoxDecoration(color: selected ? DColors.paper : null, borderRadius: BorderRadius.circular(DRadius.input)),
+                              child: Row(
+                                children: [
+                                  Text(c.flag, style: const TextStyle(fontSize: 18, fontFamilyFallback: ['Noto Color Emoji'])),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(c.name(arabic), overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: DColors.ink)),
+                                  ),
+                                  Text(c.dial, textDirection: TextDirection.ltr, style: const TextStyle(fontSize: 13, color: DColors.ink2)),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
