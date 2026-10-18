@@ -1072,6 +1072,7 @@ class _AddFundsScreenState extends State<AddFundsScreen> {
                   title: 'Add a screenshot or receipt',
                   sub: _receipt == null ? 'Speeds things up if the reference is missing' : _receipt!.filename,
                   done: _receipt != null,
+                  preview: _receipt == null ? null : slotPreview(_receipt!.bytes, _receipt!.contentType),
                   onTap: _busy ? () {} : _pickReceipt,
                 ),
                 const Gap(8),

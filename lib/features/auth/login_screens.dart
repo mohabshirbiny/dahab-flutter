@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/data/countries.dart';
 import '../../core/text/keys/auth_reset.dart';
 import '../../core/text/texts_controller.dart';
-import '../../mock/mock_account.dart';
 import '../../services/api/api_client.dart';
 import '../../services/auth/auth_api.dart';
 import '../../services/auth/auth_controller.dart';
@@ -130,8 +130,9 @@ Widget _resetNotice(BuildContext context, PasswordResetDone done) {
   return DNote(icon: 'circle-check', kind: NoteKind.ok, text: '${context.k(AuthResetKeys.doneTitle)}. ${lines.join(' ')}');
 }
 
-/// Country code picker + phone number input.
-class PhoneInput extends StatelessWidget {
+/// Country code picker (every country, with search) + phone number input.
+/// [code] is the calling code ("+20"); [onCode] gets the chosen one.
+class PhoneInput extends StatefulWidget {
   const PhoneInput({super.key, required this.code, required this.onCode, required this.controller, this.hint});
 
   final String code;
@@ -140,16 +141,31 @@ class PhoneInput extends StatelessWidget {
   final String? hint;
 
   @override
+  State<PhoneInput> createState() => _PhoneInputState();
+}
+
+class _PhoneInputState extends State<PhoneInput> {
+  /// The country last picked, so one that shares a code (Canada and the US) keeps its flag.
+  String? _iso;
+
+  @override
   Widget build(BuildContext context) {
+    final country = countryForDial(widget.code, preferIso: _iso) ?? countries.firstWhere((c) => c.iso == 'EG');
     return Row(
       children: [
         SizedBox(
           width: 110,
-          child: DSelect<String>(options: mockCountryCodes, value: code, onChanged: onCode, translateLabels: false),
+          child: DCountryCode(
+            country: country,
+            onChanged: (c) {
+              setState(() => _iso = c.iso);
+              widget.onCode(c.dial);
+            },
+          ),
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: DInput(controller: controller, hint: hint, keyboardType: TextInputType.phone, textDirection: TextDirection.ltr),
+          child: DInput(controller: widget.controller, hint: widget.hint, keyboardType: TextInputType.phone, textDirection: TextDirection.ltr),
         ),
       ],
     );

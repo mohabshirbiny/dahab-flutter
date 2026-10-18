@@ -83,7 +83,7 @@ class _Sell2ScreenState extends State<Sell2Screen> {
           ),
           const Gap(9),
           Grid2(
-            children: [for (final s in d.photoSlots) _PhotoSlot(slot: s, done: d.has(s.key), onTap: () => pickIntoSlot(context, s.key))],
+            children: [for (final s in d.photoSlots) _PhotoSlot(slot: s, done: d.has(s.key), preview: _preview(d, s.key), onTap: () => pickIntoSlot(context, s.key))],
           ),
           const Gap(9),
           DButton.ghost(
@@ -151,12 +151,22 @@ class _Sell2ScreenState extends State<Sell2Screen> {
   }
 }
 
+/// A photo picked on this device, or one already on the listing being fixed; null for a PDF.
+Widget? _preview(SellDraft d, String key) {
+  final file = d.files[key];
+  if (file != null) return slotPreview(file.bytes, file.contentType);
+  final kept = d.kept[key];
+  if (kept != null && kept.mime.startsWith('image/')) return ApiImage(path: kept.url, auth: true, height: 110);
+  return null;
+}
+
 class _PhotoSlot extends StatelessWidget {
-  const _PhotoSlot({required this.slot, required this.done, required this.onTap});
+  const _PhotoSlot({required this.slot, required this.done, required this.onTap, this.preview});
 
   final PhotoSlot slot;
   final bool done;
   final VoidCallback onTap;
+  final Widget? preview;
 
   @override
   Widget build(BuildContext context) {
@@ -164,6 +174,7 @@ class _PhotoSlot extends StatelessWidget {
       title: slot.title,
       icon: slot.icon,
       done: done,
+      preview: preview,
       onTap: onTap,
       footer: [
         const Gap(4),

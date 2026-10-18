@@ -184,6 +184,7 @@ class _IdentityAgainScreenState extends State<IdentityAgainScreen> {
     done: file != null,
     sub: file != null ? context.k(AccountIdentityKeys.added) : context.k(AccountIdentityKeys.tapToAdd),
     subColor: file != null ? DColors.ok : null,
+    preview: file == null ? null : slotPreview(file.bytes, file.contentType),
     footer: file != null ? [const Gap(2), Text(file.filename, maxLines: 1, overflow: TextOverflow.ellipsis, style: DText.tiny)] : null,
     onTap: () => _pick(front),
   );
