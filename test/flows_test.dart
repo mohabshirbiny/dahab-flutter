@@ -1609,6 +1609,31 @@ void main() {
     await _end(tester);
   });
 
+  testWidgets('a rejected customer cannot send again and is sent to customer service', (tester) async {
+    final api = FakeBackend()
+      ..pendingAccount = true
+      ..verification = FakeBackend.identityState('rejected', reasons: ['name_does_not_match'], note: 'The name is not yours.');
+    await _start(tester, backend: api);
+    await signIn(tester);
+    await _tap(tester, 'Account');
+    expect(find.text('Not approved'), findsWidgets);
+
+    await _tap(tester, 'National ID');
+    expect(find.text('Your ID was not approved'), findsOneWidget);
+    expect(find.textContaining('The name does not match your account'), findsOneWidget);
+    expect(find.text('The name is not yours.'), findsOneWidget);
+    expect(find.text('Send for review'), findsNothing);
+    await _tap(tester, 'Contact customer service');
+    expect(find.text('Contact us'), findsWidgets);
+    expect(api.identitySubmissions, isEmpty);
+
+    _go(tester, '/sell1');
+    await _settle(tester);
+    expect(find.text('Your ID was not approved'), findsOneWidget);
+    expect(find.text('What are you selling'), findsNothing);
+    await _end(tester);
+  });
+
   testWidgets('inbox items open the right screen by type and link', (tester) async {
     const owner1 = 'b1000000-0000-4000-8000-000000000001';
     const owner2 = 'b1000000-0000-4000-8000-000000000002';
