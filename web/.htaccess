@@ -1,0 +1,8 @@
+# Flutter Web keeps the same file names on every build (main.dart.js, flutter_bootstrap.js, …),
+# so without this a browser keeps the previous version for as long as the host's cache allows
+# (Hostinger sends 7 days). Copied into build/web/ by `flutter build web`; upload it with the rest.
+<IfModule mod_headers.c>
+  <FilesMatch "^(index\.html|main\.dart\.js|flutter_bootstrap\.js|flutter\.js|flutter_service_worker\.js|version\.json|manifest\.json)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
