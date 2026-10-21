@@ -23,7 +23,9 @@ class OrdersScreen extends StatefulWidget {
 class _OrdersScreenState extends State<OrdersScreen> {
   String _stage = 'all';
   String _role = 'all';
-  late final Future<List<OrderCardData>> _future = context.read<OrdersRepository>().orders();
+  late Future<List<OrderCardData>> _future = _load();
+
+  Future<List<OrderCardData>> _load() => context.read<OrdersRepository>().orders();
 
   List<OrderCardData> _filter(List<OrderCardData> all) => all.where((o) {
     final okStage = _stage == 'all' || o.stage.name == _stage;
@@ -60,6 +62,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
           FutureBuilder<List<OrderCardData>>(
             future: _future,
             builder: (context, snap) {
+              if (snap.hasError) return DErrorState(onRetry: () => setState(() => _future = _load()));
               if (!snap.hasData) return const DLoading(height: 300);
               final all = snap.data!;
               if (all.isEmpty) {
