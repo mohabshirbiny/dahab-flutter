@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../core/utils/format.dart';
 import '../../models/buy_request.dart';
 import '../../models/dispute.dart';
@@ -27,12 +29,15 @@ class ApiOrdersRepository implements OrdersRepository {
 
   @override
   Future<List<OrderCardData>> orders() async {
-    final orders = await list();
-    List<BuyRequest> mine;
+    // Both lists are read at the same time; a refused request list still shows the orders.
+    final requests = _buyRequests.mine().catchError((Object _) => const <BuyRequest>[], test: (e) => e is ApiException);
+    final List<CustomerOrder> orders;
+    final List<BuyRequest> mine;
     try {
-      mine = await _buyRequests.mine();
-    } on ApiException {
-      mine = const [];
+      (orders, mine) = await (list(), requests).wait;
+    } on ParallelWaitError<(List<CustomerOrder>?, List<BuyRequest>?), (AsyncError?, AsyncError?)> catch (e) {
+      final failed = (e.errors.$1 ?? e.errors.$2)!;
+      Error.throwWithStackTrace(failed.error, failed.stackTrace);
     }
     return [
       for (final o in orders) orderCard(o),
