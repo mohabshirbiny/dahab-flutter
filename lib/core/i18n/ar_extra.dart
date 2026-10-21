@@ -693,4 +693,14 @@ const Map<String, String> arExtra = {
   'It helps more than you think.': 'بتفرق معانا أكتر مما تتخيل.',
   // Upload your ID again (backend testing fixes). AR-DRAFT: the owner approves the wording.
   'Upload your ID again': 'ارفع بطاقتك تاني',
+  // Testing notes (2026-10-21). AR-DRAFT: the owner approves the wording.
+  'Type the number': 'اكتب الرقم',
+  'Use': 'استخدم',
+  'g': 'جم',
+  'EGP /g': 'جنيه /جم',
+  'If you have a problem bringing the piece, please contact us. We can look at your deadline again.':
+      'لو عندك مشكلة في توصيل القطعة، كلمنا. ممكن نراجع المهلة بتاعتك تاني.',
+  'Add a screenshot or receipt of your transfer first.': 'ضيف صورة أو إيصال التحويل الأول.',
+  'Required. A screenshot of the transfer is enough.': 'مطلوب. صورة شاشة للتحويل كفاية.',
+  'We need it to match your transfer, even when you use the reference.': 'محتاجينه علشان نطابق تحويلك، حتى لو استخدمت الرقم المرجعي.',
 };

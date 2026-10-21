@@ -90,7 +90,18 @@ class _Sell1Body extends StatelessWidget {
           DSeg<int>(options: [for (final k in ref.karats) (k, '${k}K')], value: d.karat, onChanged: (v) => d.update((d) => d.karat = v)),
           const Gap(14),
           ...kindGrid,
-          DSlider(label: 'Weight', value: d.weight, min: 0.5, max: 50, step: 0.1, display: '${d.weight.toStringAsFixed(1)} g', onChanged: (v) => d.update((d) => d.weight = v)),
+          DSlider(
+            label: 'Weight',
+            value: d.weight,
+            min: 1,
+            max: 100,
+            step: 1,
+            display: '${_grams(d.weight)} g',
+            typeMax: 9999,
+            typeDecimals: 2,
+            unit: 'g',
+            onChanged: (v) => d.update((d) => d.weight = v),
+          ),
           Transform.translate(
             offset: const Offset(0, -6),
             child: Align(
@@ -100,7 +111,17 @@ class _Sell1Body extends StatelessWidget {
           ),
           const Gap(6),
           if (isGold) ...[
-            DSlider(label: 'Making charge', value: d.making, min: 0, max: 1000, step: 10, display: '${d.making.round()} /g', onChanged: (v) => d.update((d) => d.making = v)),
+            DSlider(
+              label: 'Making charge',
+              value: d.making,
+              min: 0,
+              max: 5000,
+              step: 10,
+              display: '${d.making.round()} /g',
+              typeMax: 100000,
+              unit: 'EGP /g',
+              onChanged: (v) => d.update((d) => d.making = v),
+            ),
             const DNote(
               icon: 'bulb',
               text:
@@ -300,3 +321,6 @@ class _Sell1Body extends StatelessWidget {
     );
   }
 }
+
+/// A weight as the seller set it: whole grams on the slider, up to 2 decimals when typed.
+String _grams(double w) => w == w.roundToDouble() ? w.toStringAsFixed(0) : w.toStringAsFixed(2).replaceFirst(RegExp(r'0$'), '');

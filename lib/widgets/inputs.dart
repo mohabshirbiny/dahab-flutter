@@ -396,7 +396,19 @@ class DError extends StatelessWidget {
 
 /// `.slider` — label, range input, value.
 class DSlider extends StatelessWidget {
-  const DSlider({super.key, required this.label, required this.value, required this.min, required this.max, required this.step, required this.display, required this.onChanged});
+  const DSlider({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.step,
+    required this.display,
+    required this.onChanged,
+    this.typeMax,
+    this.typeDecimals = 0,
+    this.unit,
+  });
 
   final String label;
   final double value;
@@ -406,9 +418,37 @@ class DSlider extends StatelessWidget {
   final String display;
   final ValueChanged<double> onChanged;
 
+  /// When set, tapping the value opens a box to type an exact number (up to [typeMax], with
+  /// [typeDecimals] decimals), beyond the slider's own steps and range.
+  final double? typeMax;
+  final int typeDecimals;
+
+  /// Shown after the typed number, e.g. `g`.
+  final String? unit;
+
+  Future<void> _type(BuildContext context) async {
+    final typed = await showDialog<double>(
+      context: context,
+      barrierColor: DColors.modalBarrier,
+      builder: (_) => _TypeNumberDialog(label: label, value: value, max: typeMax!, decimals: typeDecimals, unit: unit),
+    );
+    if (typed != null) onChanged(typed);
+  }
+
   @override
   Widget build(BuildContext context) {
     final divisions = ((max - min) / step).round();
+    final shown = Text(
+      context.t(display),
+      textAlign: TextAlign.end,
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        decoration: typeMax == null ? null : TextDecoration.underline,
+        decorationStyle: TextDecorationStyle.dotted,
+        decorationColor: DColors.ink3,
+      ),
+    );
     return Padding(
       padding: const EdgeInsets.only(bottom: 13),
       child: Row(
@@ -441,13 +481,97 @@ class DSlider extends StatelessWidget {
           const SizedBox(width: 11),
           ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 62),
-            child: Text(
-              context.t(display),
-              textAlign: TextAlign.end,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-            ),
+            child: typeMax == null
+                ? shown
+                : Semantics(
+                    button: true,
+                    label: context.t('Type the number'),
+                    child: Tappable(onTap: () => _type(context), child: shown),
+                  ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The slider's "type the number" box: one number field, Cancel and Use.
+class _TypeNumberDialog extends StatefulWidget {
+  const _TypeNumberDialog({required this.label, required this.value, required this.max, required this.decimals, this.unit});
+
+  final String label;
+  final double value;
+  final double max;
+  final int decimals;
+  final String? unit;
+
+  @override
+  State<_TypeNumberDialog> createState() => _TypeNumberDialogState();
+}
+
+class _TypeNumberDialogState extends State<_TypeNumberDialog> {
+  late final TextEditingController _c = TextEditingController(text: widget.value.toStringAsFixed(widget.decimals));
+  String? _error;
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  void _use() {
+    final v = double.tryParse(_c.text.replaceAll(',', '').trim());
+    if (v == null || v <= 0 || v > widget.max) {
+      setState(() => _error = 'Enter a number above 0 and up to ${widget.max.round()}.');
+      return;
+    }
+    Navigator.of(context).pop(double.parse(v.toStringAsFixed(widget.decimals)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pattern = widget.decimals == 0 ? r'^\d*$' : '^\\d*\\.?\\d{0,${widget.decimals}}\$';
+    return Dialog(
+      backgroundColor: DColors.white,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.all(22),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(DRadius.modal)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 320),
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(context.t(widget.label), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: DInput(
+                      controller: _c,
+                      keyboardType: TextInputType.numberWithOptions(decimal: widget.decimals > 0),
+                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(pattern))],
+                      onSubmitted: (_) => _use(),
+                    ),
+                  ),
+                  if (widget.unit != null) ...[const SizedBox(width: 10), Text(context.t(widget.unit!), style: const TextStyle(fontSize: 13, color: DColors.ink2))],
+                ],
+              ),
+              DError(_error ?? '', visible: _error != null),
+              const SizedBox(height: 16),
+              DActsRow(
+                gap: 9,
+                children: [
+                  DButton.ghost('Cancel', onTap: () => Navigator.of(context).pop()),
+                  DButton('Use', onTap: _use),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

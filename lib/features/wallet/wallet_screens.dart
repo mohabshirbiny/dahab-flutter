@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -17,6 +16,7 @@ import '../../models/wallet.dart';
 import '../../services/auth/auth_controller.dart';
 import '../../services/api/api_client.dart';
 import '../../services/auth/auth_messages.dart';
+import '../../services/media_picker.dart';
 import '../../services/repositories.dart';
 import '../../services/payout_controller.dart';
 import '../../services/text_download.dart';
@@ -857,8 +857,6 @@ class _AddFundsScreenState extends State<AddFundsScreen> {
   (String, String)? _key;
 
   /// `dahab-identity.allowed_mimes` plus PDF; `max_upload_kb`.
-  static const _allowed = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
-  static const _maxBytes = 8192 * 1024;
 
   @override
   void dispose() {
@@ -888,28 +886,15 @@ class _AddFundsScreenState extends State<AddFundsScreen> {
   Future<void> _pickReceipt() async {
     if (_receipt != null) {
       final ok = await ask(context, title: 'Replace this', body: 'You can add another receipt instead.', yes: 'Replace');
-      if (!ok) return;
+      if (!ok || !mounted) return;
     }
-    final picked = await FilePicker.pickFile(type: FileType.custom, allowedExtensions: _allowed);
+    final picked = await context.read<MediaPicker>().pick(MediaKind.topupReceipt);
     if (picked == null || !mounted) return;
-    final ext = (picked.extension ?? '').toLowerCase();
-    if (!_allowed.contains(ext)) return showToast(context, 'Use a photo (JPG, PNG, WEBP) or a PDF.');
-    final bytes = await picked.readAsBytes();
-    if (!mounted) return;
-    if (bytes.length > _maxBytes) return showToast(context, 'That file is larger than 8 MB.');
+    if (picked.error != null) return showToast(context, picked.error!);
     setState(() {
-      _receipt = UploadFile(
-        field: 'file',
-        filename: picked.name,
-        bytes: bytes,
-        contentType: switch (ext) {
-          'png' => 'image/png',
-          'webp' => 'image/webp',
-          'pdf' => 'application/pdf',
-          _ => 'image/jpeg',
-        },
-      );
+      _receipt = picked.file;
       _receiptToken = null;
+      _error = null;
     });
     showToast(context, 'Added.');
   }
@@ -917,8 +902,12 @@ class _AddFundsScreenState extends State<AddFundsScreen> {
   Future<void> _submit() async {
     final amount = _amount.text.replaceAll(',', '').trim();
     final valid = RegExp(r'^\d{1,8}(\.\d{1,2})?$').hasMatch(amount) && parseAmount(amount) > 0;
-    setState(() => _amountError = valid ? null : 'Enter an amount above 0, e.g. 20,000.');
-    if (!valid || _accountId == null) return;
+    setState(() {
+      _amountError = valid ? null : 'Enter an amount above 0, e.g. 20,000.';
+      // The backend requires proof of the transfer.
+      _error = _receipt == null ? 'Add a screenshot or receipt of your transfer first.' : null;
+    });
+    if (!valid || _accountId == null || _receipt == null) return;
 
     setState(() {
       _busy = true;
@@ -926,7 +915,7 @@ class _AddFundsScreenState extends State<AddFundsScreen> {
     });
     final repo = context.read<WalletRepository>();
     try {
-      if (_receipt != null) _receiptToken ??= await repo.uploadReceipt(_receipt!);
+      _receiptToken ??= await repo.uploadReceipt(_receipt!);
       await repo.submitTopUp(amount: amount, accountId: _accountId!, receiptToken: _receiptToken, idempotencyKey: _idempotencyKey('$amount|$_accountId|${_receiptToken ?? ''}'));
       if (!mounted) return;
       await tell(context, title: 'Thanks', body: 'We will match your transfer and add it to your wallet. You will get a message when it lands.');
@@ -1070,13 +1059,13 @@ class _AddFundsScreenState extends State<AddFundsScreen> {
                 const DLabel('Proof of transfer'),
                 DSlot(
                   title: 'Add a screenshot or receipt',
-                  sub: _receipt == null ? 'Speeds things up if the reference is missing' : _receipt!.filename,
+                  sub: _receipt == null ? 'Required. A screenshot of the transfer is enough.' : _receipt!.filename,
                   done: _receipt != null,
                   preview: _receipt == null ? null : slotPreview(_receipt!.bytes, _receipt!.contentType),
                   onTap: _busy ? () {} : _pickReceipt,
                 ),
                 const Gap(8),
-                const T('Optional when you use the reference. Needed if you transferred without it.', style: DText.tiny),
+                const T('We need it to match your transfer, even when you use the reference.', style: DText.tiny),
                 if (_error != null) ...[const Gap(12), DNote(icon: 'alert-triangle', kind: NoteKind.wait, text: _error!)],
                 const Gap(16),
                 DButton("I've sent the transfer", loading: _busy, onTap: _busy ? null : _submit),

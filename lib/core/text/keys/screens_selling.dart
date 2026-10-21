@@ -130,6 +130,7 @@ abstract final class ScreensSellingKeys {
   static const sellingTryWelcomeOrEid25 = TextKey('selling.try_welcome_or_eid25', 'Try WELCOME or EID25.', area: 'Selling', where: 'Sell: step 1');
   static const sellingWhenDahabReceivesThePiece = TextKey('selling.when_dahab_receives_the_piece', 'When Dahab receives the piece', area: 'Selling', where: 'Sell: review and list');
 
+  static const sellingEgpG = TextKey('selling.egp_g', 'EGP /g', area: 'Selling', where: 'Sell: step 1');
   static const all = <TextKey>[
     ordersGoldValue,
     ordersMakingChargeBack,
@@ -253,5 +254,6 @@ abstract final class ScreensSellingKeys {
     sellingThisIsYourFirstSaleSo,
     sellingTryWelcomeOrEid25,
     sellingWhenDahabReceivesThePiece,
+    sellingEgpG,
   ];
 }

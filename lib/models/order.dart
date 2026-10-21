@@ -362,6 +362,8 @@ class CustomerOrder {
     required this.timeline,
     this.karat,
     this.weight,
+    this.photoPath,
+    this.description,
     this.branchNameEn = '',
     this.branchNameAr = '',
     this.branchAddressEn = '',
@@ -401,6 +403,12 @@ class CustomerOrder {
   final String typeNameAr;
   final int? karat;
   final String? weight;
+
+  /// The piece's first public photo, served by the order's own media route (needs the session).
+  final String? photoPath;
+
+  /// What the seller wrote about the piece.
+  final String? description;
   final String listingState;
   final String branchNameEn;
   final String branchNameAr;
@@ -494,6 +502,8 @@ class CustomerOrder {
       typeNameAr: '${type['name_ar'] ?? ''}',
       karat: (piece['karat'] as num?)?.toInt(),
       weight: _str(piece['weight_g']),
+      photoPath: _str((piece['photo'] as Map?)?['url']),
+      description: _str(piece['description']),
       listingState: '${piece['listing_state'] ?? ''}',
       branchNameEn: '${branch['name_en'] ?? ''}',
       branchNameAr: '${branch['name_ar'] ?? ''}',

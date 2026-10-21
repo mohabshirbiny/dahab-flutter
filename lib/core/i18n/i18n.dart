@@ -167,6 +167,12 @@ class LangController extends ChangeNotifier {
     (RegExp(r'^Bring it by (.+)$'), r'وصّلها قبل $1'),
     (RegExp(r'^More time given: (\d+) working hours\. The deadline below is the new one\.$'), r'اتدّالك وقت زيادة: $1 ساعة عمل. المهلة اللي تحت هي الجديدة.'),
     (RegExp(r'^We could not give more time: (.+)$'), r'مقدرناش ندي وقت زيادة: $1'),
+    // Testing notes (2026-10-21): the slider's typed number and what IGI found, for the seller. AR-DRAFT.
+    (RegExp(r'^Enter a number above 0 and up to (\d+)\.$'), r'اكتب رقم أكبر من 0 ولحد $1.'),
+    (RegExp(r'^IGI weighed the piece at ([\d.]+) g, ([\d.]+) g more than the ([\d.]+) g listed\. The price changed with the weight\.$'),
+        r'IGI وزنت القطعة $1 جم، يعني $2 جم أكتر من الـ $3 جم المكتوبين. السعر اتغير مع الوزن.'),
+    (RegExp(r'^IGI weighed the piece at ([\d.]+) g, ([\d.]+) g less than the ([\d.]+) g listed\. The price changed with the weight\.$'),
+        r'IGI وزنت القطعة $1 جم، يعني $2 جم أقل من الـ $3 جم المكتوبين. السعر اتغير مع الوزن.'),
     // Backend spec 016: the tax invoice screen.
     (RegExp(r'^Gold value at (\d[\d,]*(?:\.\d+)?) EGP per gram$'), r'قيمة الدهب بسعر $1 جنيه للجرام'),
     (RegExp(r'^Commission, ([\d.]+)%$'), r'العمولة، $1٪'),

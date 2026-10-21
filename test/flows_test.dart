@@ -932,7 +932,7 @@ void main() {
     expect(create.body, contains('"category":"gold"'));
     expect(create.body, contains('"piece_type_id":1'));
     expect(create.body, contains('"karat_code":21'));
-    expect(create.body, contains('"stated_weight_g":"8.0"'));
+    expect(create.body, contains('"stated_weight_g":"8.00"'));
     expect(create.body, contains('"making_charge_per_g":"300"'));
     expect(create.body, contains('"branch_option_ids":[1]'));
     expect(create.body, contains('"photo_tokens":["listing_photo-token-1","listing_photo-token-2"]'));
@@ -1234,8 +1234,14 @@ void main() {
 
     await tester.enterText(_field('How much do you want to add?'), '20000');
     await tester.pump();
+    // The receipt is required: nothing is sent without it.
+    await _tap(tester, "I've sent the transfer");
+    expect(find.text('Add a screenshot or receipt of your transfer first.'), findsOneWidget);
+    expect(api.requests.any((r) => r.url.path.endsWith('/customer/me/wallet/topups') && r.method == 'POST'), isFalse);
+    await _tap(tester, 'Add a screenshot or receipt');
     await _tap(tester, "I've sent the transfer");
     final submit = api.requests.lastWhere((r) => r.url.path.endsWith('/customer/me/wallet/topups') && r.method == 'POST');
+    expect(submit.body, contains('"receipt_upload_token":"receipt-token-1"'));
     expect(submit.body, contains('"receiving_account_id":2'));
     expect(submit.body, contains('"amount":"20000"'));
     expect(submit.headers['Idempotency-Key'], matches(RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$')));

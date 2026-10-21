@@ -697,9 +697,14 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
             const Gap(16),
             DError('Choose a reason before closing your account.', visible: _error, top: 0),
             if (_error) const Gap(7),
-            DButton('Close my account', kind: DButtonKind.danger, loading: _busy, onTap: blockers.isEmpty ? _close : null),
-            const Gap(9),
-            DButton.ghost('Keep my account', onTap: () => context.nav(R.account)),
+            // Testing notes: smaller buttons, side by side.
+            DActsRow(
+              gap: 9,
+              children: [
+                DButton.ghost('Keep my account', small: true, expand: true, onTap: () => context.nav(R.account)),
+                DButton('Close my account', kind: DButtonKind.danger, small: true, expand: true, loading: _busy, onTap: blockers.isEmpty ? _close : null),
+              ],
+            ),
           ],
         ),
       ),

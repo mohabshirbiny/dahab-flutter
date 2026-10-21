@@ -178,6 +178,9 @@ abstract final class ScreensWalletKeys {
 
   static const walletCopied = TextKey('wallet.copied', 'Copied.', area: 'Wallet', where: 'Wallet screens');
 
+  static const walletAddAScreenshotOrReceiptOf = TextKey('wallet.add_a_screenshot_or_receipt_of', 'Add a screenshot or receipt of your transfer first.', area: 'Wallet', where: 'Wallet screens');
+  static const walletRequiredAScreenshotOfTheTransfe = TextKey('wallet.required_a_screenshot_of_the_transfe', 'Required. A screenshot of the transfer is enough.', area: 'Wallet', where: 'Wallet screens');
+  static const walletWeNeedItToMatchYour = TextKey('wallet.we_need_it_to_match_your', 'We need it to match your transfer, even when you use the reference.', area: 'Wallet', where: 'Wallet screens');
   static const all = <TextKey>[
     bankAPersonChecksTheNameAgainst,
     bankAccountHolderName,
@@ -349,5 +352,8 @@ abstract final class ScreensWalletKeys {
     walletYourTopUps,
     walletYourWithdrawals,
     walletCopied,
+    walletAddAScreenshotOrReceiptOf,
+    walletRequiredAScreenshotOfTheTransfe,
+    walletWeNeedItToMatchYour,
   ];
 }

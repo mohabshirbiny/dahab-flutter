@@ -15,6 +15,7 @@ import '../../services/api/orders_api.dart';
 import '../../services/auth/auth_controller.dart';
 import '../../services/repositories.dart';
 import '../../widgets/widgets.dart';
+import '../shared/listing_ui.dart' show ApiImage;
 import '../shared/suspended_notice.dart';
 import 'order_flows.dart' show OrderContextCard;
 
@@ -174,6 +175,8 @@ class _OrderBody extends StatelessWidget {
       children: [
         OrderContextCard(title, weight == null ? '${o.orderRef} · $side' : '${o.orderRef} · $side, ${weight.toStringAsFixed(2)} g'),
         const Gap(12),
+        _PieceCard(order: o),
+        const Gap(12),
         Align(
           alignment: AlignmentDirectional.centerStart,
           child: DPill(status, kind: _pill(tone)),
@@ -197,6 +200,18 @@ class _OrderBody extends StatelessWidget {
         _Timeline(order: o),
       ],
     );
+  }
+
+  /// "IGI weighed the piece at 12.00 g, 4.00 g more than the 8.00 g listed." — null when the weight matched.
+  static String? _weightChange(CustomerOrder o) {
+    final stated = double.tryParse(o.inspection?.statedWeight ?? '');
+    final measured = double.tryParse(o.inspection?.measuredWeight ?? '');
+    if (stated == null || measured == null || (measured - stated).abs() < 0.0005) return null;
+    final diff = (measured - stated).abs().toStringAsFixed(2);
+    final more = measured > stated;
+    return more
+        ? 'IGI weighed the piece at ${measured.toStringAsFixed(2)} g, $diff g more than the ${stated.toStringAsFixed(2)} g listed. The price changed with the weight.'
+        : 'IGI weighed the piece at ${measured.toStringAsFixed(2)} g, $diff g less than the ${stated.toStringAsFixed(2)} g listed. The price changed with the weight.';
   }
 
   static PillKind _pill(Tone t) => switch (t) {
@@ -315,6 +330,21 @@ class _OrderBody extends StatelessWidget {
         ),
         _ => const SizedBox.shrink(),
       },
+      // Testing notes: after a refusal the seller cannot ask again; they call us instead.
+      if (r.state == 'refused') ...[
+        const Gap(9),
+        DCard(
+          padding: const EdgeInsets.all(13),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const T('If you have a problem bringing the piece, please contact us. We can look at your deadline again.', style: TextStyle(fontSize: 12, color: DColors.ink2, height: 1.7)),
+              const Gap(10),
+              DButton.ghost('Contact us', small: true, onTap: () => context.nav(R.support)),
+            ],
+          ),
+        ),
+      ],
     ];
   }
 
@@ -409,7 +439,13 @@ class _OrderBody extends StatelessWidget {
           ],
         ];
       case CustomerOrderStage.decide:
-        return const [DNote(icon: 'clock', kind: NoteKind.wait, text: 'The buyer is deciding on the new price. Your piece is safe at the branch.')];
+        return [
+          if (_weightChange(o) case final change?) ...[
+            DNote(icon: 'alert-triangle', kind: NoteKind.wait, text: change),
+            const Gap(12),
+          ],
+          const DNote(icon: 'clock', kind: NoteKind.wait, text: 'The buyer is deciding on the new price. Your piece is safe at the branch.'),
+        ];
       case CustomerOrderStage.pay when !o.isSeller:
         final short = shortfall;
         return [
@@ -749,6 +785,48 @@ class _CountdownState extends State<_Countdown> {
         children: [
           DRow(widget.label, whenOf(widget.at)),
           DRow('Time left', text, valueColor: left.isNegative || left.inHours < 3 ? DColors.bad : DColors.wait),
+        ],
+      ),
+    );
+  }
+}
+
+/// Testing notes: the piece itself on the order, for both sides — its photo and what was listed.
+class _PieceCard extends StatelessWidget {
+  const _PieceCard({required this.order});
+
+  final CustomerOrder order;
+
+  @override
+  Widget build(BuildContext context) {
+    final o = order;
+    final weight = double.tryParse(o.weight ?? '');
+    final type = context.isArabic && o.typeNameAr.isNotEmpty ? o.typeNameAr : o.typeNameEn;
+    return DCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(DRadius.card)),
+            child: ApiImage(path: o.photoPath, auth: true, height: 170, iconSize: 34),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (type.isNotEmpty) DRow('Type', type),
+                if (o.karat != null) DRow('Karat', '${o.karat}K'),
+                if (weight != null) DRow('Weight listed', '${weight.toStringAsFixed(2)} g'),
+                if (o.description != null && o.description!.trim().isNotEmpty) ...[
+                  const Gap(6),
+                  T(o.description!, style: const TextStyle(fontSize: 12, color: DColors.ink2, height: 1.7)),
+                  const Gap(6),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );

@@ -244,6 +244,7 @@ abstract final class ScreensOrdersKeys {
   static const ordersYouCanChangeYourMakingCharge = TextKey('orders.you_can_change_your_making_charge', 'You can change your making charge whenever no one has an open request on the piece. The listing keeps its history, so you don\'t lose the views it has built up.', area: 'Orders', where: 'Order steps');
   static const ordersYourCode = TextKey('orders.your_code', 'Your code', area: 'Orders', where: 'Order screen');
 
+  static const ordersIfYouHaveAProblemBringing = TextKey('orders.if_you_have_a_problem_bringing', 'If you have a problem bringing the piece, please contact us. We can look at your deadline again.', area: 'Orders', where: 'Order screen');
   static const all = <TextKey>[
     buyAddAtLeast,
     buyAddFunds,
@@ -481,5 +482,6 @@ abstract final class ScreensOrdersKeys {
     ordersMakingChargeUpdated,
     ordersYouCanChangeYourMakingCharge,
     ordersYourCode,
+    ordersIfYouHaveAProblemBringing,
   ];
 }

@@ -222,18 +222,9 @@ class _Sell3ScreenState extends State<Sell3Screen> {
   }
 }
 
-/// `#s-weight` — typical weights; picking one sets the weight slider.
+/// `#s-weight` — how to find the real weight (the typical-weights list was removed).
 class WeightGuideScreen extends StatelessWidget {
   const WeightGuideScreen({super.key});
-
-  static const _guide = [
-    ('Plain ring', 'Usually 3 to 5 g', 4),
-    ('Ring with a stone', 'Usually 4 to 7 g', 6),
-    ('Pair of earrings', 'Usually 3 to 6 g', 4),
-    ('Chain or necklace', 'Usually 8 to 15 g', 11),
-    ('Bangle', 'Usually 15 to 30 g', 20),
-    ('Bridal set', 'Usually 25 to 45 g', 30),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -248,25 +239,6 @@ class WeightGuideScreen extends StatelessWidget {
             text: 'A guess is only a starting point. Buyers compare on price, so a piece listed at the wrong weight usually sits unsold or gets adjusted at inspection.',
           ),
           const Gap(16),
-          const DLabel('Typical weights'),
-          DMenuCard(
-            children: [
-              for (final (title, sub, w) in _guide)
-                DMenu(
-                  title: title,
-                  sub: sub,
-                  trailing: T('Use $w g', style: DText.linkTiny),
-                  onTap: () {
-                    context.read<SellDraft>().update((d) => d.weight = w.toDouble());
-                    showToast(context, 'Set to $w g. Change it if you find the real weight.');
-                    Future.delayed(const Duration(milliseconds: 700), () {
-                      if (context.mounted) context.nav(R.sell1);
-                    });
-                  },
-                ),
-            ],
-          ),
-          const Gap(14),
           const DLabel('Better than a guess'),
           const DCard(
             child: Column(

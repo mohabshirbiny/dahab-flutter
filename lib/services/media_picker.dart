@@ -16,7 +16,10 @@ enum MediaKind {
 
   /// Backend testing fixes: a photo of the customer's own ID, sent again
   /// (`dahab-identity.allowed_mimes`, `max_upload_kb` 8192).
-  identity('identity', ['jpg', 'jpeg', 'png', 'webp'], 8);
+  identity('identity', ['jpg', 'jpeg', 'png', 'webp'], 8),
+
+  /// Spec 009: the proof of a wallet top-up (required since the testing notes of 2026-10-21).
+  topupReceipt('topup_receipt', ['jpg', 'jpeg', 'png', 'webp', 'pdf'], 8);
 
   const MediaKind(this.purpose, this.extensions, this.maxMegabytes);
 

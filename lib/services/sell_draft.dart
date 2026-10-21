@@ -213,8 +213,8 @@ class SellDraft extends ChangeNotifier {
     };
     karat = l.karat ?? karat;
     pieceTypeId = l.pieceTypeId;
-    weight = (double.tryParse(l.weight ?? '') ?? weight).clamp(0.5, 50).toDouble();
-    making = (double.tryParse(l.makingPerGram ?? '') ?? making).clamp(0, 1000).toDouble();
+    weight = (double.tryParse(l.weight ?? '') ?? weight).clamp(0.01, 9999).toDouble();
+    making = (double.tryParse(l.makingPerGram ?? '') ?? making).clamp(0, 100000).toDouble();
     final ask = double.tryParse(l.askingPrice ?? '');
     if (ask != null && type == SellType.diamond) {
       stoneAsk = ask.clamp(0, 150000).toDouble();
@@ -266,7 +266,7 @@ class SellDraft extends ChangeNotifier {
   Map<String, dynamic> _fields() => {
     'piece_type_id': pieceTypeId,
     if (type != SellType.diamond) 'karat_code': karat,
-    if (type != SellType.diamond) 'stated_weight_g': weight.toStringAsFixed(1),
+    if (type != SellType.diamond) 'stated_weight_g': weight.toStringAsFixed(2),
     if (type == SellType.gold) 'making_charge_per_g': making.round().toString(),
     if (type == SellType.diamond) 'asking_price': stoneAsk.round().toString(),
     if (type == SellType.mixed) 'asking_price': totalAsk.round().toString(),

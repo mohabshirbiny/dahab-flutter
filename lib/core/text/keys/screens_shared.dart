@@ -349,6 +349,8 @@ abstract final class ScreensSharedKeys {
   static const authSendItAgain = TextKey('auth.send_it_again', 'Send it again', area: 'Auth', where: 'Sign in');
   static const sharedCopy = TextKey('shared.copy', 'Copy', area: 'Shared', where: 'Shared texts');
 
+  static const sharedTypeTheNumber = TextKey('shared.type_the_number', 'Type the number', area: 'Shared', where: 'Shared widgets');
+  static const sharedUse = TextKey('shared.use', 'Use', area: 'Shared', where: 'Shared widgets');
   static const all = <TextKey>[
     authAcceptTheTermsToCreateYour,
     authAddThePhotosOfYourId,
@@ -691,5 +693,7 @@ abstract final class ScreensSharedKeys {
     authEnterYourPhoneNumber,
     authSendItAgain,
     sharedCopy,
+    sharedTypeTheNumber,
+    sharedUse,
   ];
 }

@@ -663,6 +663,30 @@ abstract final class PatternKeys {
     where: 'A sentence with a number, a name or a date in it',
   );
 
+  static const patternEnterANumberAbove0AndUp = TextKey(
+    'pattern.enter_a_number_above_0_and_up',
+    'Enter a number above 0 and up to {number}.',
+    ar: 'اكتب رقم أكبر من 0 ولحد {number}.',
+    placeholders: ['number'],
+    area: 'Shared',
+    where: 'A sentence with a number, a name or a date in it',
+  );
+  static const patternIgiWeighedThePieceAtWeightG = TextKey(
+    'pattern.igi_weighed_the_piece_at_weight_g',
+    'IGI weighed the piece at {weight} g, {weight_2} g more than the {weight_3} g listed. The price changed with the weight.',
+    ar: 'IGI وزنت القطعة {weight} جم، يعني {weight_2} جم أكتر من الـ {weight_3} جم المكتوبين. السعر اتغير مع الوزن.',
+    placeholders: ['weight', 'weight_2', 'weight_3'],
+    area: 'Shared',
+    where: 'A sentence with a number, a name or a date in it',
+  );
+  static const patternIgiWeighedThePieceAtWeightG2 = TextKey(
+    'pattern.igi_weighed_the_piece_at_weight_g_2',
+    'IGI weighed the piece at {weight} g, {weight_2} g less than the {weight_3} g listed. The price changed with the weight.',
+    ar: 'IGI وزنت القطعة {weight} جم، يعني {weight_2} جم أقل من الـ {weight_3} جم المكتوبين. السعر اتغير مع الوزن.',
+    placeholders: ['weight', 'weight_2', 'weight_3'],
+    area: 'Shared',
+    where: 'A sentence with a number, a name or a date in it',
+  );
   static const all = <TextKey>[
     patternMakingChargeAmountPerGram,
     patternKaratKWeightG,
@@ -745,6 +769,9 @@ abstract final class PatternKeys {
     patternPaidToYourWalletAmountEgp,
     patternIssuedByTextTaxRegistrationText2,
     patternTextWeightG,
+    patternEnterANumberAbove0AndUp,
+    patternIgiWeighedThePieceAtWeightG,
+    patternIgiWeighedThePieceAtWeightG2,
   ];
 
   static const table = <PatternKey>[
@@ -829,5 +856,8 @@ abstract final class PatternKeys {
     PatternKey(r'^Paid to your wallet, (\d[\d,]*(?:\.\d+)?) EGP$', patternPaidToYourWalletAmountEgp, ['amount']),
     PatternKey(r'^Issued by (.+)\. Tax registration (.*)\.$', patternIssuedByTextTaxRegistrationText2, ['text', 'text_2']),
     PatternKey(r'^(.+), ([\d.]+) g$', patternTextWeightG, ['text', 'weight']),
+    PatternKey(r'^Enter a number above 0 and up to (\d+)\.$', patternEnterANumberAbove0AndUp, ['number']),
+    PatternKey(r'^IGI weighed the piece at ([\d.]+) g, ([\d.]+) g more than the ([\d.]+) g listed\. The price changed with the weight\.$', patternIgiWeighedThePieceAtWeightG, ['weight', 'weight_2', 'weight_3']),
+    PatternKey(r'^IGI weighed the piece at ([\d.]+) g, ([\d.]+) g less than the ([\d.]+) g listed\. The price changed with the weight\.$', patternIgiWeighedThePieceAtWeightG2, ['weight', 'weight_2', 'weight_3']),
   ];
 }
