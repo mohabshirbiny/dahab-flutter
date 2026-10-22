@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/text/keys/promo.dart';
 import '../../core/text/texts_controller.dart';
+import '../../models/promo.dart';
 import '../../models/reference.dart';
 import '../../services/api/api_client.dart';
 import '../../services/api/market_api.dart';
@@ -27,6 +28,20 @@ class _Sell3ScreenState extends State<Sell3Screen> {
   String? _error;
   bool _busy = false;
   int _reload = 0;
+
+  /// The advance asked without a code: a seller's first sale of a gold piece is paid ahead
+  /// automatically while the backend's switch is on. A failure just shows nothing.
+  PaysAdvance? _autoAdvance;
+  String? _autoFor;
+
+  void _checkAdvance(SellDraft d) {
+    final signature = d.quoteParams.query;
+    if (_autoFor == signature) return;
+    _autoFor = signature;
+    context.read<PromoRepository>().preview(d.quoteParams).then((p) {
+      if (mounted && _autoFor == signature) setState(() => _autoAdvance = p.paysAdvance);
+    }, onError: (Object _) {});
+  }
 
   /// Uploads the files, creates (or edits) the listing and sends it for
   /// review (backend spec 010). A retry after a failure repeats nothing.
@@ -75,8 +90,12 @@ class _Sell3ScreenState extends State<Sell3Screen> {
   Widget build(BuildContext context) {
     final d = context.watch<SellDraft>();
     final q = d.quote(context.watch<LiveRates>());
-    // Paid ahead only when the backend says this sale qualifies and can be advanced now (spec 023).
-    final advance = d.promoPreview?.paysAdvance;
+    // Paid ahead only when the backend says this sale qualifies and can be advanced now (spec 023):
+    // through the applied code, or with no code for a seller's first gold sale.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _checkAdvance(d);
+    });
+    final advance = d.promoPreview?.paysAdvance ?? _autoAdvance;
     final paidAhead = advance != null && advance.available;
     return AppPage(
       id: R.sell3,
