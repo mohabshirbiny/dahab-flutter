@@ -472,7 +472,7 @@ class _OrderBody extends StatelessWidget {
                   DRow('Available in your wallet', moneyOf(short.available)),
                   DRow('Still needed', moneyOf(short.shortfall), valueColor: DColors.bad),
                   const Gap(10),
-                  DButton.ghost('Add funds', small: true, onTap: () => context.nav(R.addfunds)),
+                  DButton.ghost('Add funds', small: true, onTap: () => context.nav(R.addfunds, query: {'amount': short.shortfall})),
                 ],
               ),
             ),

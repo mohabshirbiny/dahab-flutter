@@ -349,6 +349,8 @@ void main() {
     expect(api.orders.single['state'], 'awaiting_balance');
     await _tap(tester, 'Add funds');
     expect(find.text('You need a little more'), findsNothing); // on Add funds now
+    await _settle(tester);
+    expect(tester.widget<TextField>(_field('How much do you want to add?')).controller!.text, '6,560');
     await _end(tester);
   });
 
@@ -1042,6 +1044,9 @@ void main() {
     expect(find.text('You need a little more'), findsOneWidget);
     expect(find.text('10,640 EGP'), findsOneWidget);
     expect(api.buyRequests, isEmpty);
+    await _tap(tester, 'Add funds');
+    await _settle(tester);
+    expect(tester.widget<TextField>(_field('How much do you want to add?')).controller!.text, '10,640');
     await _end(tester);
   });
 

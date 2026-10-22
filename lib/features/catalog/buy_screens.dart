@@ -248,7 +248,7 @@ class TopUpFirstScreen extends StatelessWidget {
           const Gap(14),
           const DNote(icon: 'info-circle', text: 'Other buyers may be in the queue for this piece, and the price follows the gold rate until you send your request.'),
           const Gap(16),
-          DButton('Add funds', onTap: () => context.nav(R.addfunds)),
+          DButton('Add funds', onTap: () => context.nav(R.addfunds, query: s == null ? null : {'amount': s.shortfall})),
           const Gap(9),
           DButton.ghost(
             'Save it for later',

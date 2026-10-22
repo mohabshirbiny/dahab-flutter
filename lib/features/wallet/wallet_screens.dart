@@ -829,9 +829,12 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
   }
 }
 
-/// `#s-addfunds`
+/// `#s-addfunds` — `?amount=` (the shortfall from a buy request or an order's
+/// balance) fills the amount, rounded up to whole pounds.
 class AddFundsScreen extends StatefulWidget {
-  const AddFundsScreen({super.key});
+  const AddFundsScreen({super.key, this.amount});
+
+  final String? amount;
 
   @override
   State<AddFundsScreen> createState() => _AddFundsScreenState();
@@ -842,7 +845,7 @@ class AddFundsScreen extends StatefulWidget {
 /// money moves until Dahab sees it arrive). The provider fee and daily limit
 /// are shown for information only.
 class _AddFundsScreenState extends State<AddFundsScreen> {
-  final _amount = TextEditingController(text: '20,000');
+  late final _amount = TextEditingController(text: _initialAmount(widget.amount));
   String? _method;
   int? _accountId;
   UploadFile? _receipt;
@@ -877,6 +880,12 @@ class _AddFundsScreenState extends State<AddFundsScreen> {
   }
 
   static const _signInFirst = 'Sign in to add money to your wallet.';
+
+  /// The amount asked for, or 20,000 when opened from the wallet.
+  static String _initialAmount(String? asked) {
+    final v = asked == null ? 0 : parseAmount(asked);
+    return v > 0 ? group(v.ceil()) : '20,000';
+  }
 
   String _idempotencyKey(String payload) {
     if (_key == null || _key!.$1 != payload) _key = (payload, newIdempotencyKey());
