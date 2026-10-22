@@ -1166,6 +1166,15 @@ class FakeBackend {
       }
       if (suspendedReason != null) return error(403, 'account_suspended');
       if (req.headers['Idempotency-Key'] == null) return error(400, 'idempotency_key_required');
+      // The backend's `balance_due_first`: a buyer who owes the balance or a price answer settles it first.
+      final owed = orders.where((o) => o['role'] == 'buyer' && (o['state'] == 'awaiting_balance' || o['state'] == 'weight_adjust_pending')).firstOrNull;
+      if (owed != null) {
+        return json(409, {
+          'message': 'balance_due_first',
+          'code': 'balance_due_first',
+          'details': {'order_id': owed['id'], 'order_ref': owed['order_ref'], 'order_state': owed['state']},
+        });
+      }
       if (body['deposit_legal_doc_id'] != depositTerms['id']) return error(422, 'deposit_agreement_required');
       final row = market.where((m) => m['id'] == body['listing_id']).firstOrNull;
       if (row == null) return error(404, 'not_found');

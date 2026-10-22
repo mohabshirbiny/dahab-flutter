@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/buy_request_balance.dart';
 import '../../core/text/keys/listing_price.dart';
 import '../../core/text/texts_controller.dart';
 import '../../core/utils/idempotency.dart';
@@ -263,6 +264,17 @@ class _DetailBody extends StatelessWidget {
       }
       if (!context.mounted) return;
       if (e.code == 'verification_required') return context.nav(R.gate);
+      final owed = balanceDueOf(e);
+      if (owed != null) {
+        final open = await ask(
+          context,
+          title: context.kr(BuyRequestBalanceKeys.title),
+          body: context.kr(owed.state == 'weight_adjust_pending' ? BuyRequestBalanceKeys.bodyDecide : BuyRequestBalanceKeys.bodyPay, {'order_ref': owed.orderRef}),
+          yes: context.kr(BuyRequestBalanceKeys.open),
+        );
+        if (open && context.mounted) context.nav(R.order, query: {'id': owed.orderId});
+        return;
+      }
       showToast(context, buyRequestErrorMessage(e));
       if (e.code == 'price_moved' || e.code == 'already_in_queue' || e.code == 'listing_not_purchasable') onChanged();
     }

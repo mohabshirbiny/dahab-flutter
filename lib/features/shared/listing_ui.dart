@@ -93,6 +93,8 @@ String buyRequestErrorMessage(ApiException e) {
       return 'This piece cannot be priced right now. Try again in a few minutes.';
     case 'already_in_queue':
       return 'You already have a request on this piece.';
+    case 'balance_due_first':
+      return 'Finish your open order first: pay the balance or answer the new price.';
     case 'cannot_buy_own_listing':
       return 'This is your own piece.';
     case 'listing_not_purchasable':

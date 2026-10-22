@@ -87,6 +87,14 @@ DepositShortfall? shortfallOf(ApiException e) {
   return DepositShortfall(depositAmount: '${d['deposit_amount']}', available: '${d['available']}', shortfall: '${d['shortfall']}');
 }
 
+/// The order a 409 `balance_due_first` points at — the buyer owes its balance
+/// (`awaiting_balance`) or an answer to a new price (`weight_adjust_pending`) — or null.
+({String orderId, String orderRef, String state})? balanceDueOf(ApiException e) {
+  final d = (e.extra['details'] as Map?)?.cast<String, dynamic>();
+  if (e.code != 'balance_due_first' || d == null || d['order_id'] is! String) return null;
+  return (orderId: d['order_id'] as String, orderRef: '${d['order_ref'] ?? ''}', state: '${d['order_state'] ?? ''}');
+}
+
 /// The fresh price of a 409 `price_moved`, or null.
 String? movedPriceOf(ApiException e) {
   if (e.code != 'price_moved') return null;

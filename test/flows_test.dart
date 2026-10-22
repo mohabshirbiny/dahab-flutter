@@ -1034,6 +1034,27 @@ void main() {
     await _end(tester);
   });
 
+  testWidgets('a buyer who owes a balance is sent to that order instead of a new request', (tester) async {
+    const id = '0199d000-0000-7000-8000-000000000002';
+    final api = FakeBackend()
+      ..wallet = {'available': '50000.0000', 'held': '11640.0000', 'total': '61640.0000', 'currency': 'EGP'}
+      ..orders = [FakeBackend.order(id, state: 'awaiting_balance', stage: 'pay', actions: ['pay'], amountDue: '46560.0000')];
+    await _start(tester, backend: api);
+    await signIn(tester);
+    _go(tester, '/detail?id=${FakeBackend.marketRingId}');
+    await _settle(tester);
+    await _tap(tester, 'Send buy request');
+    await _tap(tester, 'Agree and send');
+
+    expect(find.text('Finish your open order first'), findsOneWidget);
+    expect(find.text('Order DH-2026-000002 is waiting for you to pay the balance. Pay it, then you can ask for another piece.'), findsOneWidget);
+    expect(api.buyRequests, isEmpty);
+    await _tap(tester, 'Open the order');
+    await _settle(tester);
+    expect(api.requests.any((r) => r.method == 'GET' && r.url.path.endsWith('/customer/me/orders/$id')), isTrue);
+    await _end(tester);
+  });
+
   testWidgets('a short wallet opens You need a little more with the shortfall from the API', (tester) async {
     final api = FakeBackend()..wallet = {'available': '1000.0000', 'held': '0.0000', 'total': '1000.0000', 'currency': 'EGP'};
     await _start(tester, backend: api);
