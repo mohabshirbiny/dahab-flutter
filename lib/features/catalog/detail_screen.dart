@@ -330,6 +330,8 @@ class _DetailBody extends StatelessWidget {
     final queue = d.queueAhead ?? 0;
     final onMarket = own == null || own.state == ListingState.live;
     final branches = arabic && d.branchNamesAr.isNotEmpty ? d.branchNamesAr : d.branchNames;
+    // Spec 019 US7: staff may hide the views and requests a buyer sees on a piece.
+    final showsStats = context.watch<TextsController?>()?.controls.shows('listing_stats') ?? true;
     const rowPad = EdgeInsets.symmetric(vertical: 7);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -354,7 +356,7 @@ class _DetailBody extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const T('This is your listing', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-                                if (own != null) T(_stateLine(own), style: DText.tiny) else if (!d.live) const T('84 views, 2 buyers in the queue', style: DText.tiny),
+                                if (own != null) T(_stateLine(own), style: DText.tiny) else if (!d.live && showsStats) const T('84 views, 2 buyers in the queue', style: DText.tiny),
                               ],
                             ),
                           ),
@@ -422,7 +424,7 @@ class _DetailBody extends StatelessWidget {
                 ),
                 const Gap(12),
               ],
-              if (d.views != null) ...[
+              if (d.views != null && showsStats) ...[
                 _StatRow(stats: [('${d.views}', 'people viewed'), ('${d.requests}', 'asked to buy'), ('${d.daysListed}', 'days listed')]),
                 const Gap(14),
               ],

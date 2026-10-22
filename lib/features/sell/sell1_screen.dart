@@ -51,6 +51,8 @@ class _Sell1Body extends StatelessWidget {
     final isDiamond = d.type == SellType.diamond;
     final isMixed = d.type == SellType.mixed;
     final arabic = context.isArabic;
+    // Spec 019 US7: staff may hide the Rapaport suggestion; the seller still sets the price.
+    final showsGuide = context.watch<TextsController?>()?.controls.shows('rapaport_reference') ?? true;
     final kinds = [for (final t in ref.pieceTypes.where((t) => t.category == d.category)) (t.id, arabic && t.nameAr.isNotEmpty ? t.nameAr : t.nameEn)];
     final kindGrid = <Widget>[
       const DLabel('Type of piece', bottom: 6),
@@ -155,7 +157,7 @@ class _Sell1Body extends StatelessWidget {
           const DLabel('Cut', bottom: 6),
           DSeg<double>(options: const [(1.12, 'Excellent'), (1.0, 'Very good'), (0.85, 'Good')], value: d.cut, onChanged: (v) => d.update((d) => d.cut = v, resetsStone: true)),
           const Gap(14),
-          DSoft.bordered(
+          if (showsGuide) DSoft.bordered(
             margin: const EdgeInsets.only(bottom: 13),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
