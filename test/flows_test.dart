@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:dahab_app/core/i18n/i18n.dart';
+import 'package:dahab_app/core/text/app_controls.dart';
+import 'package:dahab_app/core/text/texts_controller.dart';
 import 'package:dahab_app/services/auth/auth_controller.dart';
 import 'package:dahab_app/widgets/inputs.dart';
 import 'package:flutter/material.dart';
@@ -1617,6 +1619,23 @@ void main() {
     expect(find.textContaining('The photo is blurred or has glare'), findsOneWidget);
     await _tap(tester, 'Upload your ID again');
     expect(find.text('Send for review'), findsOneWidget);
+    await _end(tester);
+  });
+
+  // Backend spec 019 US7: staff may hide the Rapaport suggestion beside a diamond price.
+  testWidgets('sell step 1 hides the diamond suggestion when the switch is off', (tester) async {
+    await _start(tester);
+    await signIn(tester);
+    _go(tester, '/sell1');
+    await _settle(tester);
+    await _tap(tester, 'Diamond');
+    expect(find.text('Suggested price for this stone'), findsOneWidget);
+
+    Provider.of<TextsController>(tester.element(find.byType(Navigator).first), listen: false)
+        .seedControlsForTest(const AppControls(visibility: {'rapaport_reference': false}));
+    await _settle(tester);
+    expect(find.text('Suggested price for this stone'), findsNothing);
+    expect(find.text('You ask'), findsOneWidget); // the seller still sets the price
     await _end(tester);
   });
 
