@@ -250,6 +250,7 @@ const Map<String, String> arExtra = {
   'This listing was not sent yet. Finish it and send it for approval.': 'الإعلان ده لسه متبعتش. كمله وابعته للمراجعة.',
   'Fix what we asked for and send it again.': 'صلح اللي طلبناه وابعته تاني.',
   'Buyers can see this piece.': 'المشترين شايفين القطعة دي.',
+  'This piece is sold. The sale is settled and the listing is closed.': 'القطعة دي اتباعت. البيعة اتسوّت والإعلان اتقفل.',
   'This listing was not accepted and is closed.': 'الإعلان ده اترفض واتقفل.',
   'This listing is off the market and closed. To sell the piece, list it again.': 'الإعلان ده اتشال من السوق واتقفل. عشان تبيع القطعة، اعرضها من جديد.',
   'Your account is suspended, so this piece is hidden from buyers. It returns when the account is reinstated.':

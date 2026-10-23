@@ -280,6 +280,7 @@ class _ListingsScreenState extends State<ListingsScreen> {
       ListingState.live => ('Live', Tone.ok),
       ListingState.reserved => ('Decide today', Tone.bad),
       ListingState.accepted => ('Accepted', Tone.ok),
+      ListingState.sold => ('Sold', Tone.ok),
       ListingState.rejected => ('Not accepted', Tone.bad),
       ListingState.withdrawn => ('Taken down', Tone.neutral),
       ListingState.suspendedHold => ('On hold', Tone.wait),
@@ -323,6 +324,7 @@ class _ListingsScreenState extends State<ListingsScreen> {
             l.order == null
                 ? 'You accepted a buyer.'
                 : 'You accepted a buyer (order ${l.order!.orderRef}). Bring the piece to ${l.order!.branchNameEn} by ${whenOf(l.order!.reachBranchDeadline)}.',
+          ListingState.sold => 'This piece is sold. The sale is settled and the listing is closed.',
           ListingState.rejected => 'This listing was not accepted and is closed.',
           ListingState.withdrawn => 'This listing is off the market and closed. To sell the piece, list it again.',
           ListingState.suspendedHold => 'Your account is suspended, so this piece is hidden from buyers. It returns when the account is reinstated.',

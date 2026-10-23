@@ -8,9 +8,9 @@ import 'buy_request.dart';
 import 'promo.dart';
 
 /// A `listing_state` value. The backend has more states than this app acts on
-/// (at inspection, sold, …, for later features), so anything unknown is kept
-/// and shown as "in progress". Reserved (buyers in line) and accepted (a buyer
-/// chosen) come with buy requests (spec 011).
+/// (at inspection, settling, …), so anything unknown is kept and shown as
+/// "in progress". Reserved (buyers in line) and accepted (a buyer chosen) come
+/// with buy requests (spec 011); sold is final, once the sale is settled.
 enum ListingState {
   draft,
   inReview,
@@ -18,6 +18,7 @@ enum ListingState {
   live,
   reserved,
   accepted,
+  sold,
   rejected,
   withdrawn,
   suspendedHold,
@@ -30,6 +31,7 @@ enum ListingState {
     'live' => live,
     'reserved' => reserved,
     'accepted' => accepted,
+    'sold' => sold,
     'rejected' => rejected,
     'withdrawn' => withdrawn,
     'suspended_hold' => suspendedHold,

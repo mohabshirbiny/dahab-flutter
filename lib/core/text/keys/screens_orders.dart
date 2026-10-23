@@ -202,6 +202,7 @@ abstract final class ScreensOrdersKeys {
   static const ordersThisIsDoneFromTheOrder = TextKey('orders.this_is_done_from_the_order', 'This is done from the order it is about.', area: 'Orders', where: 'Order help screens');
   static const ordersThisListingIsInProgress = TextKey('orders.this_listing_is_in_progress', 'This listing is in progress.', area: 'Orders', where: 'Orders list');
   static const ordersThisListingIsOffTheMarket = TextKey('orders.this_listing_is_off_the_market', 'This listing is off the market and closed. To sell the piece, list it again.', area: 'Orders', where: 'Orders list');
+  static const ordersThisPieceIsSoldTheSale = TextKey('orders.this_piece_is_sold_the_sale', 'This piece is sold. The sale is settled and the listing is closed.', area: 'Orders', where: 'Orders list');
   static const ordersThisListingWasNotAcceptedAnd = TextKey('orders.this_listing_was_not_accepted_and', 'This listing was not accepted and is closed.', area: 'Orders', where: 'Orders list');
   static const ordersThisListingWasNotSentYet = TextKey('orders.this_listing_was_not_sent_yet', 'This listing was not sent yet. Finish it and send it for approval.', area: 'Orders', where: 'Orders list');
   static const ordersThisOrderIsOnHoldWhile = TextKey('orders.this_order_is_on_hold_while', 'This order is on hold while Dahab looks into a problem. No money moves and no deadline runs against you.', area: 'Orders', where: 'Order screen');
@@ -442,6 +443,7 @@ abstract final class ScreensOrdersKeys {
     ordersThisIsDoneFromTheOrder,
     ordersThisListingIsInProgress,
     ordersThisListingIsOffTheMarket,
+    ordersThisPieceIsSoldTheSale,
     ordersThisListingWasNotAcceptedAnd,
     ordersThisListingWasNotSentYet,
     ordersThisOrderIsOnHoldWhile,

@@ -328,6 +328,7 @@ class _DetailBody extends StatelessWidget {
     ListingState.live => 'Live',
     ListingState.reserved => 'Buyers in line',
     ListingState.accepted => 'Sold to a buyer, waiting for delivery',
+    ListingState.sold => 'Sold',
     ListingState.rejected => 'Not accepted',
     ListingState.withdrawn => 'Taken down',
     ListingState.suspendedHold => 'On hold',
