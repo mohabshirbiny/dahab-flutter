@@ -50,15 +50,40 @@ class LegalDoc {
       LegalDoc(id: (j['id'] as num).toInt(), version: '${j['version'] ?? ''}', bodyEn: '${j['body_en'] ?? ''}', bodyAr: '${j['body_ar'] ?? ''}');
 }
 
+/// What IGI's certificate costs the seller, in EGP, by the certificate they bring
+/// (`GET /reference/certificate-costs`, set by staff on the Rates page).
+class CertificateCosts {
+  const CertificateCosts({required this.igi, required this.otherLab, required this.none});
+
+  final double igi;
+  final double otherLab;
+  final double none;
+
+  /// The cost for the sell form's choice: `igi`, `other` or `none`.
+  double of(String cert) => switch (cert) {
+    'igi' => igi,
+    'other' => otherLab,
+    _ => none,
+  };
+
+  factory CertificateCosts.fromJson(Map<String, dynamic> j) {
+    double read(String k) => double.tryParse('${j[k]}') ?? 0;
+    return CertificateCosts(igi: read('igi'), otherLab: read('other_lab'), none: read('none'));
+  }
+}
+
 /// Everything the sell flow reads before a listing exists.
 class SellReference {
-  const SellReference({required this.karats, required this.pieceTypes, required this.branches, required this.declaration});
+  const SellReference({required this.karats, required this.pieceTypes, required this.branches, required this.declaration, this.certificateCosts});
 
   /// Enabled karat codes, in display order.
   final List<int> karats;
   final List<PieceTypeRef> pieceTypes;
   final List<BranchRef> branches;
   final LegalDoc declaration;
+
+  /// Null when the backend could not say (an older backend): the form shows no figure.
+  final CertificateCosts? certificateCosts;
 
   /// The enabled type of [category] named [nameEn], if Dahab accepts it now.
   PieceTypeRef? pieceType(String category, String nameEn) {

@@ -74,6 +74,9 @@ class SellDraft extends ChangeNotifier {
 
   static const maxPhotos = 6;
 
+  /// The highest asking price the seller may type (the backend's own limit; the sliders stop well below it).
+  static const double maxAsk = 99999999;
+
   /// The backend's `category`.
   String get category => switch (type) {
     SellType.gold => 'gold',
@@ -217,10 +220,10 @@ class SellDraft extends ChangeNotifier {
     making = (double.tryParse(l.makingPerGram ?? '') ?? making).clamp(0, 100000).toDouble();
     final ask = double.tryParse(l.askingPrice ?? '');
     if (ask != null && type == SellType.diamond) {
-      stoneAsk = ask.clamp(0, 150000).toDouble();
+      stoneAsk = ask.clamp(0, maxAsk).toDouble();
       _stoneTouched = true;
     }
-    if (ask != null && type == SellType.mixed) totalAsk = ask.clamp(0, 300000).toDouble();
+    if (ask != null && type == SellType.mixed) totalAsk = ask.clamp(0, maxAsk).toDouble();
     description = l.description ?? '';
     branchIds.addAll(l.branchIds);
     final recorded = l.promo;

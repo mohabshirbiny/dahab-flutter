@@ -698,6 +698,11 @@ const Map<String, String> arExtra = {
   'Use': 'استخدم',
   'g': 'جم',
   'EGP /g': 'جنيه /جم',
+  // Certificate costs and typed stone figures (2026-10-23). AR-DRAFT: the owner approves the wording.
+  'ct': 'قيراط',
+  'EGP': 'جنيه',
+  'IGI certificate cost': 'تكلفة شهادة IGI',
+  'Free': 'مجانًا',
   'If you have a problem bringing the piece, please contact us. We can look at your deadline again.':
       'لو عندك مشكلة في توصيل القطعة، كلمنا. ممكن نراجع المهلة بتاعتك تاني.',
   'Add a screenshot or receipt of your transfer first.': 'ضيف صورة أو إيصال التحويل الأول.',

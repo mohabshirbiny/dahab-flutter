@@ -144,7 +144,10 @@ class _Sell1Body extends StatelessWidget {
             min: 0.1,
             max: 3,
             step: 0.1,
-            display: d.carat.toStringAsFixed(1),
+            display: _trimmed(d.carat),
+            typeMax: 99,
+            typeDecimals: 2,
+            unit: 'ct',
             onChanged: (v) => d.update((d) => d.carat = v, resetsStone: true),
           ),
           const DLabel('Clarity', bottom: 6),
@@ -178,6 +181,8 @@ class _Sell1Body extends StatelessWidget {
             max: 150000,
             step: 500,
             display: group(d.stoneAsk),
+            typeMax: SellDraft.maxAsk,
+            unit: 'EGP',
             onChanged: (v) => d.update((d) => d.stoneAsk = v, touchesStone: true),
           ),
         ],
@@ -214,13 +219,30 @@ class _Sell1Body extends StatelessWidget {
               _ => 'IGI issues one for you. The full cost is taken from your settlement when the piece sells.',
             },
           ),
+          // What IGI's certificate costs for this choice, as staff set it.
+          if (ref.certificateCosts case final costs?)
+            DRow(
+              'IGI certificate cost',
+              costs.of(d.cert) == 0 ? 'Free' : '− ${money(costs.of(d.cert))}',
+              valueColor: costs.of(d.cert) == 0 ? DColors.ok : null,
+            ),
           const Gap(16),
         ],
 
         // ---- total price (mixed) ----
         if (isMixed) ...[
           const DLabel('Your price for the whole piece'),
-          DSlider(label: 'You ask', value: d.totalAsk, min: 0, max: 300000, step: 1000, display: group(d.totalAsk), onChanged: (v) => d.update((d) => d.totalAsk = v)),
+          DSlider(
+            label: 'You ask',
+            value: d.totalAsk,
+            min: 0,
+            max: 300000,
+            step: 1000,
+            display: group(d.totalAsk),
+            typeMax: SellDraft.maxAsk,
+            unit: 'EGP',
+            onChanged: (v) => d.update((d) => d.totalAsk = v),
+          ),
           if (q != null)
             DNote(
               icon: 'info-circle',
@@ -326,3 +348,6 @@ class _Sell1Body extends StatelessWidget {
 
 /// A weight as the seller set it: whole grams on the slider, up to 2 decimals when typed.
 String _grams(double w) => w == w.roundToDouble() ? w.toStringAsFixed(0) : w.toStringAsFixed(2).replaceFirst(RegExp(r'0$'), '');
+
+/// Carats as the seller set them: one decimal on the slider, up to 2 when typed.
+String _trimmed(double c) => c.toStringAsFixed(2).replaceFirst(RegExp(r'0$'), '');

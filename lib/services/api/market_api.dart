@@ -102,14 +102,18 @@ class ApiReferenceRepository implements ReferenceRepository {
       _client.get('/reference/piece-types'),
       _client.get('/reference/branches'),
       _client.get('/reference/legal-documents/ownership_declaration'),
+      // Optional: the form still works without the certificate costs.
+      _client.get('/reference/certificate-costs').then<Map<String, dynamic>?>((r) => r, onError: (Object _) => null),
     ]);
     List<Map<String, dynamic>> rows(Map<String, dynamic>? res) => [for (final r in (res?['data'] as List? ?? const [])) (r as Map).cast<String, dynamic>()];
+    final costs = results[4]?['data'];
 
     return SellReference(
       karats: [for (final k in rows(results[0])) (k['code'] as num).toInt()],
       pieceTypes: [for (final t in rows(results[1])) PieceTypeRef.fromJson(t)],
       branches: [for (final b in rows(results[2])) BranchRef.fromJson(b)],
       declaration: LegalDoc.fromJson((results[3]?['data'] as Map).cast<String, dynamic>()),
+      certificateCosts: costs is Map ? CertificateCosts.fromJson(costs.cast<String, dynamic>()) : null,
     );
   }
 }

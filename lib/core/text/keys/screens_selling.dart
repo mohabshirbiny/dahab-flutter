@@ -131,6 +131,10 @@ abstract final class ScreensSellingKeys {
   static const sellingWhenDahabReceivesThePiece = TextKey('selling.when_dahab_receives_the_piece', 'When Dahab receives the piece', area: 'Selling', where: 'Sell: review and list');
 
   static const sellingEgpG = TextKey('selling.egp_g', 'EGP /g', area: 'Selling', where: 'Sell: step 1');
+  static const sellingCt = TextKey('selling.ct', 'ct', area: 'Selling', where: 'Sell: step 1');
+  static const sellingEgp = TextKey('selling.egp', 'EGP', area: 'Selling', where: 'Sell: step 1');
+  static const sellingIgiCertificateCost = TextKey('selling.igi_certificate_cost', 'IGI certificate cost', area: 'Selling', where: 'Sell: step 1');
+  static const sellingFree = TextKey('selling.free', 'Free', area: 'Selling', where: 'Sell: step 1');
   static const all = <TextKey>[
     ordersGoldValue,
     ordersMakingChargeBack,
@@ -255,5 +259,9 @@ abstract final class ScreensSellingKeys {
     sellingTryWelcomeOrEid25,
     sellingWhenDahabReceivesThePiece,
     sellingEgpG,
+    sellingCt,
+    sellingEgp,
+    sellingIgiCertificateCost,
+    sellingFree,
   ];
 }
