@@ -7,9 +7,6 @@ import '../text_key.dart';
 /// nothing a customer reads changes. Keys are never renamed. Staff change the wording from App text.
 abstract final class ScreensAccountKeys {
   static const account16000ChatWhatsappOrEmail = TextKey('account.16000_chat_whatsapp_or_email', '16000, chat, WhatsApp or email', area: 'Account', where: 'Settings and legal screens');
-  static const account200Egp = TextKey('account.200_egp', '200 EGP', area: 'Account', where: 'Settings and legal screens');
-  static const account20OfTheMakingCharge = TextKey('account.20_of_the_making_charge', '20% of the making charge', area: 'Account', where: 'Settings and legal screens');
-  static const account5OfTheValueYouAdd = TextKey('account.5_of_the_value_you_add', '5% of the value you add', area: 'Account', where: 'Settings and legal screens');
   static const accountABuyerRequestsMyPiece = TextKey('account.a_buyer_requests_my_piece', 'A buyer requests my piece', area: 'Account', where: 'Settings and legal screens');
   static const accountActivity = TextKey('account.activity', 'Activity', area: 'Account', where: 'Account');
   static const accountAddOne = TextKey('account.add_one', 'Add one', area: 'Account', where: 'Account');
@@ -109,7 +106,6 @@ abstract final class ScreensAccountKeys {
   static const accountSignedOutOfEveryDevice = TextKey('account.signed_out_of_every_device', 'Signed out of every device.', area: 'Account', where: 'Settings and legal screens');
   static const accountSignedOutOfThatDevice = TextKey('account.signed_out_of_that_device', 'Signed out of that device.', area: 'Account', where: 'Settings and legal screens');
   static const accountStillStuck = TextKey('account.still_stuck', 'Still stuck', area: 'Account', where: 'Settings and legal screens');
-  static const accountTakenFromTheMakingChargeOr = TextKey('account.taken_from_the_making_charge_or', 'Taken from the making charge or the value you add, never from the value of your gold.', area: 'Account', where: 'Settings and legal screens');
   static const accountTalkToUs = TextKey('account.talk_to_us', 'Talk to us', area: 'Account', where: 'Settings and legal screens');
   static const accountTaxInvoicesForWhatYouSold = TextKey('account.tax_invoices_for_what_you_sold', 'Tax invoices for what you sold and bought', area: 'Account', where: 'Account');
   static const accountTermsAndPrivacy = TextKey('account.terms_and_privacy', 'Terms and privacy', area: 'Account', where: 'Account');
@@ -161,9 +157,6 @@ abstract final class ScreensAccountKeys {
 
   static const all = <TextKey>[
     account16000ChatWhatsappOrEmail,
-    account200Egp,
-    account20OfTheMakingCharge,
-    account5OfTheValueYouAdd,
     accountABuyerRequestsMyPiece,
     accountActivity,
     accountAddOne,
@@ -263,7 +256,6 @@ abstract final class ScreensAccountKeys {
     accountSignedOutOfEveryDevice,
     accountSignedOutOfThatDevice,
     accountStillStuck,
-    accountTakenFromTheMakingChargeOr,
     accountTalkToUs,
     accountTaxInvoicesForWhatYouSold,
     accountTermsAndPrivacy,

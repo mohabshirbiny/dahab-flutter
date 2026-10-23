@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/text/keys/account_help.dart';
+import '../../core/text/keys/commission_terms.dart';
 import '../../core/text/texts_controller.dart';
 import '../../core/utils/idempotency.dart';
 import '../../models/account.dart';
@@ -713,6 +714,32 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
 }
 
 /// `#s-prices` — where prices come from.
+/// The *Dahab commission* card. The figures are the live settings from the text bundle; the
+/// card waits until they are known rather than show a number the code made up.
+class CommissionCard extends StatelessWidget {
+  const CommissionCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<TextsController?>()?.bundle.settings ?? const <String, Object?>{};
+    final known = ['commission_gold_pct', 'commission_stone_pct', 'commission_minimum_egp'].every((n) => settings[n] != null);
+    if (!known) return const SizedBox.shrink();
+    return DSoft.bordered(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const DLabel('Dahab commission'),
+          DRow('On gold', context.k(CommissionTermsKeys.onGold, settings)),
+          DRow('On stones', context.k(CommissionTermsKeys.onStones, settings)),
+          DRow('Minimum', context.k(CommissionTermsKeys.minimum, settings)),
+          const Gap(8),
+          T(context.k(CommissionTermsKeys.note, settings), style: DText.tiny),
+        ],
+      ),
+    );
+  }
+}
+
 class PricesScreen extends StatelessWidget {
   const PricesScreen({super.key});
 
@@ -765,19 +792,7 @@ class PricesScreen extends StatelessWidget {
             'The diamond guide',
             'Diamond suggestions come from the Rapaport price list, the reference the trade uses worldwide, converted to Egyptian pounds. It is a guide, not a valuation. IGI decides the real grade.',
           ),
-          const DSoft.bordered(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DLabel('Dahab commission'),
-                DRow('On gold', '20% of the making charge'),
-                DRow('On stones', '5% of the value you add'),
-                DRow('Minimum', '200 EGP'),
-                Gap(8),
-                T('Taken from the making charge or the value you add, never from the value of your gold.', style: DText.tiny),
-              ],
-            ),
-          ),
+          const CommissionCard(),
           const Gap(14),
           const DNote(
             icon: 'shield-check',

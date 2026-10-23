@@ -68,9 +68,9 @@ abstract final class Pricing {
         gross = stone;
         jeweller = stone * jewellerStoneShare;
       case SellType.mixed:
-        base = math.max(ask - gold, 0);
+        base = ask;
         gross = ask;
-        jeweller = gold + base * jewellerStoneShare;
+        jeweller = gold + math.max(ask - gold, 0) * jewellerStoneShare;
     }
     final pct = isGold ? commGold : commStone;
     final comm = commission(base, pct);
@@ -83,7 +83,7 @@ abstract final class Pricing {
       commission: comm,
       net: gross - comm,
       jewellerPays: jeweller,
-      commissionNote: atMinimum ? '(minimum $minCommission EGP)' : '(${(pct * 100).round()}% of ${isGold ? 'the making charge' : 'the value you add'})',
+      commissionNote: atMinimum ? '(minimum $minCommission EGP)' : '(${(pct * 100).round()}% of ${isGold ? 'the making charge' : 'the full price'})',
     );
   }
 }

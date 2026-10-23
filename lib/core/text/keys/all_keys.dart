@@ -4,6 +4,7 @@ import 'account_identity.dart';
 import 'account_legal.dart';
 import 'auth_reset.dart';
 import 'buy_request_balance.dart';
+import 'commission_terms.dart';
 import 'listing_price.dart';
 import 'orders_after_collection.dart';
 import 'patterns.dart';
@@ -34,6 +35,7 @@ const List<TextKey> allTextKeys = [
   ...BuyRequestBalanceKeys.all,
   ...PromoKeys.all,
   ...ReferralKeys.all,
+  ...CommissionTermsKeys.all,
   ...WalletStatementKeys.all,
   ...InvoiceVatKeys.all,
   ...ScreensHomeKeys.all,

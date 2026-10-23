@@ -63,10 +63,10 @@ abstract final class PatternKeys {
     area: 'Shared',
     where: 'A sentence with a number, a name or a date in it',
   );
-  static const patternCountOfTheValueYouAdd = TextKey(
-    'pattern.count_of_the_value_you_add',
-    '({count}% of the value you add)',
-    ar: '({count}٪ من القيمة اللي بتضيفها)',
+  static const patternCountOfTheFullPrice = TextKey(
+    'pattern.count_of_the_full_price',
+    '({count}% of the full price)',
+    ar: '({count}٪ من السعر كله)',
     placeholders: ['count'],
     area: 'Shared',
     where: 'A sentence with a number, a name or a date in it',
@@ -694,7 +694,7 @@ abstract final class PatternKeys {
     patternMixedWeightGAndStone,
     patternCountOfCount2RequiredAdded,
     patternCountOfTheMakingCharge,
-    patternCountOfTheValueYouAdd,
+    patternCountOfTheFullPrice,
     patternCount,
     patternMinimumCountEgp,
     patternMinimum,
@@ -781,7 +781,7 @@ abstract final class PatternKeys {
     PatternKey(r'^Mixed, ([\d.]+) g and stone$', patternMixedWeightGAndStone, ['weight']),
     PatternKey(r'^(\d+) of (\d+) required added$', patternCountOfCount2RequiredAdded, ['count', 'count_2']),
     PatternKey(r'^\((\d+)% of the making charge\)$', patternCountOfTheMakingCharge, ['count']),
-    PatternKey(r'^\((\d+)% of the value you add\)$', patternCountOfTheValueYouAdd, ['count']),
+    PatternKey(r'^\((\d+)% of the full price\)$', patternCountOfTheFullPrice, ['count']),
     PatternKey(r'^\((\d+)%\)$', patternCount, ['count']),
     PatternKey(r'^\(minimum (\d+) EGP\)$', patternMinimumCountEgp, ['count']),
     PatternKey(r'^\(minimum\)$', patternMinimum, []),

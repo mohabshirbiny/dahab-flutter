@@ -74,7 +74,7 @@ class LangController extends ChangeNotifier {
     (RegExp(r'^Mixed, ([\d.]+) g and stone$'), r'مكسّة، $1 جرام وحجر'),
     (RegExp(r'^(\d+) of (\d+) required added$'), r'$1 من $2 مطلوبة اتضافت'),
     (RegExp(r'^\((\d+)% of the making charge\)$'), r'($1٪ من المصنعية)'),
-    (RegExp(r'^\((\d+)% of the value you add\)$'), r'($1٪ من القيمة اللي بتضيفها)'),
+    (RegExp(r'^\((\d+)% of the full price\)$'), r'($1٪ من السعر كله)'),
     (RegExp(r'^\((\d+)%\)$'), r'($1٪)'),
     (RegExp(r'^\(minimum (\d+) EGP\)$'), r'(الحد الأدنى $1 جنيه)'),
     (RegExp(r'^\(minimum\)$'), r'(الحد الأدنى)'),
