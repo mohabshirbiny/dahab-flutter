@@ -135,6 +135,7 @@ abstract final class ScreensSellingKeys {
   static const sellingEgp = TextKey('selling.egp', 'EGP', area: 'Selling', where: 'Sell: step 1');
   static const sellingIgiCertificateCost = TextKey('selling.igi_certificate_cost', 'IGI certificate cost', area: 'Selling', where: 'Sell: step 1');
   static const sellingFree = TextKey('selling.free', 'Free', area: 'Selling', where: 'Sell: step 1');
+  static const sellingUploadTheStoneCertificateOrChoo = TextKey('selling.upload_the_stone_certificate_or_choo', 'Upload the stone certificate, or choose No certificate.', area: 'Selling', where: 'Sell: step 1');
   static const all = <TextKey>[
     ordersGoldValue,
     ordersMakingChargeBack,
@@ -263,5 +264,6 @@ abstract final class ScreensSellingKeys {
     sellingEgp,
     sellingIgiCertificateCost,
     sellingFree,
+    sellingUploadTheStoneCertificateOrChoo,
   ];
 }

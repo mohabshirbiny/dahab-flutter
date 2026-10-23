@@ -145,6 +145,10 @@ class SellDraft extends ChangeNotifier {
 
   bool has(String key) => files.containsKey(key) || kept.containsKey(key);
 
+  /// An IGI or another lab's certificate was chosen but not uploaded; the seller must add it
+  /// or choose "No certificate".
+  bool get certificateMissing => _inUse('cert') && !has('cert');
+
   static MediaKind kindOf(String key) => switch (key) {
     'inv' => MediaKind.invoice,
     'video' => MediaKind.video,

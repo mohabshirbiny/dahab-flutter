@@ -224,6 +224,7 @@ const Map<String, String> arExtra = {
   'Dahab is not accepting this kind of piece right now.': 'دهب مش بيقبل النوع ده من القطع دلوقتي.',
   'This cannot change once a listing exists. To sell something else, start a new listing.': 'ده مينفعش يتغير بعد ما الإعلان يتعمل. لو عايز تبيع حاجة تانية، اعمل إعلان جديد.',
   'A clear photo or a PDF': 'صورة واضحة أو ملف PDF',
+  'Upload the stone certificate, or choose No certificate.': 'ارفع شهادة الحجر، أو اختار مفيش شهادة.',
   'Use an MP4, MOV or WEBM video.': 'استخدم فيديو MP4 أو MOV أو WEBM.',
   'That video is larger than 50 MB.': 'الفيديو ده أكبر من ٥٠ ميجا.',
   'Where can you bring the piece?': 'تقدر تجيب القطعة فين؟',

@@ -1660,6 +1660,26 @@ void main() {
     await _end(tester);
   });
 
+  testWidgets('sell step 1 needs the certificate uploaded when IGI or another lab is chosen', (tester) async {
+    await _start(tester);
+    await signIn(tester);
+    _go(tester, '/sell1');
+    await _settle(tester);
+    await _tap(tester, 'Diamond');
+    for (final lab in ['IGI certificate', 'Another lab']) {
+      await _tap(tester, lab);
+      await _tap(tester, 'Continue to photos');
+      expect(find.text('Upload the stone certificate, or choose No certificate.'), findsOneWidget);
+      expect(find.text('Photos'), findsNothing);
+    }
+
+    await _tap(tester, 'No certificate');
+    expect(find.text('Upload the stone certificate, or choose No certificate.'), findsNothing);
+    await _tap(tester, 'Continue to photos');
+    expect(find.text('Photos'), findsOneWidget);
+    await _end(tester);
+  });
+
   testWidgets('a rejected customer cannot send again and is sent to customer service', (tester) async {
     final api = FakeBackend()
       ..pendingAccount = true

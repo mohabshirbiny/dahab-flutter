@@ -47,6 +47,7 @@ class _Sell3ScreenState extends State<Sell3Screen> {
   /// review (backend spec 010). A retry after a failure repeats nothing.
   Future<void> _send() async {
     final draft = context.read<SellDraft>();
+    if (draft.certificateMissing) return setState(() => _error = 'Upload the stone certificate, or choose No certificate.');
     if (draft.requiredAdded < draft.requiredCount) return setState(() => _error = 'Add the required photos before continuing.');
     if (draft.description.trim().length < 40) return setState(() => _error = 'Add a little more detail before continuing.');
     if (draft.branchIds.isEmpty) return setState(() => _error = 'Choose at least one branch you can bring the piece to.');

@@ -35,13 +35,27 @@ class Sell1Screen extends StatelessWidget {
   }
 }
 
-class _Sell1Body extends StatelessWidget {
+class _Sell1Body extends StatefulWidget {
   const _Sell1Body({required this.ref});
 
   final SellReference ref;
 
   @override
+  State<_Sell1Body> createState() => _Sell1BodyState();
+}
+
+class _Sell1BodyState extends State<_Sell1Body> {
+  String? _error;
+
+  void _continue() {
+    if (context.read<SellDraft>().certificateMissing) return setState(() => _error = 'Upload the stone certificate, or choose No certificate.');
+    setState(() => _error = null);
+    context.nav(R.sell2);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final ref = widget.ref;
     context.read<SellDraft>().syncWith(ref);
     final d = context.watch<SellDraft>();
     final rates = context.watch<LiveRates>();
@@ -340,7 +354,9 @@ class _Sell1Body extends StatelessWidget {
         const Gap(16),
         const PromoCard(),
         const Gap(16),
-        DButton('Continue to photos', onTap: () => context.nav(R.sell2)),
+        DError(_error ?? '', visible: _error != null && d.certificateMissing),
+        const Gap(12),
+        DButton('Continue to photos', onTap: _continue),
       ],
     );
   }
