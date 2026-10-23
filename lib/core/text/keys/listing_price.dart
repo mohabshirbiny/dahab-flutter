@@ -76,6 +76,23 @@ abstract final class ListingPriceKeys {
     where: _piece,
   );
 
+  // ---- How "You would receive" is reached, on the seller's own piece ----
+
+  static const atSellerRate = TextKey(
+    'listing.price.at_seller_rate',
+    'Your piece at the seller gold rate',
+    ar: 'قطعتك بسعر الدهب للبائع',
+    area: _area,
+    where: _piece,
+  );
+  static const commissionVatIncluded = TextKey(
+    'listing.price.commission_vat_included',
+    'Dahab commission, VAT included',
+    ar: 'عمولة دهب شاملة الضريبة',
+    area: _area,
+    where: _piece,
+  );
+
   static const all = <TextKey>[
     titleStones,
     note,
@@ -96,5 +113,7 @@ abstract final class ListingPriceKeys {
     errStopped,
     changePrice,
     reservedNote,
+    atSellerRate,
+    commissionVatIncluded,
   ];
 }

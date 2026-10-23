@@ -424,6 +424,13 @@ class _DetailBody extends StatelessWidget {
                 if (d.depositExact != null && !_owner && !p.mine) ...[const Gap(4), T('Deposit needed to send a request: ${moneyOf(d.depositExact)}', style: DText.tiny)],
               ] else
                 const T('Price not available right now', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              if (own?.youWouldReceive != null && own!.commissionVatIncluded != null) ...[
+                // Why the seller receives less than the price: the backend's figures, nothing worked out here.
+                const Gap(8),
+                if (own.sellerGross != null && own.sellerGross != own.currentPrice)
+                  DRow(context.k(ListingPriceKeys.atSellerRate), moneyOf(own.sellerGross)),
+                DRow(context.k(ListingPriceKeys.commissionVatIncluded), '− ${moneyOf(own.commissionVatIncluded)}'),
+              ],
               if (own?.youWouldReceive != null) ...[
                 const Gap(6),
                 T('You would receive ${money(double.tryParse(own!.youWouldReceive!) ?? 0)}', style: DText.tiny.copyWith(color: DColors.ok)),

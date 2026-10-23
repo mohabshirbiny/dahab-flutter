@@ -82,6 +82,8 @@ class Listing {
     this.branchNamesAr = const [],
     required this.currentPrice,
     required this.youWouldReceive,
+    this.sellerGross,
+    this.commissionVatIncluded,
     required this.staffMessage,
     required this.createdAt,
     required this.listedAt,
@@ -134,6 +136,11 @@ class Listing {
   /// What would reach the seller after commission and VAT (indicative).
   final String? youWouldReceive;
 
+  /// What [youWouldReceive] comes from: the piece at the seller's rate (gold) or the asking price
+  /// (stones), less Dahab's commission, VAT included. Both the backend's, indicative.
+  final String? sellerGross;
+  final String? commissionVatIncluded;
+
   /// What Dahab wrote when it asked for changes, rejected or took the piece down.
   final String? staffMessage;
   final DateTime createdAt;
@@ -175,6 +182,8 @@ class Listing {
       branchNamesAr: [for (final b in (j['branch_options'] as List? ?? const [])) '${(b as Map)['name_ar']}'],
       currentPrice: j['current_price'] as String?,
       youWouldReceive: j['you_would_receive'] as String?,
+      sellerGross: j['seller_gross'] as String?,
+      commissionVatIncluded: j['commission_vat_included'] as String?,
       staffMessage: j['staff_message'] as String?,
       createdAt: DateTime.tryParse('${j['created_at']}')?.toLocal() ?? DateTime.now(),
       listedAt: j['listed_at'] == null ? null : DateTime.tryParse('${j['listed_at']}')?.toLocal(),
