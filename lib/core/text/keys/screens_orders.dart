@@ -56,9 +56,11 @@ abstract final class ScreensOrdersKeys {
   static const ordersAddAPhoto = TextKey('orders.add_a_photo', 'Add a photo', area: 'Orders', where: 'Order help screens');
   static const ordersAdded = TextKey('orders.added', 'Added', area: 'Orders', where: 'Order help screens');
   static const ordersAll = TextKey('orders.all', 'All', area: 'Orders', where: 'Orders list');
+  static const ordersAnotherPageOptional = TextKey('orders.another_page_optional', 'Another page (optional)', area: 'Orders', where: 'Order help screens');
   static const ordersAnswered = TextKey('orders.answered', 'Answered', area: 'Orders', where: 'Order screen');
   static const ordersAnythingToShowUs = TextKey('orders.anything_to_show_us', 'Anything to show us', area: 'Orders', where: 'Order help screens');
   static const ordersAvailableInYourWallet = TextKey('orders.available_in_your_wallet', 'Available in your wallet', area: 'Orders', where: 'Order screen');
+  static const ordersBackOfTheirId = TextKey('orders.back_of_their_id', 'Back of their ID', area: 'Orders', where: 'Order help screens');
   static const ordersBackOnTheMarket = TextKey('orders.back_on_the_market', 'Back on the market.', area: 'Orders', where: 'Order screen');
   static const ordersBalanceNow = TextKey('orders.balance_now', 'Balance now', area: 'Orders', where: 'Order screen');
   static const ordersBeingLookedAt = TextKey('orders.being_looked_at', 'Being looked at', area: 'Orders', where: 'Order screen');
@@ -96,7 +98,7 @@ abstract final class ScreensOrdersKeys {
   static const ordersDirectionsSentToYourPhone = TextKey('orders.directions_sent_to_your_phone', 'Directions sent to your phone.', area: 'Orders', where: 'Order card');
   static const ordersDraft = TextKey('orders.draft', 'Draft', area: 'Orders', where: 'Orders list');
   static const ordersEverything = TextKey('orders.everything', 'Everything', area: 'Orders', where: 'Orders list');
-  static const ordersFillInTheirNameAValid = TextKey('orders.fill_in_their_name_a_valid', 'Fill in their name, a valid phone and their ID photo, and tick the box.', area: 'Orders', where: 'Order help screens');
+  static const ordersFillInTheirNameAValid = TextKey('orders.fill_in_their_name_a_valid', 'Fill in their name, a valid phone and their ID photos, and tick the box.', area: 'Orders', where: 'Order help screens');
   static const ordersFinishAndSend = TextKey('orders.finish_and_send', 'Finish and send', area: 'Orders', where: 'Orders list');
   static const ordersFinished = TextKey('orders.finished', 'Finished', area: 'Orders', where: 'Orders list');
   static const ordersFixWhatWeAskedForAnd = TextKey('orders.fix_what_we_asked_for_and', 'Fix what we asked for and send it again.', area: 'Orders', where: 'Orders list');
@@ -169,6 +171,7 @@ abstract final class ScreensOrdersKeys {
   static const ordersTheNewPriceWasAccepted = TextKey('orders.the_new_price_was_accepted', 'The new price was accepted', area: 'Orders', where: 'Order screen');
   static const ordersTheNewPriceWasDeclined = TextKey('orders.the_new_price_was_declined', 'The new price was declined', area: 'Orders', where: 'Order screen');
   static const ordersTheOrderIsFrozenWhileWe = TextKey('orders.the_order_is_frozen_while_we', 'The order is frozen while we look at it. No money moves and no deadline runs against you.', area: 'Orders', where: 'Order help screens');
+  static const ordersThePageWithTheirPhoto = TextKey('orders.the_page_with_their_photo', 'The page with their photo', area: 'Orders', where: 'Order help screens');
   static const ordersThePersonYouNamedCanNo = TextKey('orders.the_person_you_named_can_no', 'The person you named can no longer collect the piece. Only you can, with your own code.', area: 'Orders', where: 'Order help screens');
   static const ordersThePhotoCouldNotBeAdded = TextKey('orders.the_photo_could_not_be_added', 'The photo could not be added. Use a JPG, PNG or WEBP under 8 MB.', area: 'Orders', where: 'Order help screens');
   static const ordersThePieceIsAtIgiWe = TextKey('orders.the_piece_is_at_igi_we', 'The piece is at IGI. We tell you as soon as the result is in.', area: 'Orders', where: 'Order screen');
@@ -297,9 +300,11 @@ abstract final class ScreensOrdersKeys {
     ordersAddAPhoto,
     ordersAdded,
     ordersAll,
+    ordersAnotherPageOptional,
     ordersAnswered,
     ordersAnythingToShowUs,
     ordersAvailableInYourWallet,
+    ordersBackOfTheirId,
     ordersBackOnTheMarket,
     ordersBalanceNow,
     ordersBeingLookedAt,
@@ -410,6 +415,7 @@ abstract final class ScreensOrdersKeys {
     ordersTheNewPriceWasAccepted,
     ordersTheNewPriceWasDeclined,
     ordersTheOrderIsFrozenWhileWe,
+    ordersThePageWithTheirPhoto,
     ordersThePersonYouNamedCanNo,
     ordersThePhotoCouldNotBeAdded,
     ordersThePieceIsAtIgiWe,

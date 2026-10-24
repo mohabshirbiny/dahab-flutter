@@ -1395,6 +1395,9 @@ class FakeBackend {
         case 'proxy':
           if (body['authorisation_id'] != proxyAuthorisation['id'] || body['authorisation_accepted'] != true) return error(422, 'declaration_required');
           if (!'${body['id_upload_token']}'.startsWith('proxy_id-token-')) return error(422, 'upload_token_invalid');
+          // Like the backend: the kind, and an Egyptian ID needs its back.
+          if (!const ['egyptian_id', 'passport'].contains(body['id_kind'])) return error(422, 'validation_failed');
+          if (body['id_kind'] == 'egyptian_id' && !'${body['id_back_upload_token']}'.startsWith('proxy_id-token-')) return error(422, 'validation_failed');
           if (!RegExp(r'^\+[1-9]\d{7,14}$').hasMatch('${body['phone']}')) {
             return json(422, {
               'message': 'The given data was invalid.',

@@ -409,12 +409,21 @@ class _ProxyForm extends StatefulWidget {
 class _ProxyFormState extends State<_ProxyForm> with _Keyed {
   final _name = TextEditingController();
   final _phone = TextEditingController();
-  String? _idToken;
+  // Their ID like the sign-up one: the kind, then the front (or passport photo page) and the back
+  // (another page, optional, for a passport). Each photo is uploaded once picked; the file stays for the preview.
+  String _idKind = 'egyptian_id';
+  String? _frontToken;
+  String? _backToken;
+  UploadFile? _frontFile;
+  UploadFile? _backFile;
   LegalDoc? _terms;
   bool _ok = false;
   bool _error = false;
   bool _busy = false;
   bool _uploading = false;
+
+  bool get _passport => _idKind == 'passport';
+  bool get _photosReady => _frontToken != null && (_passport || _backToken != null);
 
   @override
   void initState() {
@@ -444,17 +453,24 @@ class _ProxyFormState extends State<_ProxyForm> with _Keyed {
     return raw.startsWith('+') ? '+${raw.replaceAll(RegExp(r'\D'), '')}' : toE164('+20', raw);
   }
 
-  Future<void> _addId() async {
+  Future<void> _addId(bool front) async {
     if (_uploading) return;
     final picked = await context.read<MediaPicker>().pick(MediaKind.proxyId);
     if (picked == null || !mounted) return;
     if (picked.file == null) return showToast(context, picked.error!);
+    final file = picked.file!;
     setState(() => _uploading = true);
     try {
-      final token = await context.read<OrdersRepository>().upload(MediaKind.proxyId, picked.file!);
+      final token = await context.read<OrdersRepository>().upload(MediaKind.proxyId, file);
       if (!mounted) return;
       setState(() {
-        _idToken = token;
+        if (front) {
+          _frontToken = token;
+          _frontFile = file;
+        } else {
+          _backToken = token;
+          _backFile = file;
+        }
         _error = false;
       });
       forgetKey();
@@ -469,7 +485,7 @@ class _ProxyFormState extends State<_ProxyForm> with _Keyed {
   Future<void> _send() async {
     final name = _name.text.trim();
     final terms = _terms;
-    if (name.length < 2 || !RegExp(r'^\+[1-9]\d{7,14}$').hasMatch(_e164) || _idToken == null || !_ok || terms == null) {
+    if (name.length < 2 || !RegExp(r'^\+[1-9]\d{7,14}$').hasMatch(_e164) || !_photosReady || !_ok || terms == null) {
       return setState(() => _error = true);
     }
     if (_busy) return;
@@ -478,14 +494,28 @@ class _ProxyFormState extends State<_ProxyForm> with _Keyed {
       _busy = true;
     });
     try {
-      await context.read<OrdersRepository>().nameProxy(widget.order.id, name: name, phone: _e164, idToken: _idToken!, authorisationId: terms.id, idempotencyKey: key);
+      await context.read<OrdersRepository>().nameProxy(
+        widget.order.id,
+        name: name,
+        phone: _e164,
+        idKind: _idKind,
+        idToken: _frontToken!,
+        idBackToken: _backToken,
+        authorisationId: terms.id,
+        idempotencyKey: key,
+      );
       forgetKey();
       if (!mounted) return;
       await tell(context, title: 'Code sent', body: 'They will get the collection code on their number. The branch checks their ID against it at the counter.');
       if (mounted) context.nav(R.order, query: {'id': widget.order.id});
     } on ApiException catch (e) {
       if (!e.isNetwork) forgetKey();
-      if (e.code == 'upload_token_invalid' && mounted) setState(() => _idToken = null);
+      if (e.code == 'upload_token_invalid' && mounted) {
+        setState(() {
+          _frontToken = _backToken = null;
+          _frontFile = _backFile = null;
+        });
+      }
       if (mounted) showToast(context, orderErrorMessage(e));
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -514,6 +544,16 @@ class _ProxyFormState extends State<_ProxyForm> with _Keyed {
       if (mounted) setState(() => _busy = false);
     }
   }
+
+  /// One side of their ID, with the picked photo shown once added (like the sign-up ID).
+  Widget _idSlot(String title, UploadFile? file, bool front) => DSlot(
+    title: title,
+    done: file != null,
+    sub: _uploading ? 'Uploading…' : (file != null ? 'Added' : 'Tap to add'),
+    subColor: file != null ? DColors.ok : null,
+    preview: file == null ? null : slotPreview(file.bytes, file.contentType),
+    onTap: () => _addId(front),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -547,14 +587,38 @@ class _ProxyFormState extends State<_ProxyForm> with _Keyed {
           child: DInput(controller: _phone, hint: '+20 10 0000 0000', keyboardType: TextInputType.phone, onChanged: (_) => forgetKey()),
         ),
         const DLabel('A photo of their ID'),
-        DSlot(
-          title: 'Front of their ID',
-          sub: _uploading ? 'Uploading…' : (_idToken != null ? 'Added' : 'The branch checks it against the person at the counter'),
-          subColor: _idToken != null ? DColors.ok : null,
-          icon: 'camera',
-          done: _idToken != null,
-          onTap: _addId,
+        DSeg<String>(
+          options: const [('egyptian_id', 'Egyptian ID'), ('passport', 'Passport')],
+          value: _idKind,
+          onChanged: (k) => setState(() {
+            // The photos of one kind are not the other's.
+            if (k != _idKind) {
+              _frontToken = _backToken = null;
+              _frontFile = _backFile = null;
+            }
+            _idKind = k;
+            _error = false;
+            forgetKey();
+          }),
         ),
+        const Gap(12),
+        if (_passport) ...[
+          _idSlot('The page with their photo', _frontFile, true),
+          const Gap(10),
+          _idSlot('Another page (optional)', _backFile, false),
+        ] else
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: _idSlot('Front of their ID', _frontFile, true)),
+                const SizedBox(width: 10),
+                Expanded(child: _idSlot('Back of their ID', _backFile, false)),
+              ],
+            ),
+          ),
+        const Gap(8),
+        const T('The branch checks it against the person at the counter', style: DText.tiny),
         const Gap(12),
         const DNote(
           icon: 'alert-triangle',
@@ -570,7 +634,7 @@ class _ProxyFormState extends State<_ProxyForm> with _Keyed {
               ? 'I authorise this person to collect the piece on my behalf, and I take responsibility for that choice.'
               : (context.isArabic && terms.bodyAr.isNotEmpty ? terms.bodyAr : terms.bodyEn),
         ),
-        DError('Fill in their name, a valid phone and their ID photo, and tick the box.', visible: _error, top: 0),
+        DError('Fill in their name, a valid phone and their ID photos, and tick the box.', visible: _error, top: 0),
         if (_error) const Gap(7),
         DButton('Send them the collection code', loading: _busy, onTap: _uploading ? null : _send),
       ],

@@ -636,13 +636,19 @@ void main() {
     expect(find.text('Who is collecting'), findsOneWidget);
 
     await _tap(tester, 'Send them the collection code');
-    expect(find.text('Fill in their name, a valid phone and their ID photo, and tick the box.'), findsOneWidget);
+    expect(find.text('Fill in their name, a valid phone and their ID photos, and tick the box.'), findsOneWidget);
 
     await tester.enterText(_field('Full name, as written on their ID'), 'Karim Adel Mostafa');
     await tester.enterText(_field('Their phone number'), '010 0123 4567');
+    // Like the sign-up ID: an Egyptian ID by default, front and back, each shown once added.
+    expect(find.text('Egyptian ID'), findsOneWidget);
     await _tap(tester, 'Front of their ID');
-    expect(api.uploads, ['proxy_id']);
     await _tap(tester, 'I authorise this person to collect the piece for me and take responsibility for choosing them.');
+    await _tap(tester, 'Send them the collection code');
+    expect(api.requests.where((r) => r.url.path.endsWith('/proxy')), isEmpty);
+    await _tap(tester, 'Back of their ID');
+    expect(api.uploads, ['proxy_id', 'proxy_id']);
+    expect(find.text('Added'), findsNWidgets(2));
     await _tap(tester, 'Send them the collection code');
 
     final sent = api.requests.singleWhere((r) => r.url.path.endsWith('/proxy'));
@@ -650,7 +656,9 @@ void main() {
     expect(jsonDecode(sent.body), {
       'name': 'Karim Adel Mostafa',
       'phone': '+201001234567',
+      'id_kind': 'egyptian_id',
       'id_upload_token': 'proxy_id-token-1',
+      'id_back_upload_token': 'proxy_id-token-2',
       'authorisation_id': 11,
       'authorisation_accepted': true,
     });

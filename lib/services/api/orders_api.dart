@@ -109,19 +109,30 @@ class ApiOrdersRepository implements OrdersRepository {
   Future<LegalDoc> proxyAuthorisation() async =>
       LegalDoc.fromJson(((await _client.get('/reference/legal-documents/collection_proxy_authorisation'))?['data'] as Map).cast<String, dynamic>());
 
-  /// `POST /customer/me/orders/{id}/proxy` (trade gate). The phone is +E.164.
+  /// `POST /customer/me/orders/{id}/proxy` (trade gate). The phone is +E.164. The ID like the sign-up
+  /// one: `id_kind` egyptian_id (front + back) or passport (photo page, another page optional).
   @override
   Future<CustomerOrder> nameProxy(
     String id, {
     required String name,
     required String phone,
+    required String idKind,
     required String idToken,
+    String? idBackToken,
     required int authorisationId,
     required String idempotencyKey,
   }) async => _one(
     await _client.post(
       '$_base/${Uri.encodeComponent(id)}/proxy',
-      body: {'name': name, 'phone': phone, 'id_upload_token': idToken, 'authorisation_id': authorisationId, 'authorisation_accepted': true},
+      body: {
+        'name': name,
+        'phone': phone,
+        'id_kind': idKind,
+        'id_upload_token': idToken,
+        'id_back_upload_token': ?idBackToken,
+        'authorisation_id': authorisationId,
+        'authorisation_accepted': true,
+      },
       auth: true,
       idempotencyKey: idempotencyKey,
     ),

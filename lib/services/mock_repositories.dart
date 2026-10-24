@@ -96,7 +96,9 @@ class MockOrdersRepository implements OrdersRepository {
     String id, {
     required String name,
     required String phone,
+    required String idKind,
     required String idToken,
+    String? idBackToken,
     required int authorisationId,
     required String idempotencyKey,
   }) => throw UnsupportedError('No orders without the backend.');

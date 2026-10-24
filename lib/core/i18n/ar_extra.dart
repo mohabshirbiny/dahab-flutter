@@ -710,4 +710,9 @@ const Map<String, String> arExtra = {
   'Add a screenshot or receipt of your transfer first.': 'ضيف صورة أو إيصال التحويل الأول.',
   'Required. A screenshot of the transfer is enough.': 'مطلوب. صورة شاشة للتحويل كفاية.',
   'We need it to match your transfer, even when you use the reference.': 'محتاجينه علشان نطابق تحويلك، حتى لو استخدمت الرقم المرجعي.',
+  // The proxy's ID like the sign-up one (backend handover ID check, 2026-10-24). AR-DRAFT: the owner approves the wording.
+  'Back of their ID': 'ضهر البطاقة',
+  'The page with their photo': 'صفحة الباسبور اللي فيها صورته',
+  'Another page (optional)': 'صفحة تانية (اختياري)',
+  'Fill in their name, a valid phone and their ID photos, and tick the box.': 'اكتب اسمه ورقم تليفون صحيح وضيف صور بطاقته، وعلّم على الموافقة.',
 };

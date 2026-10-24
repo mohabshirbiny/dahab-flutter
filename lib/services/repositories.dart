@@ -131,7 +131,16 @@ abstract interface class OrdersRepository {
   Future<LegalDoc> proxyAuthorisation();
 
   /// The buyer names someone else to collect; replaces anyone named before.
-  Future<CustomerOrder> nameProxy(String id, {required String name, required String phone, required String idToken, required int authorisationId, required String idempotencyKey});
+  Future<CustomerOrder> nameProxy(
+    String id, {
+    required String name,
+    required String phone,
+    required String idKind,
+    required String idToken,
+    String? idBackToken,
+    required int authorisationId,
+    required String idempotencyKey,
+  });
 
   /// The buyer withdraws the person named; only the buyer can collect again.
   Future<CustomerOrder> removeProxy(String id, {required String idempotencyKey});
