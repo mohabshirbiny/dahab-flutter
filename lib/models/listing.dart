@@ -6,6 +6,7 @@ library;
 
 import 'buy_request.dart';
 import 'promo.dart';
+import 'stone.dart';
 
 /// A `listing_state` value. The backend has more states than this app acts on
 /// (at inspection, settling, …), so anything unknown is kept and shown as
@@ -97,7 +98,15 @@ class Listing {
     this.order,
     this.promo,
     this.paysAdvance,
+    this.certificateFee,
+    this.stone,
   });
+
+  /// Stones: what IGI's certificate costs the seller, already out of [youWouldReceive]; null when nothing.
+  final String? certificateFee;
+
+  /// Stones: the certificate brought and the stone as stated; null for gold.
+  final StoneDetails? stone;
 
   /// The code recorded on this sale, if any (backend spec 023).
   final ListingPromo? promo;
@@ -197,6 +206,8 @@ class Listing {
       order: OrderSummary.fromJson(j['order']),
       promo: ListingPromo.fromJson(j['promo']),
       paysAdvance: PaysAdvance.fromJson(j['pays_advance']),
+      certificateFee: j['certificate_fee'] as String?,
+      stone: StoneDetails.fromJson(j['stone']),
     );
   }
 }

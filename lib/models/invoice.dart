@@ -104,6 +104,14 @@ class InvoiceDetail {
     this.goldValueAtSellerRate,
     this.priceDifference,
     this.photoMediaId,
+    this.priceBeforeDiscount,
+    this.promoDiscount,
+    this.promoCode,
+    this.totalPaid,
+    this.commissionOrdinaryTotal,
+    this.waivedKind,
+    this.waivedCode,
+    this.waivedAmount,
     this.issuerNameEn,
     this.issuerNameAr,
     this.taxRegistrationNo,
@@ -134,6 +142,19 @@ class InvoiceDetail {
 
   /// The piece's photo printed on the invoice (served by the order's media route); older invoices have none.
   final String? photoMediaId;
+
+  /// Buyer: a code handed the spread back — the price, the discount and what was paid (since 2026-10-25).
+  final String? priceBeforeDiscount;
+  final String? promoDiscount;
+  final String? promoCode;
+  final String? totalPaid;
+
+  /// Seller: what an ordinary sale would charge (VAT included) and why less was charged:
+  /// `free_relist`, `market_maker` or `credit` (a code or credit), with the code when there is one.
+  final String? commissionOrdinaryTotal;
+  final String? waivedKind;
+  final String? waivedCode;
+  final String? waivedAmount;
   final String? issuerNameEn;
   final String? issuerNameAr;
   final String? taxRegistrationNo;
@@ -155,6 +176,14 @@ class InvoiceDetail {
       goldValueAtSellerRate: _str(lines['gold_value_at_seller_rate']),
       priceDifference: _str(lines['price_difference']),
       photoMediaId: _str(lines['photo_media_id']),
+      priceBeforeDiscount: _str(lines['price_before_discount']),
+      promoDiscount: _str(lines['promo_discount']),
+      promoCode: _str(lines['promo_code']),
+      totalPaid: _str(lines['total_paid']),
+      commissionOrdinaryTotal: _str(lines['commission_ordinary_total']),
+      waivedKind: _str((lines['commission_waived'] as Map?)?['kind']),
+      waivedCode: _str((lines['commission_waived'] as Map?)?['code']),
+      waivedAmount: _str((lines['commission_waived'] as Map?)?['amount']),
       issuerNameEn: _str(issuer?['legal_name_en']),
       issuerNameAr: _str(issuer?['legal_name_ar']),
       taxRegistrationNo: _str(issuer?['tax_registration_no']),

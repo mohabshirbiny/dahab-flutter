@@ -6,6 +6,7 @@ import 'auth_reset.dart';
 import 'buy_request_balance.dart';
 import 'commission_terms.dart';
 import 'listing_price.dart';
+import 'offer_details.dart';
 import 'orders_after_collection.dart';
 import 'patterns.dart';
 import 'promo.dart';
@@ -38,6 +39,7 @@ const List<TextKey> allTextKeys = [
   ...CommissionTermsKeys.all,
   ...WalletStatementKeys.all,
   ...InvoiceVatKeys.all,
+  ...OfferDetailsKeys.all,
   ...ScreensHomeKeys.all,
   ...ScreensOrdersKeys.all,
   ...ScreensSellingKeys.all,

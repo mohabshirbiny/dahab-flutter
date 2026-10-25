@@ -239,8 +239,24 @@ class SellDraft extends ChangeNotifier {
     promoCode = _recordedCode;
     _adopt(l);
     if (type != SellType.gold) cert = kept.containsKey('cert') ? 'other' : 'none';
+    final stone = l.stone;
+    if (stone != null) {
+      cert = switch (stone.certificateKind) {
+        'igi' => 'igi',
+        'other_lab' => 'other',
+        'none' => 'none',
+        _ => cert,
+      };
+      carat = (double.tryParse(stone.carat ?? '') ?? carat).clamp(0.01, 99).toDouble();
+      clarity = _clarities.entries.firstWhere((e) => e.value == stone.clarity, orElse: () => MapEntry(clarity, '')).key;
+      cut = _cuts.entries.firstWhere((e) => e.value == stone.cut, orElse: () => MapEntry(cut, '')).key;
+    }
     notifyListeners();
   }
+
+  /// The form's clarity and cut factors (the price guide's) and the backend's names for them.
+  static final _clarities = <double, String>{1.35: 'vvs', 1.0: 'vs', 0.78: 'si', 0.55: 'i'};
+  static final _cuts = <double, String>{1.12: 'excellent', 1.0: 'very_good', 0.85: 'good'};
 
   /// The listing now exists on the backend with this media: nothing is left to upload.
   void _adopt(Listing l) {
@@ -282,6 +298,10 @@ class SellDraft extends ChangeNotifier {
     if (type == SellType.diamond) 'asking_price': stoneAsk.round().toString(),
     if (type == SellType.mixed) 'asking_price': totalAsk.round().toString(),
     if (certificateKind != null) 'certificate_kind': certificateKind,
+    // What the stone is, as the seller states it: shown to buyers, above all without a certificate.
+    if (type != SellType.gold) 'stone_carat': carat.toStringAsFixed(2),
+    if (type != SellType.gold && _clarities[clarity] != null) 'stone_clarity': _clarities[clarity],
+    if (type != SellType.gold && _cuts[cut] != null) 'stone_cut': _cuts[cut],
     'description': description.trim(),
     'branch_option_ids': branchIds.toList()..sort(),
   };

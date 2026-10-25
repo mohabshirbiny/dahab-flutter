@@ -116,7 +116,11 @@ class SellQuote {
     required this.jewellerPays,
     required this.commissionNote,
     this.certificateFee = 0,
+    this.rate = 0,
   });
+
+  /// Gold: what the seller gets per gram of this karat now (0 when not known).
+  final double rate;
 
   final double goldValue;
   final double making;

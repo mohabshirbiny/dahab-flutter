@@ -18,9 +18,33 @@ class PieceTypeRef {
       PieceTypeRef(id: (j['id'] as num).toInt(), category: '${j['category']}', nameEn: '${j['name_en'] ?? ''}', nameAr: '${j['name_ar'] ?? ''}');
 }
 
-/// An inspection branch a seller is willing to bring the piece to.
+/// One open interval of a branch's week (`dow` 0 = Sunday … 6 = Saturday; times `HH:MM`).
+class BranchHourRef {
+  const BranchHourRef({required this.dow, required this.opensAt, required this.closesAt});
+
+  final int dow;
+  final String opensAt;
+  final String closesAt;
+
+  static BranchHourRef? fromJson(Object? raw) {
+    if (raw is! Map || raw['dow'] is! num) return null;
+    return BranchHourRef(dow: (raw['dow'] as num).toInt(), opensAt: '${raw['opens_at'] ?? ''}', closesAt: '${raw['closes_at'] ?? ''}');
+  }
+}
+
+/// An inspection branch a seller is willing to bring the piece to, with its hours and how to reach it
+/// (`GET /reference/branches`, and the order's `branch`).
 class BranchRef {
-  const BranchRef({required this.id, required this.nameEn, required this.nameAr, this.addressEn = '', this.addressAr = ''});
+  const BranchRef({
+    required this.id,
+    required this.nameEn,
+    required this.nameAr,
+    this.addressEn = '',
+    this.addressAr = '',
+    this.contactPhone,
+    this.mapUrl,
+    this.hours = const [],
+  });
 
   final int id;
   final String nameEn;
@@ -28,12 +52,20 @@ class BranchRef {
   final String addressEn;
   final String addressAr;
 
+  /// Null when staff have not set them.
+  final String? contactPhone;
+  final String? mapUrl;
+  final List<BranchHourRef> hours;
+
   factory BranchRef.fromJson(Map<String, dynamic> j) => BranchRef(
     id: (j['id'] as num).toInt(),
     nameEn: '${j['name_en'] ?? ''}',
     nameAr: '${j['name_ar'] ?? ''}',
     addressEn: '${j['address_en'] ?? ''}',
     addressAr: '${j['address_ar'] ?? ''}',
+    contactPhone: j['contact_phone'] as String?,
+    mapUrl: j['map_url'] as String?,
+    hours: [for (final h in (j['hours'] as List? ?? const [])) ?BranchHourRef.fromJson(h)],
   );
 }
 

@@ -4,6 +4,8 @@
 library;
 
 import 'promo.dart';
+import 'reference.dart';
+import 'stone.dart';
 import 'dispute.dart';
 
 enum OrderStage { action, waiting, done }
@@ -394,7 +396,19 @@ class CustomerOrder {
     this.noFee = false,
     this.advance,
     this.commission,
+    this.branch,
+    this.stone,
+    this.promo,
   });
+
+  /// The branch with its hours, address, phone and map link.
+  final BranchRef? branch;
+
+  /// Stones: the certificate brought and the stone as stated; null for gold.
+  final StoneDetails? stone;
+
+  /// The buyer's code: the price, the discount and the total (null for the seller and without a code).
+  final BuyerPromo? promo;
 
   final String id;
   final String orderRef;
@@ -546,6 +560,9 @@ class CustomerOrder {
       noFee: j['no_fee'] == true,
       advance: OrderAdvance.fromJson(j['advance']),
       commission: OrderCommission.fromJson(j['commission']),
+      branch: branch['id'] is num ? BranchRef.fromJson(branch) : null,
+      stone: StoneDetails.fromJson(piece['stone']),
+      promo: BuyerPromo.fromJson(j['promo']),
     );
   }
 }

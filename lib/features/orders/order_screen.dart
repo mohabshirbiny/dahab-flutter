@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/offer_details.dart';
 import '../../core/text/keys/orders_after_collection.dart';
 import '../../core/text/keys/promo.dart';
 import '../../core/text/texts_controller.dart';
@@ -15,7 +16,9 @@ import '../../services/api/orders_api.dart';
 import '../../services/auth/auth_controller.dart';
 import '../../services/repositories.dart';
 import '../../widgets/widgets.dart';
+import '../shared/branch_sheet.dart';
 import '../shared/listing_ui.dart' show ApiImage;
+import '../shared/stone_rows.dart';
 import '../shared/suspended_notice.dart';
 import 'order_flows.dart' show OrderContextCard;
 
@@ -348,6 +351,35 @@ class _OrderBody extends StatelessWidget {
     ];
   }
 
+  /// The buyer's code written out (owner note 2026-10-25): the price before it, the discount and the
+  /// total — a gold code gives the seller's price — and what a code on stones took off the deposit.
+  List<Widget> _promoRows(BuildContext context, CustomerOrder o, {bool showPrice = false}) {
+    final p = o.promo;
+    if (p == null) return const [];
+    return [
+      if (p.hasDiscount) ...[
+        if (showPrice) DRow(context.k(OfferDetailsKeys.price), moneyOf(p.priceBefore)),
+        DRow(
+          context.k(OfferDetailsKeys.discount, {'code': p.code}),
+          '− ${moneyOf(p.discount)}',
+          keyColor: DColors.ok,
+          valueColor: DColors.ok,
+        ),
+        DRow(context.k(OfferDetailsKeys.totalAfter), moneyOf(p.total), rule: !showPrice, bold: true, keyIsLabel: false),
+        if (p.indicative) Text(context.k(OfferDetailsKeys.indicative), style: DText.tiny),
+      ],
+      if (p.hasDepositDiscount) ...[
+        DRow(context.k(OfferDetailsKeys.depositFull), moneyOf(p.depositFull)),
+        DRow(
+          context.k(OfferDetailsKeys.depositDiscount, {'code': p.code}),
+          '− ${moneyOf(p.depositDiscount)}',
+          keyColor: DColors.ok,
+          valueColor: DColors.ok,
+        ),
+      ],
+    ];
+  }
+
   List<Widget> _stage(BuildContext context) {
     final o = order;
     final deadline = o.deadline;
@@ -364,6 +396,10 @@ class _OrderBody extends StatelessWidget {
               children: [
                 T(o.branchNameEn, style: DText.body14),
                 if (o.branchAddressEn.isNotEmpty) ...[const Gap(2), T(o.branchAddressEn, style: DText.tiny)],
+                if (o.branch case final b?) ...[
+                  const Gap(4),
+                  DLink(context.k(OfferDetailsKeys.branchDetails), onTap: () => showBranchDetails(context, b)),
+                ],
               ],
             ),
           ),
@@ -393,6 +429,7 @@ class _OrderBody extends StatelessWidget {
             child: Column(
               children: [
                 DRow('Your price is fixed at', moneyOf(o.lockedTotalPrice)),
+                ..._promoRows(context, o),
                 DRow('Deposit held', moneyOf(o.depositHeld ?? o.depositAmount)),
                 DRow('Branch', o.branchNameEn),
                 if (deadline != null) DRow('The seller delivers by', whenOf(deadline.at), valueColor: DColors.wait),
@@ -453,7 +490,8 @@ class _OrderBody extends StatelessWidget {
           DSoft.bordered(
             child: Column(
               children: [
-                DRow('Total price', moneyOf(o.finalTotal ?? o.lockedTotalPrice)),
+                if (o.promo?.hasDiscount != true) DRow('Total price', moneyOf(o.finalTotal ?? o.lockedTotalPrice)),
+                ..._promoRows(context, o, showPrice: true),
                 DRow('Deposit already held', moneyOf(o.depositAmount)),
                 DRow('Balance now', '', rule: true, bold: true, keyIsLabel: false, valueWidget: T(moneyOf(o.amountDue), style: DText.price)),
                 if (deadline != null) DRow('Pay by', whenOf(deadline.at), valueColor: DColors.wait),
@@ -820,6 +858,7 @@ class _PieceCard extends StatelessWidget {
                 if (type.isNotEmpty) DRow('Type', type),
                 if (o.karat != null) DRow('Karat', '${o.karat}K'),
                 if (weight != null) DRow('Weight listed', '${weight.toStringAsFixed(2)} g'),
+                ...stoneRows(context, o.stone),
                 if (o.description != null && o.description!.trim().isNotEmpty) ...[
                   const Gap(6),
                   T(o.description!, style: const TextStyle(fontSize: 12, color: DColors.ink2, height: 1.7)),

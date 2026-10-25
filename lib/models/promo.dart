@@ -76,9 +76,10 @@ class PromoPreview {
       kind: code?['kind'] as String?,
       mode: codeCommission?['mode'] as String?,
       percent: codeCommission?['percent'] as String?,
-      ordinaryEgp: '${commission['ordinary_egp'] ?? '0'}',
-      chargedEgp: '${commission['charged_egp'] ?? '0'}',
-      savedEgp: '${commission['saved_egp'] ?? '0'}',
+      // What the seller pays and saves, VAT included (the net figures only from an older backend).
+      ordinaryEgp: '${commission['ordinary_total_egp'] ?? commission['ordinary_egp'] ?? '0'}',
+      chargedEgp: '${commission['charged_total_egp'] ?? commission['charged_egp'] ?? '0'}',
+      savedEgp: '${commission['saved_total_egp'] ?? commission['saved_egp'] ?? '0'}',
       minimumEgp: '${commission['minimum_egp'] ?? '0'}',
       floorApplied: commission['floor_applied'] == true,
       withoutPromoEgp: '${receive['without_promo_egp'] ?? '0'}',
@@ -162,9 +163,10 @@ class OrderCommission {
     final j = raw.cast<String, dynamic>();
     return OrderCommission(
       recorded: j['recorded'] == true,
-      ordinaryEgp: j['ordinary_egp'] as String?,
-      chargedEgp: j['charged_egp'] as String?,
-      savedEgp: j['saved_egp'] as String?,
+      // VAT included when the backend recorded it (orders settled since 2026-10-25); else the net figures.
+      ordinaryEgp: (j['ordinary_total_egp'] ?? j['ordinary_egp']) as String?,
+      chargedEgp: (j['charged_total_egp'] ?? j['charged_egp']) as String?,
+      savedEgp: (j['saved_total_egp'] ?? j['saved_egp']) as String?,
       waiver: j['waiver'] as String?,
       code: j['code'] as String?,
     );

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/text/keys/invoice_vat.dart';
+import '../../core/text/keys/offer_details.dart';
 import '../../core/text/keys/wallet_statement.dart';
 import '../../core/text/texts_controller.dart';
 import '../../core/utils/idempotency.dart';
@@ -1309,7 +1310,18 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                       DRow('Making charge', moneyOf(d.makingTotal)),
                     ] else
                       DRow('Price of the piece', moneyOf(d?.askingPrice ?? i.subtotal)),
-                    DRow(i.isSeller ? 'Gross' : 'Total paid', moneyOf(i.subtotal), rule: true),
+                    if (!i.isSeller && d?.promoDiscount != null) ...[
+                      // A buyer code handed the spread back: the price, the discount, then what was paid.
+                      DRow(context.k(OfferDetailsKeys.price), moneyOf(d!.priceBeforeDiscount), rule: true),
+                      DRow(
+                        context.k(OfferDetailsKeys.discount, {'code': d.promoCode ?? ''}),
+                        '− ${moneyOf(d.promoDiscount)}',
+                        keyColor: DColors.ok,
+                        valueColor: DColors.ok,
+                      ),
+                      DRow('Total paid', moneyOf(d.totalPaid), rule: true),
+                    ] else
+                      DRow(i.isSeller ? 'Gross' : 'Total paid', moneyOf(i.subtotal), rule: true),
                   ],
                 ),
               ),
@@ -1319,6 +1331,11 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                 DSoft.bordered(
                   child: Column(
                     children: [
+                      if (d?.waivedAmount != null) ...[
+                        // Why less than an ordinary sale was charged; a sale of no commission has an invoice of 0.
+                        DRow(context.k(OfferDetailsKeys.ordinaryCommission), moneyOf(d!.commissionOrdinaryTotal)),
+                        DRow(_waiverLabel(context, d), '− ${moneyOf(d.waivedAmount)}', keyColor: DColors.ok, valueColor: DColors.ok),
+                      ],
                       if (d?.commissionVatInclusive == true) ...[
                         // Backend package C: the rate includes VAT; VAT is carved out of it.
                         DRow(context.k(InvoiceVatKeys.commissionBeforeVat, {'pct': _plain(d!.commissionPct ?? '')}), moneyOf(i.net)),
@@ -1384,3 +1401,10 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
 
 /// "14.000" -> "14"; "12.5" stays.
 String _plain(String v) => v.contains('.') ? v.replaceFirst(RegExp(r'0+$'), '').replaceFirst(RegExp(r'\.$'), '') : v;
+
+/// Why the seller paid less than an ordinary sale: a free relist, a dealer's purchase, or a code or credit.
+String _waiverLabel(BuildContext context, InvoiceDetail d) => switch (d.waivedKind) {
+  'free_relist' => context.k(OfferDetailsKeys.waivedFreeRelist),
+  'market_maker' => context.k(OfferDetailsKeys.waivedDealer),
+  _ => d.waivedCode != null ? context.k(OfferDetailsKeys.waivedCode, {'code': d.waivedCode}) : context.k(OfferDetailsKeys.waivedCredit),
+};
