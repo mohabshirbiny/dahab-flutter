@@ -1,4 +1,5 @@
 import '../../models/buy_request.dart';
+import '../../models/promo.dart';
 import '../repositories.dart';
 import 'api_client.dart';
 import 'token_store.dart';
@@ -33,6 +34,12 @@ class ApiBuyRequestsRepository implements BuyRequestsRepository {
       idempotencyKey: idempotencyKey,
     ),
   );
+
+  @override
+  Future<BuyerCodePreview> previewCode({required String listingId, required String code}) async {
+    final res = await _client.post('$_base/promo-preview', body: {'listing_id': listingId, 'promo_code': code}, auth: true);
+    return BuyerCodePreview.fromJson((res!['data'] as Map).cast<String, dynamic>());
+  }
 
   @override
   Future<List<BuyRequest>> mine({String? listingId, String? state}) async {

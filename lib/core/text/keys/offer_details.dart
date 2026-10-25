@@ -131,7 +131,52 @@ abstract final class OfferDetailsKeys {
   );
   static const waivedCredit = TextKey('invoice.waived.credit', 'Your commission credit', ar: 'رصيد العمولة بتاعك', area: 'Wallet', where: _invoice);
 
+  // ---- The buyer's code on the piece page (2026-10-26) ----
+
+  static const buyCodeTitle = TextKey('buy.code.title', 'Have a promo code?', ar: 'معاك كود خصم؟', area: 'Home', where: 'Piece page');
+  static const buyCodeApply = TextKey('buy.code.apply', 'Apply', ar: 'طبّق', area: 'Home', where: 'Piece page');
+  static const buyCodeRemove = TextKey('buy.code.remove', 'Remove', ar: 'شيل', area: 'Home', where: 'Piece page');
+  static const buyCodeHint = TextKey(
+    'buy.code.hint',
+    'Enter it here and see what it takes off before you send the request.',
+    ar: 'اكتبه هنا وشوف هيخصم كام قبل ما تبعت الطلب.',
+    area: 'Home',
+    where: 'Piece page',
+  );
+  static const buyCodeApplied = TextKey(
+    'buy.code.applied',
+    'Applied. It goes with your buy request.',
+    ar: 'اتطبق، وهيتبعت مع طلب الشراء.',
+    area: 'Home',
+    where: 'Piece page',
+  );
+  static const buyCodeYouPay = TextKey('buy.code.you_pay', 'You pay', ar: 'هتدفع', area: 'Home', where: 'Piece page');
+  static const buyCodeSellerPrice = TextKey(
+    'buy.code.seller_price',
+    'You pay the price the seller gets.',
+    ar: 'هتدفع نفس السعر اللي البايع بياخده.',
+    area: 'Home',
+    where: 'Piece page',
+  );
+  static const buyCodeDeposit = TextKey('buy.code.deposit', 'Deposit to send the request', ar: 'العربون عشان تبعت الطلب', area: 'Home', where: 'Piece page');
+  static const buyCodeNoDiscount = TextKey(
+    'buy.code.no_discount',
+    'The code is valid, but it takes nothing off this piece right now.',
+    ar: 'الكود صالح، بس مش هيخصم حاجة من القطعة دي دلوقتي.',
+    area: 'Home',
+    where: 'Piece page',
+  );
+
   static const all = <TextKey>[
+    buyCodeTitle,
+    buyCodeApply,
+    buyCodeRemove,
+    buyCodeHint,
+    buyCodeApplied,
+    buyCodeYouPay,
+    buyCodeSellerPrice,
+    buyCodeDeposit,
+    buyCodeNoDiscount,
     branchDetails,
     branchAddress,
     branchHours,

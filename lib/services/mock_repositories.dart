@@ -9,6 +9,7 @@ import '../mock/mock_wallet.dart';
 import '../models/account.dart';
 import '../models/order.dart';
 import '../models/piece.dart';
+import '../models/promo.dart';
 import '../models/wallet.dart';
 import 'api/api_client.dart' show UploadFile;
 import 'media_picker.dart' show MediaKind;
@@ -30,6 +31,17 @@ class MockCatalogRepository implements CatalogRepository {
 
 /// No buy requests without the backend: empty lines and refusals.
 class MockBuyRequestsRepository implements BuyRequestsRepository {
+  @override
+  Future<BuyerCodePreview> previewCode({required String listingId, required String code}) async => BuyerCodePreview(
+    code: code,
+    effect: 'price',
+    priceBefore: '31500.0000',
+    discount: '500.0000',
+    total: '31000.0000',
+    depositFull: '6300.0000',
+    deposit: '6300.0000',
+  );
+
   @override
   Future<DepositTerms> depositTerms() async => const DepositTerms(id: 0, bodyEn: '', bodyAr: '');
 

@@ -1034,13 +1034,12 @@ void main() {
     _go(tester, '/detail?id=${FakeBackend.marketRingId}');
     await _settle(tester);
     expect(find.text('Deposit needed to send a request: 11,640 EGP'), findsOneWidget);
+    // The code box is on the page itself; left empty, the request goes without a code.
+    expect(find.text('Have a promo code?'), findsOneWidget);
 
     await _tap(tester, 'Send buy request');
     expect(find.textContaining('the deposit shown before I send this request'), findsOneWidget);
     await _tap(tester, 'Agree and send');
-    // Any buyer may type a promo code; leaving it empty sends the request as before.
-    expect(find.text('Have a promo code?'), findsOneWidget);
-    await _tap(tester, 'Continue');
 
     final sent = api.requests.singleWhere((r) => r.method == 'POST' && r.url.path.endsWith('/customer/me/buy-requests'));
     expect(sent.headers['Idempotency-Key'], isNotEmpty);
@@ -1048,6 +1047,31 @@ void main() {
     expect(find.text('Your request is with the seller'), findsOneWidget);
     expect(find.text('11,640 EGP'), findsOneWidget);
     expect(find.text('2nd, 1 ahead of you'), findsOneWidget);
+    await _end(tester);
+  });
+
+  testWidgets('the buyer applies a code on the piece page, sees what it takes off, and it goes with the request', (tester) async {
+    final api = FakeBackend()..wallet = {'available': '20000.0000', 'held': '0.0000', 'total': '20000.0000', 'currency': 'EGP'};
+    await _start(tester, backend: api);
+    await signIn(tester);
+    _go(tester, '/detail?id=${FakeBackend.marketRingId}');
+    await _settle(tester);
+
+    await tester.enterText(find.byType(TextField).first, 'nope');
+    await _tap(tester, 'Apply');
+    expect(find.text('This code is not active.'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField).first, 'gold10');
+    await _tap(tester, 'Apply');
+    expect(find.text('Discount, code GOLD10'), findsOneWidget);
+    expect(find.text('− 500 EGP'), findsOneWidget);
+    expect(find.text('57,700 EGP'), findsOneWidget);
+    expect(find.text('Applied. It goes with your buy request.'), findsOneWidget);
+
+    await _tap(tester, 'Send buy request');
+    await _tap(tester, 'Agree and send');
+    final sent = api.requests.singleWhere((r) => r.method == 'POST' && r.url.path.endsWith('/customer/me/buy-requests'));
+    expect((jsonDecode(sent.body) as Map)['promo_code'], 'GOLD10');
     await _end(tester);
   });
 
@@ -1062,9 +1086,6 @@ void main() {
     await _settle(tester);
     await _tap(tester, 'Send buy request');
     await _tap(tester, 'Agree and send');
-    // Any buyer may type a promo code; leaving it empty sends the request as before.
-    expect(find.text('Have a promo code?'), findsOneWidget);
-    await _tap(tester, 'Continue');
 
     expect(find.text('Finish your open order first'), findsOneWidget);
     expect(find.text('Order DH-2026-000002 is waiting for you to pay the balance. Pay it, then you can ask for another piece.'), findsOneWidget);
@@ -1083,9 +1104,6 @@ void main() {
     await _settle(tester);
     await _tap(tester, 'Send buy request');
     await _tap(tester, 'Agree and send');
-    // Any buyer may type a promo code; leaving it empty sends the request as before.
-    expect(find.text('Have a promo code?'), findsOneWidget);
-    await _tap(tester, 'Continue');
 
     expect(find.text('You need a little more'), findsOneWidget);
     expect(find.text('10,640 EGP'), findsOneWidget);

@@ -172,3 +172,44 @@ class OrderCommission {
     );
   }
 }
+
+/// What a buyer's code would do on one piece (`POST /customer/me/buy-requests/promo-preview`): nothing is
+/// recorded by asking. `effect`: `spread` (gold: the seller's price), `price` (a percentage or an amount off
+/// the price), `deposit` (stones: a lower deposit). Indicative until IGI weighs the piece.
+class BuyerCodePreview {
+  const BuyerCodePreview({
+    required this.code,
+    required this.effect,
+    required this.priceBefore,
+    required this.discount,
+    required this.total,
+    required this.depositFull,
+    required this.deposit,
+    this.pricePercent,
+  });
+
+  final String code;
+  final String effect;
+  final String priceBefore;
+  final String discount;
+  final String total;
+  final String depositFull;
+  final String deposit;
+
+  /// For a percentage off the price.
+  final String? pricePercent;
+
+  bool get hasDiscount => (double.tryParse(discount) ?? 0) > 0;
+  bool get lowersDeposit => deposit != depositFull;
+
+  factory BuyerCodePreview.fromJson(Map<String, dynamic> j) => BuyerCodePreview(
+    code: '${j['code'] ?? ''}',
+    effect: '${j['effect'] ?? 'none'}',
+    priceBefore: '${j['price_before_egp'] ?? '0'}',
+    discount: '${j['discount_egp'] ?? '0'}',
+    total: '${j['total_egp'] ?? '0'}',
+    depositFull: '${j['deposit_full_egp'] ?? '0'}',
+    deposit: '${j['deposit_egp'] ?? '0'}',
+    pricePercent: (j['price_discount'] as Map?)?['percent'] as String?,
+  );
+}
