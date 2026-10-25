@@ -115,6 +115,7 @@ class SellQuote {
     required this.net,
     required this.jewellerPays,
     required this.commissionNote,
+    this.certificateFee = 0,
   });
 
   final double goldValue;
@@ -125,4 +126,7 @@ class SellQuote {
   final double net;
   final double jewellerPays;
   final String commissionNote;
+
+  /// The stone certificate cost already out of [net] (0 for gold or none).
+  final double certificateFee;
 }

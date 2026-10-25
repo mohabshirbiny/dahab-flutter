@@ -375,6 +375,7 @@ class CustomerOrder {
     this.amountDue,
     this.finalTotal,
     this.sellerProceeds,
+    this.certificateFee,
     this.inspection,
     this.collection,
     this.sellerReturn,
@@ -437,6 +438,9 @@ class CustomerOrder {
 
   /// What the seller was paid (seller only, once paid).
   final String? sellerProceeds;
+
+  /// Seller only: the stone certificate cost taken from the proceeds (null when none).
+  final String? certificateFee;
   final OrderInspection? inspection;
   final OrderCollection? collection;
   final OrderReturn? sellerReturn;
@@ -521,6 +525,7 @@ class CustomerOrder {
       amountDue: _str(j['amount_due']),
       finalTotal: _str(j['final_total']),
       sellerProceeds: _str(j['seller_proceeds']),
+      certificateFee: _str(j['certificate_fee']),
       inspection: OrderInspection.fromJson(j['inspection']),
       collection: OrderCollection.fromJson(j['collection']),
       sellerReturn: OrderReturn.fromJson(j['seller_return']),

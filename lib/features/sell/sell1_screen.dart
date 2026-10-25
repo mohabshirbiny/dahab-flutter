@@ -301,6 +301,7 @@ class _Sell1BodyState extends State<_Sell1Body> {
                     style: const TextStyle(fontSize: 13, color: DColors.ink2),
                   ),
                 ),
+                if (q.certificateFee > 0) DRow('IGI certificate', '− ${money(q.certificateFee)}'),
                 if (d.promoSaving > 0) DRow(context.k(PromoKeys.estimateSaving), '+ ${money(d.promoSaving)}', keyColor: DColors.ok, valueColor: DColors.ok),
                 DRow(
                   'You receive',

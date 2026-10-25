@@ -486,6 +486,7 @@ class _OrderBody extends StatelessWidget {
       case CustomerOrderStage.collect || CustomerOrderStage.done when o.isSeller:
         return [
           AmountBlockView(caption: 'Paid to your wallet', amount: '+ ${moneyOf(o.sellerProceeds)}'),
+          if (o.certificateFee != null) ...[const Gap(8), DRow('IGI certificate, taken from the sale', '− ${moneyOf(o.certificateFee)}')],
           const Gap(12),
           const DNote(icon: 'circle-check', kind: NoteKind.ok, text: 'The sale is complete on your side. The buyer collects the piece from the branch.'),
         ];
