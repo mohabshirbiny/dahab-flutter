@@ -21,6 +21,7 @@ import '../../services/saved_controller.dart';
 import '../shared/listing_ui.dart';
 import '../shared/piece_card.dart';
 import '../shared/stone_rows.dart';
+import 'buyer_code_card.dart';
 
 DetailView parseDetailView(String? v) => switch (v) {
   'owner' => DetailView.owner,
@@ -50,6 +51,15 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen> {
   late Future<(PieceDetail, BuyRequest?)> _future = _load();
+
+  /// The buyer's applied promo code (the card on the page), sent with the request.
+  final _code = ValueNotifier<String?>(null);
+
+  @override
+  void dispose() {
+    _code.dispose();
+    super.dispose();
+  }
 
   Future<(PieceDetail, BuyRequest?)> _load() async {
     if (widget.view == DetailView.owner && _uuid.hasMatch(widget.pieceId)) {
@@ -92,7 +102,7 @@ class _DetailScreenState extends State<DetailScreen> {
           child: snap.hasError
               ? _Gone(error: snap.error!, onRetry: _reload)
               : snap.hasData
-              ? _DetailBody(d: snap.data!.$1, mine: snap.data!.$2, view: widget.view, onChanged: _reload)
+              ? _DetailBody(d: snap.data!.$1, mine: snap.data!.$2, view: widget.view, onChanged: _reload, code: _code)
               : const DLoading(height: 400),
         );
       },
@@ -124,7 +134,7 @@ class _Gone extends StatelessWidget {
 }
 
 class _DetailBody extends StatelessWidget {
-  const _DetailBody({required this.d, required this.mine, required this.view, required this.onChanged});
+  const _DetailBody({required this.d, required this.mine, required this.view, required this.onChanged, required this.code});
 
   final PieceDetail d;
 
@@ -134,6 +144,9 @@ class _DetailBody extends StatelessWidget {
 
   /// The listing changed (taken down): load it again.
   final VoidCallback onChanged;
+
+  /// The promo code the buyer applied on the page, if any.
+  final ValueNotifier<String?> code;
 
   bool get _owner => view == DetailView.owner || d.own != null;
   bool get _cancelled => view == DetailView.cancelled;
@@ -247,10 +260,9 @@ class _DetailBody extends StatelessWidget {
     if (!context.mounted) return;
     final ok = await ask(context, title: 'Before you send', body: arabic ? terms.bodyAr : terms.bodyEn, yes: 'Agree and send');
     if (!ok || !context.mounted) return;
-    // Any buyer may enter a promo code: a market maker's own, or a buyer code for this kind of piece
-    // (gold: the seller's price; diamond: a lower deposit). An empty answer sends it without one.
-    final String? promoCode = await _askCode(context);
-    if (!context.mounted) return;
+    // The code the buyer applied on the page (a market maker's own, or a buyer code for this kind of
+    // piece), checked again by the backend when the request is sent.
+    final promoCode = code.value;
     try {
       final request = await repo.send(listingId: d.piece.id, confirmedPrice: price, termsId: terms.id, idempotencyKey: newIdempotencyKey(), promoCode: promoCode);
       session.requestSent(request);
@@ -278,12 +290,6 @@ class _DetailBody extends StatelessWidget {
       showToast(context, buyRequestErrorMessage(e));
       if (e.code == 'price_moved' || e.code == 'already_in_queue' || e.code == 'listing_not_purchasable') onChanged();
     }
-  }
-
-  /// The buyer's promo code, or nothing: an empty answer sends the request as any other.
-  Future<String?> _askCode(BuildContext context) async {
-    final code = await showDialog<String>(context: context, builder: (_) => const _PromoCodeDialog());
-    return code == null || code.isEmpty ? null : code.toUpperCase();
   }
 
   /// The buyer's own request, in words (spec 011); the prototype's text for mock pieces.
@@ -601,6 +607,8 @@ class _DetailBody extends StatelessWidget {
                   ),
                   const Gap(12),
                 ],
+                // Like the seller's on the sell form: the code and what it takes off, before the request.
+                if (d.live && p.priceAvailable && _uuid.hasMatch(p.id)) ...[BuyerCodeCard(listingId: p.id, code: code), const Gap(12)],
                 DActsRow(
                   children: [
                     DButton('Send buy request', onTap: p.priceAvailable || !d.live ? () => _buy(context) : null),
@@ -898,36 +906,4 @@ class _SaveButtonState extends State<_SaveButton> {
     final isSaved = context.select<SavedController, bool>((c) => c.isSaved(widget.listingId));
     return DButton.ghost(isSaved ? 'Saved' : 'Save', small: true, loading: _busy, foreground: isSaved ? DColors.gold : null, borderColor: isSaved ? DColors.gold : null, onTap: _toggle);
   }
-}
-
-/// The promo code prompt. It owns its field, so the field outlives the dialog's closing animation.
-class _PromoCodeDialog extends StatefulWidget {
-  const _PromoCodeDialog();
-
-  @override
-  State<_PromoCodeDialog> createState() => _PromoCodeDialogState();
-}
-
-class _PromoCodeDialogState extends State<_PromoCodeDialog> {
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => AlertDialog(
-    title: Text(context.t('Have a promo code?')),
-    content: TextField(
-      controller: _controller,
-      autofocus: true,
-      textCapitalization: TextCapitalization.characters,
-      decoration: InputDecoration(hintText: context.t('Leave empty to send without a code')),
-    ),
-    actions: [
-      TextButton(onPressed: () => Navigator.of(context).pop(_controller.text.trim()), child: Text(context.t('Continue'))),
-    ],
-  );
 }

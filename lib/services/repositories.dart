@@ -74,6 +74,10 @@ abstract interface class BuyRequestsRepository {
   /// (with the shortfall), `price_moved` (with the fresh price) and the other refusals.
   Future<BuyRequest> send({required String listingId, required String confirmedPrice, required int termsId, required String idempotencyKey, String? promoCode});
 
+  /// What a buyer's code would do on [listingId] (2026-10-26). Records nothing; `promo_code_invalid`
+  /// with `details.reason` when the code cannot be used.
+  Future<BuyerCodePreview> previewCode({required String listingId, required String code});
+
   /// Newest first; optionally one listing and/or one state. Empty when signed out.
   Future<List<BuyRequest>> mine({String? listingId, String? state});
 

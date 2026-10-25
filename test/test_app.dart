@@ -1153,6 +1153,19 @@ class FakeBackend {
     if (path == '/reference/legal-documents/deposit_agreement') return json(200, {'data': depositTerms});
     if (path == '/reference/legal-documents/collection_proxy_authorisation') return json(200, {'data': proxyAuthorisation});
 
+    // ---- 2026-10-26: the buyer's code on the piece page ----
+    if (path == '/customer/me/buy-requests/promo-preview' && req.method == 'POST') {
+      final code = '${(jsonDecode(req.body) as Map)['promo_code']}'.toUpperCase();
+      if (code != 'GOLD10') return json(422, {'code': 'promo_code_invalid', 'message': 'x', 'details': {'reason': 'inactive'}});
+      return json(200, {
+        'data': {
+          'code': 'GOLD10', 'effect': 'price', 'price_discount': {'percent': '10.0000', 'amount_egp': null},
+          'price_before_egp': '58200.0000', 'discount_egp': '500.0000', 'total_egp': '57700.0000',
+          'deposit_full_egp': '11640.0000', 'deposit_egp': '11640.0000', 'indicative': true,
+        },
+      });
+    }
+
     // ---- backend spec 011 ----
     if (path == '/customer/me/buy-requests') {
       if (pendingAccount) return error(403, 'verification_required');
