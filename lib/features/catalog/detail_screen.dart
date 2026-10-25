@@ -20,6 +20,7 @@ import '../account/account_messages.dart';
 import '../../services/saved_controller.dart';
 import '../shared/listing_ui.dart';
 import '../shared/piece_card.dart';
+import '../shared/stone_rows.dart';
 
 DetailView parseDetailView(String? v) => switch (v) {
   'owner' => DetailView.owner,
@@ -415,6 +416,9 @@ class _DetailBody extends StatelessWidget {
                   DRow(context.k(ListingPriceKeys.atSellerRate), moneyOf(own.sellerGross)),
                 DRow(context.k(ListingPriceKeys.commissionVatIncluded), '− ${moneyOf(own.commissionVatIncluded)}'),
               ],
+              // A stone piece pays IGI's certificate from the proceeds: why "You would receive" is lower still.
+              if (own?.certificateFee != null && (double.tryParse(own!.certificateFee!) ?? 0) > 0)
+                DRow(certificateFeeLabel(context, own.stone?.certificateKind), '− ${moneyOf(own.certificateFee)}'),
               if (own?.youWouldReceive != null) ...[
                 const Gap(6),
                 T('You would receive ${money(double.tryParse(own!.youWouldReceive!) ?? 0)}', style: DText.tiny.copyWith(color: DColors.ok)),
@@ -463,6 +467,7 @@ class _DetailBody extends StatelessWidget {
               if (p.karat > 0) DRow('Karat', '${p.karat}K', bottomBorder: true, padding: rowPad),
               if (p.weight > 0) DRow('Weight', '${p.weight.toStringAsFixed(2)} g', bottomBorder: true, padding: rowPad),
               DRow('Type', _kindLabel(p.kind), bottomBorder: true, padding: rowPad),
+              ...stoneRows(context, d.stone, padding: rowPad, bottomBorder: true),
               if (d.hasVideo)
                 DRow(
                   'Video',

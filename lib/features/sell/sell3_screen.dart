@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/offer_details.dart';
 import '../../core/text/keys/promo.dart';
 import '../../core/text/texts_controller.dart';
 import '../../models/promo.dart';
@@ -11,6 +12,7 @@ import '../../services/live_rates.dart';
 import '../../services/repositories.dart';
 import '../../services/sell_draft.dart';
 import '../../widgets/widgets.dart';
+import '../shared/branch_sheet.dart';
 import '../shared/listing_ui.dart';
 import '../shared/piece_card.dart';
 import 'promo_card.dart';
@@ -210,15 +212,22 @@ class _Sell3ScreenState extends State<Sell3Screen> {
                   if (ref.branches.isEmpty)
                     const DNote(icon: 'info-circle', kind: NoteKind.wait, text: 'No branch is open for inspections right now. Try again later.')
                   else
-                    for (final b in ref.branches)
+                    for (final b in ref.branches) ...[
                       DCheck(
                         value: d.branchIds.contains(b.id),
+                        bottom: 2,
                         onChanged: (_) {
                           d.toggleBranch(b.id);
                           setState(() => _error = null);
                         },
                         text: arabic && b.nameAr.isNotEmpty ? b.nameAr : b.nameEn,
                       ),
+                      // Its hours, address, phone and map, before the seller commits to bringing the piece there.
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(start: 25, bottom: 10),
+                        child: DLink(context.k(OfferDetailsKeys.branchDetails), onTap: () => showBranchDetails(context, b)),
+                      ),
+                    ],
                   const Gap(10),
                   DCheck(
                     value: _own,

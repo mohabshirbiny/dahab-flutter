@@ -1,4 +1,5 @@
 import 'listing.dart';
+import 'stone.dart';
 
 /// A listed piece of jewellery, as shown on the Home / Browse / Saved grids.
 ///
@@ -153,7 +154,11 @@ class PieceDetail {
     this.own,
     this.priceExact,
     this.depositExact,
+    this.stone,
   });
+
+  /// Stones: the certificate it comes with and the stone as stated (null for gold).
+  final StoneDetails? stone;
 
   /// The market's `current_price` exactly as sent: a buy request confirms it (spec 011).
   final String? priceExact;
@@ -225,6 +230,7 @@ class PieceDetail {
       branchNames: [for (final b in branches) '${(b as Map)['name_en']}'],
       branchNamesAr: [for (final b in branches) '${(b as Map)['name_ar']}'],
       live: true,
+      stone: StoneDetails.fromJson(j['stone']),
     );
   }
 
@@ -263,6 +269,7 @@ class PieceDetail {
       branchNamesAr: l.branchNamesAr,
       live: true,
       own: l,
+      stone: l.stone,
     );
   }
 }

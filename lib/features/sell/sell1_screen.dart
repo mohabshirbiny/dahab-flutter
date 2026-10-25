@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/offer_details.dart';
 import '../../core/text/keys/promo.dart';
 import '../../core/text/texts_controller.dart';
 import '../../models/reference.dart';
@@ -201,6 +202,33 @@ class _Sell1BodyState extends State<_Sell1Body> {
           ),
         ],
 
+        // ---- the stone of a gold-and-diamond piece: what buyers see about it ----
+        if (isMixed) ...[
+          const DLabel('Diamond'),
+          DSlider(
+            label: 'Carat',
+            value: d.carat,
+            min: 0.1,
+            max: 3,
+            step: 0.1,
+            display: _trimmed(d.carat),
+            typeMax: 99,
+            typeDecimals: 2,
+            unit: 'ct',
+            onChanged: (v) => d.update((d) => d.carat = v),
+          ),
+          const DLabel('Clarity', bottom: 6),
+          DSeg<double>(
+            options: const [(1.35, 'VVS'), (1.0, 'VS'), (0.78, 'SI'), (0.55, 'I')],
+            value: d.clarity,
+            onChanged: (v) => d.update((d) => d.clarity = v),
+          ),
+          const Gap(13),
+          const DLabel('Cut', bottom: 6),
+          DSeg<double>(options: const [(1.12, 'Excellent'), (1.0, 'Very good'), (0.85, 'Good')], value: d.cut, onChanged: (v) => d.update((d) => d.cut = v)),
+          const Gap(16),
+        ],
+
         // ---- certificate (diamond, mixed) ----
         if (isDiamond || isMixed) ...[
           const DLabel('Stone certificate'),
@@ -284,7 +312,11 @@ class _Sell1BodyState extends State<_Sell1Body> {
             margin: const EdgeInsets.only(bottom: 14),
             child: Column(
               children: [
-                if (isGold || isMixed) DRow('Gold value', money(q.goldValue)),
+                if (isGold || isMixed)
+                  DRow(
+                    q.rate > 0 ? context.k(OfferDetailsKeys.goldValueAt, {'rate': money(q.rate)}) : 'Gold value',
+                    money(q.goldValue),
+                  ),
                 if (isGold) DRow('Making charge back', '+ ${money(q.making)}', valueColor: DColors.ok),
                 if (isDiamond) DRow('Stone value', '+ ${money(q.stone)}', valueColor: DColors.ok),
                 if (isMixed) DRow('Your asking price', money(q.ask)),
