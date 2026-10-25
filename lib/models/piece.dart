@@ -275,7 +275,7 @@ enum DetailView { buyer, owner, cancelled, requested, accepted }
 /// market [piece] carries it with its indicative price; once it left, only
 /// the summary taken when it was saved remains.
 class SavedPiece {
-  const SavedPiece({required this.listingId, required this.piece, required this.title, required this.karat, required this.weight});
+  const SavedPiece({required this.listingId, required this.piece, required this.title, required this.karat, required this.weight, this.orderId, this.photoPath});
 
   final String listingId;
   final Piece? piece;
@@ -283,11 +283,18 @@ class SavedPiece {
   final int? karat;
   final String? weight;
 
+  /// The customer's own order on a piece that left the market (sold), to open from Saved.
+  final String? orderId;
+
+  /// The piece's photo, served by that order (needs the token).
+  final String? photoPath;
+
   bool get available => piece != null;
 
   factory SavedPiece.fromJson(Map<String, dynamic> j) {
     final summary = ((j['summary'] as Map?) ?? const {}).cast<String, dynamic>();
     final type = ((summary['piece_type'] as Map?) ?? const {}).cast<String, dynamic>();
+    final order = (j['order'] as Map?)?.cast<String, dynamic>();
     final listing = j['available'] == true && j['listing'] is Map ? Piece.fromMarketJson((j['listing'] as Map).cast<String, dynamic>()) : null;
     return SavedPiece(
       listingId: '${j['listing_id']}',
@@ -295,6 +302,8 @@ class SavedPiece {
       title: '${type['name_en'] ?? 'Piece'}',
       karat: (summary['karat'] as num?)?.toInt(),
       weight: summary['weight_g'] as String?,
+      orderId: order?['order_id'] as String?,
+      photoPath: (order?['photo'] as Map?)?['url'] as String?,
     );
   }
 }

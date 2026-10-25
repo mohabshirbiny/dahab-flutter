@@ -661,6 +661,8 @@ const Map<String, String> arExtra = {
   'Records tied to your account, your ID check and the sales you made, including tax invoices, are kept for the period the law requires.':
       'السجلات المرتبطة بحسابك، والتحقق من هويتك، والبيعات اللي عملتها، ومنها الفواتير الضريبية، بتتحفظ للمدة اللي القانون بيطلبها.',
   'No longer available': 'مبقتش متاحة',
+  'Sold — you have an order on these': 'اتباعت — ليك طلب عليها',
+  'Taken off the market': 'اتشالت من السوق',
   'Sell it again with no commission': 'بيعها تاني من غير عمولة',
   'You collected this piece. Put it back on the market now and Dahab takes no commission on that sale. It goes live straight away, with no review.':
       'إنت استلمت القطعة. رجّعها للسوق دلوقتي ودهب مش هتاخد عمولة على البيعة دي. بتنزل على طول من غير مراجعة.',

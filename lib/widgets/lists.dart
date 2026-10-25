@@ -25,11 +25,15 @@ class DMenu extends StatelessWidget {
     this.titleWidget,
     this.subWidget,
     this.mock = false,
+    this.leading,
   });
 
   final String title;
   final String? sub;
   final String? icon;
+
+  /// Shown in place of [icon] (a thumbnail, for instance).
+  final Widget? leading;
   final Color? iconColor;
   final Widget? trailing;
   final VoidCallback? onTap;
@@ -49,7 +53,8 @@ class DMenu extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 14),
         child: Row(
           children: [
-            if (icon != null) ...[SizedBox(width: 20, child: DIcon(icon!, size: 18, color: iconColor ?? DColors.ink2)), const SizedBox(width: 12)],
+            if (leading != null) ...[leading!, const SizedBox(width: 12)]
+            else if (icon != null) ...[SizedBox(width: 20, child: DIcon(icon!, size: 18, color: iconColor ?? DColors.ink2)), const SizedBox(width: 12)],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

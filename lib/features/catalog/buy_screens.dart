@@ -9,6 +9,7 @@ import '../../services/repositories.dart';
 import '../../services/saved_controller.dart';
 import '../../widgets/widgets.dart';
 import '../account/account_messages.dart';
+import '../shared/listing_ui.dart';
 import '../shared/piece_card.dart';
 
 /// `#s-saved` — pieces the customer saved (backend spec 017 FR-040).
@@ -31,6 +32,34 @@ class _SavedScreenState extends State<SavedScreen> {
     } on ApiException catch (e) {
       if (mounted) showToast(context, accountErrorMessage(e));
     }
+  }
+
+  /// A labelled list of saved pieces that left the market; one with an order opens it.
+  List<Widget> _group(String label, List<SavedPiece> pieces) {
+    if (pieces.isEmpty) return const [];
+    return [
+      const Gap(16),
+      DLabel(label),
+      DMenuCard(
+        children: [
+          for (final g in pieces)
+            DMenu(
+              icon: 'heart',
+              leading: g.photoPath == null
+                  ? null
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: SizedBox(width: 48, height: 48, child: ApiImage(path: g.photoPath, auth: true, height: 48, iconSize: 18)),
+                    ),
+              title: g.title,
+              sub: [if (g.karat != null) '${g.karat}K', if (g.weight != null) '${g.weight} g'].join(', '),
+              onTap: g.orderId == null ? null : () => context.nav(R.order, query: {'id': g.orderId!}),
+              showChevron: false,
+              trailing: DLink('Remove', style: const TextStyle(fontSize: 12, color: DColors.bad), onTap: () => _remove(g)),
+            ),
+        ],
+      ),
+    ];
   }
 
   @override
@@ -59,33 +88,20 @@ class _SavedScreenState extends State<SavedScreen> {
                 for (final s in items)
                   if (s.piece != null) s.piece!,
               ];
+              final sold = [
+                for (final s in items)
+                  if (!s.available && s.orderId != null) s,
+              ];
               final gone = [
                 for (final s in items)
-                  if (!s.available) s,
+                  if (!s.available && s.orderId == null) s,
               ];
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (live.isNotEmpty) Grid2(children: [for (final p in live) PieceCard(piece: p)]),
-                  if (gone.isNotEmpty) ...[
-                    const Gap(16),
-                    const DLabel('No longer available'),
-                    DMenuCard(
-                      children: [
-                        for (final g in gone)
-                          DMenu(
-                            icon: 'heart',
-                            title: g.title,
-                            sub: [if (g.karat != null) '${g.karat}K', if (g.weight != null) '${g.weight} g'].join(', '),
-                            trailing: DLink(
-                              'Remove',
-                              style: const TextStyle(fontSize: 12, color: DColors.bad),
-                              onTap: () => _remove(g),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
+                  ..._group('Sold — you have an order on these', sold),
+                  ..._group('Taken off the market', gone),
                 ],
               );
             },
