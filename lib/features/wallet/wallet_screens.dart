@@ -22,6 +22,7 @@ import '../../services/payout_controller.dart';
 import '../../services/text_download.dart';
 import '../../widgets/widgets.dart';
 import '../account/bank_screens.dart' show payoutErrorMessage, pauseLine;
+import '../shared/listing_ui.dart' show ApiImage;
 
 /// Balance card shared by Account and Wallet.
 class BalanceCard extends StatelessWidget {
@@ -1289,15 +1290,19 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                   Expanded(child: T(weight == null ? piece : '$piece, ${weight.toStringAsFixed(2)} g', style: DText.body13)),
                 ],
               ),
+              if (d?.photoMediaId != null && i.orderId.isNotEmpty) ...[
+                const Gap(14),
+                ApiImage(path: '/api/v1/customer/me/orders/${i.orderId}/media/${d!.photoMediaId}', auth: true, height: 170, iconSize: 34),
+              ],
               const Gap(14),
               DLabel(i.isSeller ? 'Settlement' : 'Price'),
               DSoft.bordered(
                 child: Column(
                   children: [
                     if (!i.isSeller && d?.priceDifference != null) ...[
-                      // Backend package C item 13: the price difference is Dahab's commission (VAT 0).
+                      // The gap between the buyer's and the seller's rates, shown as the price difference (VAT 0).
                       DRow('Gold value at ${moneyOf(d!.sellerUnitRate)} per gram', moneyOf(d.goldValueAtSellerRate)),
-                      DRow(context.k(InvoiceVatKeys.commission), moneyOf(d.priceDifference)),
+                      DRow(context.k(InvoiceVatKeys.priceDifference), moneyOf(d.priceDifference)),
                       DRow('Making charge', moneyOf(d.makingTotal)),
                     ] else if (d?.goldValue != null) ...[
                       DRow('Gold value at ${moneyOf(d!.unitRate)} per gram', moneyOf(d.goldValue)),

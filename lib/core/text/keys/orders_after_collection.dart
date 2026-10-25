@@ -82,6 +82,22 @@ abstract final class OrdersAfterCollectionKeys {
   );
   static const formSubmitButton = TextKey('order.free_relist.form.submit_button', 'Relist with no commission', area: _area, where: _form);
   static const formErrorPriceGold = TextKey('order.free_relist.form.error_price_gold', 'Enter your making charge per gram.', area: _area, where: _form);
+  static const formPreviousFee = TextKey(
+    'order.free_relist.form.previous_fee',
+    'Your making charge on this sale was {fee} EGP per gram. The new one can be the same or lower, not higher.',
+    ar: 'المصنعية في البيعة دي كانت {fee} جنيه للجرام. المصنعية الجديدة لازم تبقى زيها أو أقل، مش أكتر.',
+    placeholders: ['fee'],
+    area: _area,
+    where: _form,
+  );
+  static const formErrorPriceAbovePrevious = TextKey(
+    'order.free_relist.form.error_price_above_previous',
+    'The making charge can not be more than the previous one ({fee} EGP per gram).',
+    ar: 'المصنعية مينفعش تبقى أكتر من اللي قبلها ({fee} جنيه للجرام).',
+    placeholders: ['fee'],
+    area: _area,
+    where: _form,
+  );
   static const formErrorPriceOther = TextKey('order.free_relist.form.error_price_other', 'Enter the price you are asking.', area: _area, where: _form);
   static const formErrorConfirmOwnership = TextKey('order.free_relist.form.error_confirm_ownership', 'Confirm ownership to list the piece.', area: _area, where: _form);
   static const formErrorDeclarationChanged = TextKey(
@@ -151,6 +167,8 @@ abstract final class OrdersAfterCollectionKeys {
     formDeclarationFallback,
     formSubmitButton,
     formErrorPriceGold,
+    formPreviousFee,
+    formErrorPriceAbovePrevious,
     formErrorPriceOther,
     formErrorConfirmOwnership,
     formErrorDeclarationChanged,

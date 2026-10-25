@@ -715,6 +715,11 @@ class _FreeRelistFormState extends State<_FreeRelistForm> with _Keyed {
     if (price == null || price < 0 || (!_gold && price <= 0)) {
       return setState(() => _error = context.kr(_gold ? OrdersAfterCollectionKeys.formErrorPriceGold : OrdersAfterCollectionKeys.formErrorPriceOther));
     }
+    final previous = _gold ? widget.order.freeRelist.previousMakingCharge : null;
+    final previousValue = double.tryParse(previous ?? '');
+    if (previousValue != null && price > previousValue) {
+      return setState(() => _error = context.kr(OrdersAfterCollectionKeys.formErrorPriceAbovePrevious, {'fee': previousValue.toStringAsFixed(2)}));
+    }
     if (declaration == null || !_own) return setState(() => _error = context.kr(OrdersAfterCollectionKeys.formErrorConfirmOwnership));
     setState(() {
       _busy = true;
@@ -785,6 +790,10 @@ class _FreeRelistFormState extends State<_FreeRelistForm> with _Keyed {
         if (suspended) ...[const SuspendedNotice(), const Gap(14)],
         DNote(icon: 'info-circle', text: context.k(OrdersAfterCollectionKeys.formLiveAgainNote)),
         const Gap(14),
+        if (_gold && double.tryParse(offer.previousMakingCharge ?? '') != null) ...[
+          DNote(icon: 'tag', text: context.k(OrdersAfterCollectionKeys.formPreviousFee, {'fee': double.parse(offer.previousMakingCharge!).toStringAsFixed(2)})),
+          const Gap(14),
+        ],
         DField(
           label: context.k(_gold ? OrdersAfterCollectionKeys.formPriceLabelGold : OrdersAfterCollectionKeys.formPriceLabelOther),
           child: DInput(

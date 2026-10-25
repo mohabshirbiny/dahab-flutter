@@ -22,5 +22,8 @@ abstract final class InvoiceVatKeys {
   static const commissionVatIncluded = TextKey('invoice.vat.commission_vat_included', 'Commission, VAT included', ar: 'العمولة شاملة الضريبة', area: _area, where: _where);
   static const commission = TextKey('invoice.vat.commission', 'Commission', ar: 'العمولة', area: _area, where: _where);
 
-  static const all = <TextKey>[commissionBeforeVat, commissionVatIncluded, commission];
+  /// The buyer's price difference (the spread) is now named as such, not as the commission; `commission` is no longer shown.
+  static const priceDifference = TextKey('invoice.vat.price_difference', 'Price difference (spread)', ar: 'فرق السعر', area: _area, where: _where);
+
+  static const all = <TextKey>[commissionBeforeVat, commissionVatIncluded, commission, priceDifference];
 }

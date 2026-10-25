@@ -270,10 +270,13 @@ class OrderReturn {
 /// the server's window end (working hours from the handover): the countdown is only a
 /// display of it, the Backend decides.
 class FreeRelistOffer {
-  const FreeRelistOffer({this.status = 'none', this.endsAt, this.listingId});
+  const FreeRelistOffer({this.status = 'none', this.endsAt, this.listingId, this.previousMakingCharge});
 
   final String status;
   final DateTime? endsAt;
+
+  /// Gold, open offer: the making charge per gram of the sale; the new one may not be higher.
+  final String? previousMakingCharge;
 
   /// The new listing, once the offer is used.
   final String? listingId;
@@ -289,7 +292,7 @@ class FreeRelistOffer {
   static FreeRelistOffer fromJson(Object? raw) {
     if (raw is! Map) return none;
     final status = '${raw['status']}';
-    return FreeRelistOffer(status: const {'open', 'used', 'expired'}.contains(status) ? status : 'none', endsAt: _time(raw['ends_at']), listingId: _str(raw['listing_id']));
+    return FreeRelistOffer(status: const {'open', 'used', 'expired'}.contains(status) ? status : 'none', endsAt: _time(raw['ends_at']), listingId: _str(raw['listing_id']), previousMakingCharge: _str(raw['previous_making_charge_per_g']));
   }
 }
 

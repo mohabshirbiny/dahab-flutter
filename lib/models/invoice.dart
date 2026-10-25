@@ -102,6 +102,7 @@ class InvoiceDetail {
     this.sellerUnitRate,
     this.goldValueAtSellerRate,
     this.priceDifference,
+    this.photoMediaId,
     this.issuerNameEn,
     this.issuerNameAr,
     this.taxRegistrationNo,
@@ -126,6 +127,9 @@ class InvoiceDetail {
   final String? sellerUnitRate;
   final String? goldValueAtSellerRate;
   final String? priceDifference;
+
+  /// The piece's photo printed on the invoice (served by the order's media route); older invoices have none.
+  final String? photoMediaId;
   final String? issuerNameEn;
   final String? issuerNameAr;
   final String? taxRegistrationNo;
@@ -145,6 +149,7 @@ class InvoiceDetail {
       sellerUnitRate: _str(lines['seller_unit_rate']),
       goldValueAtSellerRate: _str(lines['gold_value_at_seller_rate']),
       priceDifference: _str(lines['price_difference']),
+      photoMediaId: _str(lines['photo_media_id']),
       issuerNameEn: _str(issuer?['legal_name_en']),
       issuerNameAr: _str(issuer?['legal_name_ar']),
       taxRegistrationNo: _str(issuer?['tax_registration_no']),

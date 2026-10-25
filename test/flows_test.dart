@@ -684,7 +684,7 @@ void main() {
           id,
           state: 'completed',
           stage: 'done',
-          freeRelist: {'status': 'open', 'ends_at': ends, 'listing_id': null},
+          freeRelist: {'status': 'open', 'ends_at': ends, 'listing_id': null, 'previous_making_charge_per_g': '300.0000'},
           rating: {'can_rate': true, 'opens_at': '2026-10-10T10:00:00+03:00', 'closes_at': '2026-11-09T10:00:00+03:00', 'given': null},
         ),
       ];
@@ -696,6 +696,12 @@ void main() {
 
     await _tap(tester, 'Relist this piece, no commission');
     expect(find.text('Your making charge per gram (EGP)'), findsOneWidget);
+    // The sale's own making charge is written on the form, and a higher one is refused on the device.
+    expect(find.textContaining('300.00 EGP per gram'), findsOneWidget);
+    await tester.enterText(_field('Your making charge per gram (EGP)'), '400');
+    await _tap(tester, 'Relist with no commission');
+    expect(find.textContaining('can not be more than the previous one'), findsOneWidget);
+    expect(api.requests.any((r) => r.url.path.endsWith('/free-relist')), isFalse);
 
     // Nothing is sent without a price and the ownership box.
     await _tap(tester, 'Relist with no commission');
