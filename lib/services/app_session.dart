@@ -50,14 +50,18 @@ class AppSession extends ChangeNotifier {
   /// What the deposit needs when the wallet was short, for *You need a little more*.
   DepositShortfall? shortfall;
 
+  /// The piece the short request was for, so *Save it for later* saves that piece.
+  String? shortfallListingId;
+
   void requestSent(BuyRequest request) {
     lastRequest = request;
     shortfall = null;
     notifyListeners();
   }
 
-  void walletShort(DepositShortfall value) {
+  void walletShort(DepositShortfall value, {String? listingId}) {
     shortfall = value;
+    shortfallListingId = listingId;
     notifyListeners();
   }
 }

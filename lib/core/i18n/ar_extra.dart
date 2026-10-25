@@ -7,6 +7,8 @@
 ///
 /// The prototype dictionary (assets/i18n/ar.json) always wins over this map.
 const Map<String, String> arExtra = {
+  // Save a piece when the wallet is short, and the header heart. AR-DRAFT: the owner approves the wording.
+  'Save this piece so you can come straight back to it after adding funds.': 'احفظ القطعة دي عشان ترجعلها على طول بعد ما تشحن محفظتك.',
   // The country-code picker of the phone fields. AR-DRAFT: the owner approves the wording.
   'Country code': 'كود الدولة',
   'Search a country or code': 'دوّر على دولة أو كود',

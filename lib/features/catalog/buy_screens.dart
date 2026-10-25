@@ -6,6 +6,7 @@ import '../../models/piece.dart';
 import '../../services/api/api_client.dart';
 import '../../services/app_session.dart';
 import '../../services/repositories.dart';
+import '../../services/saved_controller.dart';
 import '../../widgets/widgets.dart';
 import '../account/account_messages.dart';
 import '../shared/piece_card.dart';
@@ -23,7 +24,7 @@ class _SavedScreenState extends State<SavedScreen> {
 
   Future<void> _remove(SavedPiece s) async {
     try {
-      await context.read<AccountRepository>().unsave(s.listingId);
+      await context.read<SavedController>().unsave(s.listingId);
       if (!mounted) return;
       setState(() => _reload++);
       showToast(context, 'Removed from saved.');
@@ -213,12 +214,35 @@ class RequestSentScreen extends StatelessWidget {
 
 /// `#s-topup` — the wallet doesn't cover the deposit; the figures come from the
 /// backend's 409 `insufficient_funds` (spec 011), kept in [AppSession.shortfall].
-class TopUpFirstScreen extends StatelessWidget {
+class TopUpFirstScreen extends StatefulWidget {
   const TopUpFirstScreen({super.key});
 
   @override
+  State<TopUpFirstScreen> createState() => _TopUpFirstScreenState();
+}
+
+class _TopUpFirstScreenState extends State<TopUpFirstScreen> {
+  bool _busy = false;
+
+  /// Keeps the piece the request was for under saved pieces, so the buyer finds it after adding funds.
+  Future<void> _save(String listingId) async {
+    setState(() => _busy = true);
+    try {
+      await context.read<SavedController>().save(listingId);
+      if (mounted) showToast(context, 'Saved. You will find it under saved pieces.');
+    } on ApiException catch (e) {
+      if (mounted) showToast(context, accountErrorMessage(e));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final s = context.watch<AppSession>().shortfall;
+    final session = context.watch<AppSession>();
+    final s = session.shortfall;
+    final listingId = session.shortfallListingId;
+    final saved = listingId != null && context.watch<SavedController>().isSaved(listingId);
     return AppPage(
       id: R.topup,
       padded: false,
@@ -247,18 +271,19 @@ class TopUpFirstScreen extends StatelessWidget {
             ),
           const Gap(14),
           const DNote(icon: 'info-circle', text: 'Other buyers may be in the queue for this piece, and the price follows the gold rate until you send your request.'),
+          if (listingId != null && !saved) ...[
+            const Gap(8),
+            const DNote(icon: 'heart', text: 'Save this piece so you can come straight back to it after adding funds.'),
+          ],
           const Gap(16),
           DButton('Add funds', onTap: () => context.nav(R.addfunds, query: s == null ? null : {'amount': s.shortfall})),
-          const Gap(9),
-          DButton.ghost(
-            'Save it for later',
-            onTap: () {
-              showToast(context, 'Saved. You will find it under saved pieces.');
-              Future.delayed(const Duration(milliseconds: 700), () {
-                if (context.mounted) context.nav(R.saved);
-              });
-            },
-          ),
+          if (listingId != null) ...[
+            const Gap(9),
+            if (saved)
+              DButton.ghost('Saved pieces', onTap: () => context.nav(R.saved))
+            else
+              DButton.ghost('Save it for later', loading: _busy, onTap: () => _save(listingId)),
+          ],
         ],
       ),
     );

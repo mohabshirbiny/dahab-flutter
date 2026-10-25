@@ -17,6 +17,7 @@ import '../../services/repositories.dart';
 import '../../services/sell_draft.dart';
 import '../../widgets/widgets.dart';
 import '../account/account_messages.dart';
+import '../../services/saved_controller.dart';
 import '../shared/listing_ui.dart';
 import '../shared/piece_card.dart';
 
@@ -256,7 +257,7 @@ class _DetailBody extends StatelessWidget {
     } on ApiException catch (e) {
       final short = shortfallOf(e);
       if (short != null) {
-        session.walletShort(short);
+        session.walletShort(short, listingId: d.piece.id);
         if (context.mounted) context.nav(R.topup);
         return;
       }
@@ -865,39 +866,21 @@ class _SaveButton extends StatefulWidget {
 class _SaveButtonState extends State<_SaveButton> {
   static final _uuid = RegExp(r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
 
-  bool _saved = false;
   bool _busy = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _check();
-  }
-
-  Future<void> _check() async {
-    if (!_uuid.hasMatch(widget.listingId) || !context.read<AuthController>().isSignedIn) return;
-    try {
-      final rows = await context.read<AccountRepository>().saved(listingId: widget.listingId);
-      if (mounted) setState(() => _saved = rows.isNotEmpty);
-    } on ApiException {
-      // Shown as not saved.
-    }
-  }
 
   Future<void> _toggle() async {
     if (!context.read<AuthController>().isSignedIn) return context.nav(R.gate);
     if (!_uuid.hasMatch(widget.listingId)) return;
     setState(() => _busy = true);
-    final repo = context.read<AccountRepository>();
+    final saved = context.read<SavedController>();
+    final wasSaved = saved.isSaved(widget.listingId);
     try {
-      if (_saved) {
-        await repo.unsave(widget.listingId);
+      if (wasSaved) {
+        await saved.unsave(widget.listingId);
       } else {
-        await repo.save(widget.listingId, idempotencyKey: newIdempotencyKey());
+        await saved.save(widget.listingId);
       }
-      if (!mounted) return;
-      setState(() => _saved = !_saved);
-      showToast(context, _saved ? 'Added to your saved pieces.' : 'Removed from saved.');
+      if (mounted) showToast(context, wasSaved ? 'Removed from saved.' : 'Added to your saved pieces.');
     } on ApiException catch (e) {
       if (mounted) showToast(context, accountErrorMessage(e));
     } finally {
@@ -906,8 +889,10 @@ class _SaveButtonState extends State<_SaveButton> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      DButton.ghost(_saved ? 'Saved' : 'Save', small: true, loading: _busy, foreground: _saved ? DColors.gold : null, borderColor: _saved ? DColors.gold : null, onTap: _toggle);
+  Widget build(BuildContext context) {
+    final isSaved = context.select<SavedController, bool>((c) => c.isSaved(widget.listingId));
+    return DButton.ghost(isSaved ? 'Saved' : 'Save', small: true, loading: _busy, foreground: isSaved ? DColors.gold : null, borderColor: isSaved ? DColors.gold : null, onTap: _toggle);
+  }
 }
 
 /// The promo code prompt. It owns its field, so the field outlives the dialog's closing animation.

@@ -11,6 +11,7 @@ import 'buttons.dart';
 import 'd_icon.dart';
 import '../services/auth/auth_controller.dart';
 import '../services/inbox_controller.dart';
+import '../services/saved_controller.dart';
 import 'dahab_logo.dart';
 import 'mock_flag.dart';
 
@@ -102,7 +103,9 @@ class _TopBar extends StatelessWidget {
               ),
             if (isHome) const Spacer(),
             const SizedBox(width: 10),
-            // Backend spec 017: the inbox and its unread count.
+            // Backend spec 017: saved pieces and their count, then the inbox and its unread count.
+            const _SavedIcon(),
+            const SizedBox(width: 14),
             const _Bell(),
           ],
         ),
@@ -269,6 +272,72 @@ class _BellState extends State<_Bell> {
                     decoration: BoxDecoration(color: DColors.bad, borderRadius: BorderRadius.circular(7)),
                     child: Text(
                       unread > 9 ? '9+' : '$unread',
+                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white, height: 1),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The header heart with the number of saved pieces in green (backend spec 017 FR-040).
+class _SavedIcon extends StatefulWidget {
+  const _SavedIcon();
+
+  @override
+  State<_SavedIcon> createState() => _SavedIconState();
+}
+
+class _SavedIconState extends State<_SavedIcon> {
+  bool? _wasSignedIn;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Read again whenever the customer signs in; forget everything on sign-out.
+    final signedIn = context.watch<AuthController>().isSignedIn;
+    if (signedIn == _wasSignedIn) return;
+    _wasSignedIn = signedIn;
+    final saved = context.read<SavedController>();
+    if (signedIn) {
+      saved.refresh();
+    } else {
+      saved.clear();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final signedIn = context.watch<AuthController>().isSignedIn;
+    final count = signedIn ? context.watch<SavedController>().count : 0;
+    return Tappable(
+      onTap: () => context.nav(signedIn ? R.saved : R.login),
+      child: Semantics(
+        label: count > 0 ? '${context.t('Saved pieces')}, $count' : context.t('Saved pieces'),
+        button: true,
+        child: SizedBox(
+          width: 22,
+          height: 22,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Center(child: DIcon('heart', size: 18, color: count > 0 ? DColors.ok : DColors.ink2)),
+              if (count > 0)
+                PositionedDirectional(
+                  top: -4,
+                  end: -6,
+                  child: Container(
+                    constraints: const BoxConstraints(minWidth: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    height: 14,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(color: DColors.ok, borderRadius: BorderRadius.circular(7)),
+                    child: Text(
+                      count > 99 ? '99+' : '$count',
                       style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white, height: 1),
                     ),
                   ),

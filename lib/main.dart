@@ -24,6 +24,7 @@ import 'services/live_rates.dart';
 import 'services/media_picker.dart';
 import 'services/payout_controller.dart';
 import 'services/repositories.dart';
+import 'services/saved_controller.dart';
 import 'services/sell_draft.dart';
 
 /// Dahab customer app (Flutter Web).
@@ -79,6 +80,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => LiveRates(api: PricesApi(client))),
         ChangeNotifierProvider(create: (_) => SellDraft()),
         ChangeNotifierProvider(create: (_) => InboxController(accountRepo, onCountChanged: auth.refreshVerification)),
+        ChangeNotifierProvider(create: (_) => SavedController(accountRepo)),
         ChangeNotifierProvider(create: (_) => PayoutController(payouts)),
       ],
       child: const DahabApp(),

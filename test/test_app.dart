@@ -6,6 +6,7 @@ import 'package:dahab_app/core/text/texts_controller.dart';
 import 'package:dahab_app/services/api/content_api.dart';
 import 'package:dahab_app/services/api/account_api.dart';
 import 'package:dahab_app/services/inbox_controller.dart';
+import 'package:dahab_app/services/saved_controller.dart';
 import 'package:dahab_app/services/api/api_client.dart';
 import 'package:dahab_app/services/api/buy_requests_api.dart';
 import 'package:dahab_app/services/api/orders_api.dart';
@@ -1767,6 +1768,7 @@ Future<Widget> testApp(LangController lang, {FakeBackend? backend, bool liveText
       ChangeNotifierProvider(create: (_) => LiveRates(api: PricesApi(client))),
       ChangeNotifierProvider(create: (_) => SellDraft()),
       ChangeNotifierProvider(create: (_) => InboxController(accountRepo, onCountChanged: auth.refreshVerification)),
+      ChangeNotifierProvider(create: (_) => SavedController(accountRepo)),
       ChangeNotifierProvider(create: (_) => PayoutController(payouts)),
     ],
     child: const DahabApp(),
