@@ -30,13 +30,16 @@ class KaratPrice {
 
 /// What a quote is asked for: the sell form's piece, or the home calculator's.
 class QuoteParams {
-  const QuoteParams({required this.type, this.karat, this.weight = 0, this.makingPerGram = 0, this.askingPrice = 0});
+  const QuoteParams({required this.type, this.karat, this.weight = 0, this.makingPerGram = 0, this.askingPrice = 0, this.certificate});
 
   final SellType type;
   final int? karat;
   final double weight;
   final double makingPerGram;
   final double askingPrice;
+
+  /// Stones only: `igi`, `other_lab` or `none`; its cost comes out of the payout (backend package D).
+  final String? certificate;
 
   String get category => switch (type) {
     SellType.gold => 'gold',
@@ -53,6 +56,7 @@ class QuoteParams {
     }
     if (type == SellType.gold) q['making_per_g'] = makingPerGram.toStringAsFixed(2);
     if (type != SellType.gold) q['asking_price'] = askingPrice.toStringAsFixed(2);
+    if (type != SellType.gold && certificate != null) q['certificate'] = certificate!;
     return q.entries.map((e) => '${e.key}=${Uri.encodeQueryComponent(e.value)}').join('&');
   }
 
@@ -86,6 +90,7 @@ SellQuote sellQuoteFromJson(Map<String, dynamic> j) {
     ask: category == 'gold_with_diamond' ? asking : 0,
     commission: (_num(j['commission']) + _num(j['vat'])).toDouble(),
     net: _num(j['payout']).toDouble(),
+    certificateFee: _num(j['certificate_fee']).toDouble(),
     jewellerPays: _num(j['gold_value']).toDouble(),
     commissionNote: minimum ? '(minimum)' : '(${rate.round()}% of ${gold ? 'the making charge' : 'the full price'})',
   );

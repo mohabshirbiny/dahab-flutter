@@ -95,9 +95,13 @@ class SellDraft extends ChangeNotifier {
 
   double get suggestedStone => Pricing.suggestedStone(carat, clarity, cut);
 
+  /// The certificate the seller brings, as the backend names it (stones only).
+  String? get certificateKind => type == SellType.gold ? null : (cert == 'other' ? 'other_lab' : cert);
+
   /// What the backend is asked to price (backend spec 015, `GET /reference/quote`).
   QuoteParams get quoteParams => QuoteParams(
     type: type,
+    certificate: certificateKind,
     karat: karat,
     weight: weight,
     makingPerGram: making,
@@ -277,6 +281,7 @@ class SellDraft extends ChangeNotifier {
     if (type == SellType.gold) 'making_charge_per_g': making.round().toString(),
     if (type == SellType.diamond) 'asking_price': stoneAsk.round().toString(),
     if (type == SellType.mixed) 'asking_price': totalAsk.round().toString(),
+    if (certificateKind != null) 'certificate_kind': certificateKind,
     'description': description.trim(),
     'branch_option_ids': branchIds.toList()..sort(),
   };

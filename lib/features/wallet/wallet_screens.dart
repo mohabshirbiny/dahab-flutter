@@ -1333,6 +1333,10 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                   ),
                 ),
                 const Gap(14),
+                if (d?.certificateFee != null) ...[
+                  DSoft.bordered(child: DRow('Stone certificate fee, from the proceeds', moneyOf(d!.certificateFee))),
+                  const Gap(14),
+                ],
                 if (d?.paidToWallet != null)
                   DNote(
                     icon: 'wallet',

@@ -98,6 +98,7 @@ class InvoiceDetail {
     this.askingPrice,
     this.commissionPct,
     this.paidToWallet,
+    this.certificateFee,
     this.commissionVatInclusive = false,
     this.sellerUnitRate,
     this.goldValueAtSellerRate,
@@ -118,6 +119,9 @@ class InvoiceDetail {
 
   /// Seller only: what reached the wallet at settlement.
   final String? paidToWallet;
+
+  /// Seller only: the stone certificate cost taken from the proceeds (backend package D).
+  final String? certificateFee;
 
   /// Seller invoices issued since the commission rate includes VAT (backend package C).
   final bool commissionVatInclusive;
@@ -145,6 +149,7 @@ class InvoiceDetail {
       askingPrice: _str(lines['asking_price']),
       commissionPct: _str(lines['commission_pct']),
       paidToWallet: _str(lines['paid_to_wallet']),
+      certificateFee: _str(lines['certificate_fee']),
       commissionVatInclusive: lines['commission_vat_inclusive'] == true,
       sellerUnitRate: _str(lines['seller_unit_rate']),
       goldValueAtSellerRate: _str(lines['gold_value_at_seller_rate']),
