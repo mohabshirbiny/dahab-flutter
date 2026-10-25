@@ -81,6 +81,10 @@ String buyRequestErrorMessage(ApiException e) {
     case 'promo_code_invalid':
       return switch ((e.extra['details'] as Map?)?['reason']) {
         'not_your_code' => 'This code belongs to another account.',
+        'wrong_product' => 'This code is for a different kind of piece.',
+        'already_used' => 'You have already used this code.',
+        'not_started' => 'This code is not open yet.',
+        'ended' => 'This code has ended.',
         'not_approved' => 'This piece is not approved for market makers.',
         'too_new' => 'This piece has not been listed long enough yet.',
         'cap_reached' => 'This code has reached its limit for the month.',

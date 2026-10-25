@@ -19,6 +19,12 @@ const Map<String, String> arExtra = {
   'Approved': 'معتمدة',
   'Approved for market makers': 'معتمدة للتجار',
   'Your market maker code': 'كود التاجر بتاعك',
+  // Buyer promo codes by product. AR-DRAFT: the owner approves the wording.
+  'Have a promo code?': 'معاك كود خصم؟',
+  'This code is for a different kind of piece.': 'الكود ده لنوع قطعة تاني.',
+  'You have already used this code.': 'انت استخدمت الكود ده قبل كده.',
+  'This code is not open yet.': 'الكود ده لسه ما بدأش.',
+  'This code has ended.': 'الكود ده خلص.',
   'Leave empty to send without a code': 'سيبه فاضي لو هتبعت من غير كود',
   'This code belongs to another account.': 'الكود ده بتاع حساب تاني.',
   'This piece is not approved for market makers.': 'القطعة دي مش معتمدة للتجار.',

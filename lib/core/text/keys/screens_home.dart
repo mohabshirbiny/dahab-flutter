@@ -134,6 +134,11 @@ abstract final class ScreensHomeKeys {
   static const pieceThisAccountIsSuspendedContactUs = TextKey('piece.this_account_is_suspended_contact_us', 'This account is suspended. Contact us for help.', area: 'Browse', where: 'Piece cards and listing details');
   static const pieceThisCodeBelongsToAnotherAccount = TextKey('piece.this_code_belongs_to_another_account', 'This code belongs to another account.', area: 'Browse', where: 'Piece cards and listing details');
   static const pieceThisCodeIsNotActive = TextKey('piece.this_code_is_not_active', 'This code is not active.', area: 'Browse', where: 'Piece cards and listing details');
+  static const pieceHaveAPromoCode = TextKey('piece.have_a_promo_code', 'Have a promo code?', area: 'Browse', where: 'Piece page');
+  static const pieceThisCodeIsForADifferentKind = TextKey('piece.this_code_is_for_a_different_kind', 'This code is for a different kind of piece.', area: 'Browse', where: 'Piece cards and listing details');
+  static const pieceYouHaveAlreadyUsedThisCode = TextKey('piece.you_have_already_used_this_code', 'You have already used this code.', area: 'Browse', where: 'Piece cards and listing details');
+  static const pieceThisCodeIsNotOpenYet = TextKey('piece.this_code_is_not_open_yet', 'This code is not open yet.', area: 'Browse', where: 'Piece cards and listing details');
+  static const pieceThisCodeHasEnded = TextKey('piece.this_code_has_ended', 'This code has ended.', area: 'Browse', where: 'Piece cards and listing details');
   static const pieceThisIsYourListing = TextKey('piece.this_is_your_listing', 'This is your listing', area: 'Browse', where: 'Piece page');
   static const pieceThisListingHasMovedOnSo = TextKey('piece.this_listing_has_moved_on_so', 'This listing has moved on, so that is no longer possible. Open My listings to see where it is.', area: 'Browse', where: 'Piece cards and listing details');
   static const pieceThisListingIsClosedItIs = TextKey('piece.this_listing_is_closed_it_is', 'This listing is closed. It is here for your records only and cannot be bought.', area: 'Browse', where: 'Piece page');
@@ -292,6 +297,11 @@ abstract final class ScreensHomeKeys {
     pieceThisAccountIsSuspendedContactUs,
     pieceThisCodeBelongsToAnotherAccount,
     pieceThisCodeIsNotActive,
+    pieceHaveAPromoCode,
+    pieceThisCodeIsForADifferentKind,
+    pieceYouHaveAlreadyUsedThisCode,
+    pieceThisCodeIsNotOpenYet,
+    pieceThisCodeHasEnded,
     pieceThisIsYourListing,
     pieceThisListingHasMovedOnSo,
     pieceThisListingIsClosedItIs,

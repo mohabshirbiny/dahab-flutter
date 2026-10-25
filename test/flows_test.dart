@@ -1032,6 +1032,9 @@ void main() {
     await _tap(tester, 'Send buy request');
     expect(find.textContaining('the deposit shown before I send this request'), findsOneWidget);
     await _tap(tester, 'Agree and send');
+    // Any buyer may type a promo code; leaving it empty sends the request as before.
+    expect(find.text('Have a promo code?'), findsOneWidget);
+    await _tap(tester, 'Continue');
 
     final sent = api.requests.singleWhere((r) => r.method == 'POST' && r.url.path.endsWith('/customer/me/buy-requests'));
     expect(sent.headers['Idempotency-Key'], isNotEmpty);
@@ -1053,6 +1056,9 @@ void main() {
     await _settle(tester);
     await _tap(tester, 'Send buy request');
     await _tap(tester, 'Agree and send');
+    // Any buyer may type a promo code; leaving it empty sends the request as before.
+    expect(find.text('Have a promo code?'), findsOneWidget);
+    await _tap(tester, 'Continue');
 
     expect(find.text('Finish your open order first'), findsOneWidget);
     expect(find.text('Order DH-2026-000002 is waiting for you to pay the balance. Pay it, then you can ask for another piece.'), findsOneWidget);
@@ -1071,6 +1077,9 @@ void main() {
     await _settle(tester);
     await _tap(tester, 'Send buy request');
     await _tap(tester, 'Agree and send');
+    // Any buyer may type a promo code; leaving it empty sends the request as before.
+    expect(find.text('Have a promo code?'), findsOneWidget);
+    await _tap(tester, 'Continue');
 
     expect(find.text('You need a little more'), findsOneWidget);
     expect(find.text('10,640 EGP'), findsOneWidget);

@@ -245,12 +245,10 @@ class _DetailBody extends StatelessWidget {
     if (!context.mounted) return;
     final ok = await ask(context, title: 'Before you send', body: arabic ? terms.bodyAr : terms.bodyEn, yes: 'Agree and send');
     if (!ok || !context.mounted) return;
-    // A market maker may use the code of their own account (backend spec 019 6B).
-    String? promoCode;
-    if (context.read<AuthController>().customer?.isMarketMaker ?? false) {
-      promoCode = await _askCode(context);
-      if (!context.mounted) return;
-    }
+    // Any buyer may enter a promo code: a market maker's own, or a buyer code for this kind of piece
+    // (gold: the seller's price; diamond: a lower deposit). An empty answer sends it without one.
+    final String? promoCode = await _askCode(context);
+    if (!context.mounted) return;
     try {
       final request = await repo.send(listingId: d.piece.id, confirmedPrice: price, termsId: terms.id, idempotencyKey: newIdempotencyKey(), promoCode: promoCode);
       session.requestSent(request);
@@ -280,25 +278,9 @@ class _DetailBody extends StatelessWidget {
     }
   }
 
-  /// The market maker's code, or nothing: an empty answer sends the request as any other.
+  /// The buyer's promo code, or nothing: an empty answer sends the request as any other.
   Future<String?> _askCode(BuildContext context) async {
-    final controller = TextEditingController();
-    final code = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(ctx.t('Your market maker code')),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.characters,
-          decoration: InputDecoration(hintText: ctx.t('Leave empty to send without a code')),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(controller.text.trim()), child: Text(ctx.t('Continue'))),
-        ],
-      ),
-    );
-    controller.dispose();
+    final code = await showDialog<String>(context: context, builder: (_) => const _PromoCodeDialog());
     return code == null || code.isEmpty ? null : code.toUpperCase();
   }
 
@@ -926,4 +908,36 @@ class _SaveButtonState extends State<_SaveButton> {
   @override
   Widget build(BuildContext context) =>
       DButton.ghost(_saved ? 'Saved' : 'Save', small: true, loading: _busy, foreground: _saved ? DColors.gold : null, borderColor: _saved ? DColors.gold : null, onTap: _toggle);
+}
+
+/// The promo code prompt. It owns its field, so the field outlives the dialog's closing animation.
+class _PromoCodeDialog extends StatefulWidget {
+  const _PromoCodeDialog();
+
+  @override
+  State<_PromoCodeDialog> createState() => _PromoCodeDialogState();
+}
+
+class _PromoCodeDialogState extends State<_PromoCodeDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text(context.t('Have a promo code?')),
+    content: TextField(
+      controller: _controller,
+      autofocus: true,
+      textCapitalization: TextCapitalization.characters,
+      decoration: InputDecoration(hintText: context.t('Leave empty to send without a code')),
+    ),
+    actions: [
+      TextButton(onPressed: () => Navigator.of(context).pop(_controller.text.trim()), child: Text(context.t('Continue'))),
+    ],
+  );
 }
