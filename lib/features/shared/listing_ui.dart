@@ -4,6 +4,9 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/listing_relist.dart';
+import '../../core/text/texts_controller.dart';
+
 import '../../services/api/api_client.dart';
 import '../../services/auth/auth_messages.dart';
 import '../../services/media_picker.dart';
@@ -34,6 +37,12 @@ String? controlRefusalMessage(ApiException e) {
   final details = e.extra['details'];
   final words = details is Map ? ControlMessage.fromJson(details['message']).text(arabic: arabicDates) : '';
   return words.isNotEmpty ? words : e.message;
+}
+
+/// A refused relist: who may bring the piece back, else the usual listing refusals.
+String relistErrorMessage(BuildContext context, ApiException e) {
+  if (e.code != 'listing_not_relistable') return listingErrorMessage(e);
+  return context.kr((e.extra['details'] as Map?)?['reason'] == 'taken_down_by_staff' ? ListingRelistKeys.takenDownByDahab : ListingRelistKeys.notRelistable);
 }
 
 String listingErrorMessage(ApiException e) {

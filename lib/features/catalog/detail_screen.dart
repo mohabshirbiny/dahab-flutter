@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../core/text/keys/buy_request_balance.dart';
 import '../../core/text/keys/listing_price.dart';
+import '../../core/text/keys/listing_relist.dart';
+import '../../core/text/keys/screens_shared.dart';
 import '../../core/text/texts_controller.dart';
 import '../../core/utils/idempotency.dart';
 import '../../models/buy_request.dart';
@@ -178,7 +180,7 @@ class _DetailBody extends StatelessWidget {
     final ok = await ask(
       context,
       title: 'Take this listing down',
-      body: 'It stops showing to buyers and the listing is closed. This cannot be undone: to sell the piece later, list it again.',
+      body: 'It stops showing to buyers. You can put it back up any time, and it keeps its history.',
       yes: 'Take it down',
     );
     if (!ok || !context.mounted) return;
@@ -187,6 +189,18 @@ class _DetailBody extends StatelessWidget {
       if (context.mounted) showToast(context, 'Taken down.');
     } on ApiException catch (e) {
       if (context.mounted) showToast(context, listingErrorMessage(e));
+    }
+    onChanged();
+  }
+
+  Future<void> _relist(BuildContext context, Listing own) async {
+    final ok = await ask(context, title: context.kr(ListingRelistKeys.askTitle), body: context.kr(ListingRelistKeys.askBody), yes: context.kr(ListingRelistKeys.button));
+    if (!ok || !context.mounted) return;
+    try {
+      await context.read<ListingsRepository>().relist(own.id, idempotencyKey: newIdempotencyKey());
+      if (context.mounted) showToast(context, 'Back on the market.');
+    } on ApiException catch (e) {
+      if (context.mounted) showToast(context, relistErrorMessage(context, e));
     }
     onChanged();
   }
@@ -383,7 +397,7 @@ class _DetailBody extends StatelessWidget {
                         children: [
                           if (own != null && own.canChangePrice)
                             DButton.ghost(
-                              own.category == 'gold' ? 'Change fee' : context.k(ListingPriceKeys.changePrice),
+                              own.category == 'gold' ? context.k(ScreensSharedKeys.sharedChangeMakingCharge) : context.k(ListingPriceKeys.changePrice),
                               small: true,
                               onTap: () async {
                                 await context.navAndWait(R.editprice, query: {'id': own.id});
@@ -400,6 +414,7 @@ class _DetailBody extends StatelessWidget {
                               },
                             ),
                           if (own == null ? !d.live : own.canWithdraw) DButton.ghost('Take down', small: true, onTap: () => _takeDown(context)),
+                          if (own != null && own.canRelist) DButton(context.k(ListingRelistKeys.button), small: true, onTap: () => _relist(context, own)),
                           DButton.ghost('View', small: true, onTap: () => context.nav(R.listings)),
                         ],
                       ),

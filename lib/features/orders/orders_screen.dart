@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/listing_price.dart';
+import '../../core/text/keys/listing_relist.dart';
+import '../../core/text/keys/screens_shared.dart';
+import '../../core/text/texts_controller.dart';
+
 import '../../core/utils/idempotency.dart';
 import '../../models/listing.dart';
 import '../../models/order.dart';
@@ -304,7 +309,7 @@ class _ListingsScreenState extends State<ListingsScreen> {
       status: status,
       statusTone: tone,
       subtitle: weight == null ? lead : '$lead, ${weight.toStringAsFixed(2)} g',
-      stage: l.canEdit || l.canWithdraw || l.state == ListingState.reserved ? OrderStage.action : OrderStage.waiting,
+      stage: l.canEdit || l.canWithdraw || l.canRelist || l.state == ListingState.reserved ? OrderStage.action : OrderStage.waiting,
       blocks: [
         if (l.state == ListingState.live || l.state == ListingState.reserved || l.state == ListingState.suspendedHold)
           RowsBlock([
@@ -326,12 +331,22 @@ class _ListingsScreenState extends State<ListingsScreen> {
                 : 'You accepted a buyer (order ${l.order!.orderRef}). Bring the piece to ${l.order!.branchNameEn} by ${whenOf(l.order!.reachBranchDeadline)}.',
           ListingState.sold => 'This piece is sold. The sale is settled and the listing is closed.',
           ListingState.rejected => 'This listing was not accepted and is closed.',
-          ListingState.withdrawn => 'This listing is off the market and closed. To sell the piece, list it again.',
+          ListingState.withdrawn => switch (l.takenDownBy) {
+            'seller' => context.k(ListingRelistKeys.takenDownByYou),
+            'staff' => context.k(ListingRelistKeys.takenDownByDahab),
+            _ => 'This listing is off the market and closed. To sell the piece, list it again.',
+          },
           ListingState.suspendedHold => 'Your account is suspended, so this piece is hidden from buyers. It returns when the account is reinstated.',
           ListingState.other => 'This listing is in progress.',
         }),
         if (l.canEdit) ActionsBlock([OrderAction(l.state == ListingState.draft ? 'Finish and send' : 'Fix and resend', 'fix')]),
-        if (l.canWithdraw) const ActionsBlock([OrderAction('Take it down', 'withdraw')]),
+        if (l.canChangePrice || l.canWithdraw)
+          ActionsBlock([
+            if (l.canChangePrice)
+              OrderAction(l.category == 'gold' ? context.k(ScreensSharedKeys.sharedChangeMakingCharge) : context.k(ListingPriceKeys.changePrice), 'editprice'),
+            if (l.canWithdraw) const OrderAction('Take it down', 'withdraw'),
+          ]),
+        if (l.canRelist) ActionsBlock([OrderAction(context.k(ListingRelistKeys.button), 'relist', primary: true)]),
       ],
     );
   }
@@ -342,12 +357,19 @@ class _ListingsScreenState extends State<ListingsScreen> {
       context.read<SellDraft>().loadFrom(l);
       return context.nav(R.sell1);
     }
+    if (action == 'editprice') {
+      await context.navAndWait(R.editprice, query: {'id': l.id});
+      if (mounted) setState(() => _reload++);
+      return;
+    }
+    if (action == 'relist') return _relist(l);
     if (action != 'withdraw') return runOrderAction(context, action);
 
+    // Always asked first: the piece leaves the market at once.
     final ok = await ask(
       context,
       title: 'Take this listing down',
-      body: 'It stops showing to buyers and the listing is closed. This cannot be undone: to sell the piece later, list it again.',
+      body: 'It stops showing to buyers. You can put it back up any time, and it keeps its history.',
       yes: 'Take it down',
     );
     if (!ok || !mounted) return;
@@ -357,6 +379,21 @@ class _ListingsScreenState extends State<ListingsScreen> {
       if (mounted) showToast(context, 'Taken down.');
     } on ApiException catch (e) {
       if (mounted) showToast(context, listingErrorMessage(e));
+    } finally {
+      _busy = false;
+      if (mounted) setState(() => _reload++);
+    }
+  }
+
+  Future<void> _relist(Listing l) async {
+    final ok = await ask(context, title: context.kr(ListingRelistKeys.askTitle), body: context.kr(ListingRelistKeys.askBody), yes: context.kr(ListingRelistKeys.button));
+    if (!ok || !mounted) return;
+    _busy = true;
+    try {
+      await context.read<ListingsRepository>().relist(l.id, idempotencyKey: newIdempotencyKey());
+      if (mounted) showToast(context, 'Back on the market.');
+    } on ApiException catch (e) {
+      if (mounted) showToast(context, relistErrorMessage(context, e));
     } finally {
       _busy = false;
       if (mounted) setState(() => _reload++);

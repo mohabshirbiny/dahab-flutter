@@ -71,6 +71,10 @@ class ApiListingsRepository implements ListingsRepository {
       _one(await _client.post('$_base/${Uri.encodeComponent(id)}/withdraw', auth: true, idempotencyKey: idempotencyKey));
 
   @override
+  Future<Listing> relist(String id, {required String idempotencyKey}) async =>
+      _one(await _client.post('$_base/${Uri.encodeComponent(id)}/relist', auth: true, idempotencyKey: idempotencyKey));
+
+  @override
   Future<Listing> changePrice(String id, Map<String, dynamic> body, {required String idempotencyKey}) async =>
       _one(await _client.post('$_base/${Uri.encodeComponent(id)}/price', body: body, auth: true, idempotencyKey: idempotencyKey));
 

@@ -155,6 +155,112 @@ class _UpperCaseFormatter extends TextInputFormatter {
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) => newValue.copyWith(text: newValue.text.toUpperCase());
 }
 
+/// A figure typed by hand: the label above, one number field with its unit after it, like
+/// the Change price screen. [onChanged] gets the number only while it is valid (at most
+/// [decimals] decimals, from [min] to [max]); otherwise [invalidText] shows under the field and
+/// [onValidity] says so, so the screen can hold the next step.
+class DNumberField extends StatefulWidget {
+  const DNumberField({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    required this.invalidText,
+    this.unit,
+    this.decimals = 2,
+    this.min = 0,
+    this.minExclusive = false,
+    this.max = 99999999,
+    this.onValidity,
+  });
+
+  final String label;
+  final double value;
+  final ValueChanged<double> onChanged;
+  final String invalidText;
+  final String? unit;
+  final int decimals;
+  final double min;
+
+  /// The number must be above [min], not equal to it (a weight of 0 is no weight).
+  final bool minExclusive;
+  final double max;
+  final ValueChanged<bool>? onValidity;
+
+  @override
+  State<DNumberField> createState() => _DNumberFieldState();
+}
+
+class _DNumberFieldState extends State<DNumberField> {
+  late final TextEditingController _c = TextEditingController(text: _text(widget.value));
+  bool _invalid = false;
+
+  String _text(double v) {
+    final fixed = v.toStringAsFixed(widget.decimals);
+    return fixed.contains('.') ? fixed.replaceFirst(RegExp(r'\.?0+$'), '') : fixed;
+  }
+
+  double? get _typed => double.tryParse(_c.text.trim().replaceAll(',', '.'));
+
+  @override
+  void didUpdateWidget(DNumberField old) {
+    super.didUpdateWidget(old);
+    // A value set from outside (a loaded draft): show it unless the field already says it.
+    if (widget.value != old.value && _typed != widget.value) _c.text = _text(widget.value);
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  void _changed(String raw) {
+    final text = raw.trim().replaceAll(',', '.');
+    final pattern = RegExp(widget.decimals == 0 ? r'^\d{1,9}$' : '^\\d{1,9}(\\.\\d{1,${widget.decimals}})?\$');
+    final v = pattern.hasMatch(text) ? double.parse(text) : null;
+    final ok = v != null && (widget.minExclusive ? v > widget.min : v >= widget.min) && v <= widget.max;
+    if (ok == _invalid) {
+      setState(() => _invalid = !ok);
+      widget.onValidity?.call(ok);
+    }
+    if (ok) widget.onChanged(v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final unit = widget.unit;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 13),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(context.t(widget.label), style: const TextStyle(fontSize: 13, color: DColors.ink2)),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _c,
+            keyboardType: TextInputType.numberWithOptions(decimal: widget.decimals > 0),
+            onChanged: _changed,
+            cursorColor: DColors.ink,
+            cursorWidth: 1.2,
+            style: const TextStyle(fontSize: 14, height: 1.6, color: DColors.ink),
+            decoration: _decoration(
+              context,
+              suffix: unit == null
+                  ? null
+                  : Padding(
+                      padding: const EdgeInsetsDirectional.only(end: 12),
+                      child: Text(context.t(unit), style: const TextStyle(fontSize: 13, color: DColors.ink3)),
+                    ),
+            ),
+          ),
+          if (_invalid) DError(widget.invalidText, visible: true),
+        ],
+      ),
+    );
+  }
+}
+
 /// Native-looking `<select>`, styled like the inputs.
 class DSelect<V> extends StatelessWidget {
   const DSelect({super.key, required this.options, required this.value, required this.onChanged, this.translateLabels = true});

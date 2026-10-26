@@ -7,6 +7,7 @@ import 'auth_reset.dart';
 import 'buy_request_balance.dart';
 import 'commission_terms.dart';
 import 'listing_price.dart';
+import 'listing_relist.dart';
 import 'offer_details.dart';
 import 'orders_after_collection.dart';
 import 'patterns.dart';
@@ -18,6 +19,7 @@ import 'screens_orders.dart';
 import 'screens_selling.dart';
 import 'screens_shared.dart';
 import 'screens_wallet.dart';
+import 'sell_figures.dart';
 import 'wallet_statement.dart';
 import 'invoice_vat.dart';
 
@@ -34,6 +36,8 @@ const List<TextKey> allTextKeys = [
   ...AccountIdentityKeys.all,
   ...AuthResetKeys.all,
   ...ListingPriceKeys.all,
+  ...ListingRelistKeys.all,
+  ...SellFigureKeys.all,
   ...BuyRequestBalanceKeys.all,
   ...PromoKeys.all,
   ...ReferralKeys.all,

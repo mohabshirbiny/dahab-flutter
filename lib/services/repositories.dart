@@ -54,8 +54,12 @@ abstract interface class ListingsRepository {
   /// Sends a draft, or a listing sent back for changes, to Dahab's review.
   Future<Listing> submit(String id, {required String idempotencyKey});
 
-  /// Takes a live listing off the market. Final.
+  /// Takes a live listing off the market. The seller can put it back with [relist].
   Future<Listing> withdraw(String id, {required String idempotencyKey});
+
+  /// Puts a piece the seller took down back on the market, with no new review. Throws
+  /// `listing_not_relistable` (Dahab took it down, or it left another way), `platform_stopped`.
+  Future<Listing> relist(String id, {required String idempotencyKey});
 
   /// Changes the price of a live piece nobody has asked for (backend spec 022):
   /// `{making_charge_per_g}` for gold, `{asking_price}` for stones. Throws
