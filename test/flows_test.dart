@@ -1198,7 +1198,7 @@ void main() {
     await _settle(tester);
     expect(find.text('58,200 EGP'), findsOneWidget);
 
-    await _tap(tester, 'Change fee');
+    await _tap(tester, 'Change making charge');
     expect(find.text('Making charge now'), findsOneWidget);
     expect(find.text('This is already the price.'), findsNothing);
 
@@ -1254,13 +1254,13 @@ void main() {
     // Approved for market makers: the backend says no, the app shows nothing to press.
     _go(tester, '/detail?id=$live&view=owner');
     await _settle(tester);
-    expect(find.text('Change fee'), findsNothing);
+    expect(find.text('Change making charge'), findsNothing);
 
     _go(tester, '/listings');
     await _settle(tester);
     _go(tester, '/detail?id=$reserved&view=owner');
     await _settle(tester);
-    expect(find.text('Change fee'), findsNothing);
+    expect(find.text('Change making charge'), findsNothing);
     expect(find.text("Someone is in line for this piece, so its price can't change. You can change it again if the line empties."), findsOneWidget);
     await _end(tester);
   });

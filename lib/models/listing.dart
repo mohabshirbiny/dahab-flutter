@@ -94,6 +94,8 @@ class Listing {
     required this.canSubmit,
     required this.canWithdraw,
     this.canChangePrice = false,
+    this.canRelist = false,
+    this.takenDownBy,
     this.queueCount = 0,
     this.order,
     this.promo,
@@ -163,6 +165,12 @@ class Listing {
   /// Spec 022: live and the price is not fixed; the Backend decides (`can_change_price`).
   final bool canChangePrice;
 
+  /// The seller took it off the market themself, so it can go back (`can_relist`).
+  final bool canRelist;
+
+  /// Who took a withdrawn piece off the market: `seller`, `staff`, or null when it left another way.
+  final String? takenDownBy;
+
   List<ListingMedia> get photos => media.where((m) => m.kind == 'photo').toList();
 
   ListingMedia? mediaOf(String kind) {
@@ -202,6 +210,8 @@ class Listing {
       canSubmit: j['can_submit'] == true,
       canWithdraw: j['can_withdraw'] == true,
       canChangePrice: j['can_change_price'] == true,
+      canRelist: j['can_relist'] == true,
+      takenDownBy: j['taken_down_by'] as String?,
       queueCount: (j['queue_count'] as num?)?.toInt() ?? 0,
       order: OrderSummary.fromJson(j['order']),
       promo: ListingPromo.fromJson(j['promo']),
