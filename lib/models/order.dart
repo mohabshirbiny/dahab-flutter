@@ -272,13 +272,16 @@ class OrderReturn {
 /// the server's window end (working hours from the handover): the countdown is only a
 /// display of it, the Backend decides.
 class FreeRelistOffer {
-  const FreeRelistOffer({this.status = 'none', this.endsAt, this.listingId, this.previousMakingCharge});
+  const FreeRelistOffer({this.status = 'none', this.endsAt, this.listingId, this.previousMakingCharge, this.previousPrice});
 
   final String status;
   final DateTime? endsAt;
 
   /// Gold, open offer: the making charge per gram of the sale; the new one may not be higher.
   final String? previousMakingCharge;
+
+  /// A stone piece, open offer: what the buyer paid; the new asking price may not be higher (app notes 2026-10-26).
+  final String? previousPrice;
 
   /// The new listing, once the offer is used.
   final String? listingId;
@@ -294,7 +297,7 @@ class FreeRelistOffer {
   static FreeRelistOffer fromJson(Object? raw) {
     if (raw is! Map) return none;
     final status = '${raw['status']}';
-    return FreeRelistOffer(status: const {'open', 'used', 'expired'}.contains(status) ? status : 'none', endsAt: _time(raw['ends_at']), listingId: _str(raw['listing_id']), previousMakingCharge: _str(raw['previous_making_charge_per_g']));
+    return FreeRelistOffer(status: const {'open', 'used', 'expired'}.contains(status) ? status : 'none', endsAt: _time(raw['ends_at']), listingId: _str(raw['listing_id']), previousMakingCharge: _str(raw['previous_making_charge_per_g']), previousPrice: _str(raw['previous_price']));
   }
 }
 
@@ -399,6 +402,7 @@ class CustomerOrder {
     this.branch,
     this.stone,
     this.promo,
+    this.sellerEstimate,
   });
 
   /// The branch with its hours, address, phone and map link.
@@ -409,6 +413,9 @@ class CustomerOrder {
 
   /// The buyer's code: the price, the discount and the total (null for the seller and without a code).
   final BuyerPromo? promo;
+
+  /// Seller only, from acceptance until the buyer pays: what the sale would pay them (backend app notes 2026-10-26).
+  final SellerEstimate? sellerEstimate;
 
   final String id;
   final String orderRef;
@@ -563,6 +570,50 @@ class CustomerOrder {
       branch: branch['id'] is num ? BranchRef.fromJson(branch) : null,
       stone: StoneDetails.fromJson(piece['stone']),
       promo: BuyerPromo.fromJson(j['promo']),
+      sellerEstimate: SellerEstimate.fromJson(j['seller_estimate']),
+    );
+  }
+}
+
+/// The seller's money before the buyer pays (backend `seller_estimate`, order detail only): the piece,
+/// Dahab's commission VAT included (after any waiver), the certificate fee and what reaches the wallet.
+class SellerEstimate {
+  const SellerEstimate({
+    required this.gross,
+    required this.commissionTotal,
+    required this.savedTotal,
+    required this.certificateFee,
+    required this.proceeds,
+    required this.weight,
+    required this.weightMeasured,
+    required this.indicative,
+  });
+
+  final String gross;
+  final String commissionTotal;
+  final String savedTotal;
+  final String certificateFee;
+  final String proceeds;
+  final String? weight;
+  final bool weightMeasured;
+
+  /// True until the buyer owes the balance: the weight or a regrade may still change it.
+  final bool indicative;
+
+  bool get hasSaving => (double.tryParse(savedTotal) ?? 0) > 0;
+  bool get hasCertificateFee => (double.tryParse(certificateFee) ?? 0) > 0;
+
+  static SellerEstimate? fromJson(Object? raw) {
+    if (raw is! Map) return null;
+    return SellerEstimate(
+      gross: '${raw['gross_egp'] ?? '0'}',
+      commissionTotal: '${raw['commission_total_egp'] ?? '0'}',
+      savedTotal: '${raw['saved_total_egp'] ?? '0'}',
+      certificateFee: '${raw['certificate_fee_egp'] ?? '0'}',
+      proceeds: '${raw['proceeds_egp'] ?? '0'}',
+      weight: _str(raw['weight_g']),
+      weightMeasured: raw['weight_measured'] == true,
+      indicative: raw['indicative'] != false,
     );
   }
 }

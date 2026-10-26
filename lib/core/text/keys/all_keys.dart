@@ -1,4 +1,5 @@
 import '../text_key.dart';
+import 'app_notes_sales.dart';
 import 'account_help.dart';
 import 'account_identity.dart';
 import 'account_legal.dart';
@@ -40,6 +41,7 @@ const List<TextKey> allTextKeys = [
   ...WalletStatementKeys.all,
   ...InvoiceVatKeys.all,
   ...OfferDetailsKeys.all,
+  ...AppNotesSalesKeys.all,
   ...ScreensHomeKeys.all,
   ...ScreensOrdersKeys.all,
   ...ScreensSellingKeys.all,

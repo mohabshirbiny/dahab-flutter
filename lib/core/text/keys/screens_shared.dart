@@ -275,6 +275,9 @@ abstract final class ScreensSharedKeys {
   static const sharedRequestSent = TextKey('shared.request_sent', 'Request sent', area: 'Shared', where: 'Screen titles');
   static const sharedReviewAndList = TextKey('shared.review_and_list', 'Review and list', area: 'Shared', where: 'Screen titles');
   static const sharedSaleSettled = TextKey('shared.sale_settled', 'Sale settled', area: 'Shared', where: 'Shared texts');
+  static const sharedSalePaid = TextKey('shared.sale_paid', 'Sale paid', area: 'Shared', where: 'Shared texts');
+  static const sharedPaidForAPieceYouSold = TextKey('shared.paid_for_a_piece_you_sold', 'Paid for a piece you sold', area: 'Shared', where: 'Shared texts');
+  static const sharedYourShareOfAPieceYouSold = TextKey('shared.your_share_of_a_piece_you_sold', 'Your share of a piece you sold, after commission and VAT, paid when the buyer paid the balance.', area: 'Shared', where: 'Shared texts');
   static const sharedSell = TextKey('shared.sell', 'Sell', area: 'Shared', where: 'Shared widgets');
   static const sharedSellYourPiece = TextKey('shared.sell_your_piece', 'Sell your piece', area: 'Shared', where: 'Screen titles');
   static const sharedSellingRulesAndDeadlines = TextKey('shared.selling_rules_and_deadlines', 'Selling rules and deadlines', area: 'Shared', where: 'Shared texts');
@@ -621,6 +624,9 @@ abstract final class ScreensSharedKeys {
     sharedRequestSent,
     sharedReviewAndList,
     sharedSaleSettled,
+    sharedSalePaid,
+    sharedPaidForAPieceYouSold,
+    sharedYourShareOfAPieceYouSold,
     sharedSell,
     sharedSellYourPiece,
     sharedSellingRulesAndDeadlines,

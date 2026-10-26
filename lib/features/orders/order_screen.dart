@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/app_notes_sales.dart';
+import '../../core/text/keys/listing_price.dart';
 import '../../core/text/keys/offer_details.dart';
 import '../../core/text/keys/orders_after_collection.dart';
 import '../../core/text/keys/promo.dart';
@@ -11,6 +13,7 @@ import '../../core/utils/idempotency.dart';
 import '../../models/dispute.dart';
 import '../../models/order.dart';
 import '../../models/piece.dart';
+import '../../models/wallet.dart';
 import '../../services/api/api_client.dart';
 import '../../services/api/orders_api.dart';
 import '../../services/auth/auth_controller.dart';
@@ -417,6 +420,7 @@ class _OrderBody extends StatelessWidget {
           ..._moreTime(context),
           const Gap(12),
           const DNote(icon: 'info-circle', text: 'IGI checks the karat and weight. The buyer pays the balance only after it passes, and then you are paid.'),
+          if (o.sellerEstimate != null) ...[const Gap(14), _SellerEstimateCard(order: o)],
           if (o.can('ask_more_time')) ...[
             const Gap(16),
             DButton.ghost('I need more time', onTap: () => context.nav(R.extend, query: {'id': o.id})),
@@ -440,7 +444,12 @@ class _OrderBody extends StatelessWidget {
           const DNote(icon: 'clock', text: 'The seller is bringing the piece to the branch for inspection. You pay the balance only after it passes.'),
         ];
       case CustomerOrderStage.atIgi:
-        return [const DNote(icon: 'clock', kind: NoteKind.wait, text: 'The piece is at IGI. We tell you as soon as the result is in.'), const Gap(12), branch];
+        return [
+          const DNote(icon: 'clock', kind: NoteKind.wait, text: 'The piece is at IGI. We tell you as soon as the result is in.'),
+          const Gap(12),
+          branch,
+          if (o.isSeller && o.sellerEstimate != null) ...[const Gap(14), _SellerEstimateCard(order: o)],
+        ];
       case CustomerOrderStage.decide when !o.isSeller:
         final inspection = o.inspection;
         if (inspection == null || inspection.pricePending || inspection.newPrice == null) {
@@ -482,6 +491,7 @@ class _OrderBody extends StatelessWidget {
             const Gap(12),
           ],
           const DNote(icon: 'clock', kind: NoteKind.wait, text: 'The buyer is deciding on the new price. Your piece is safe at the branch.'),
+          if (o.sellerEstimate != null) ...[const Gap(14), _SellerEstimateCard(order: o)],
         ];
       case CustomerOrderStage.pay when !o.isSeller:
         final short = shortfall;
@@ -515,12 +525,16 @@ class _OrderBody extends StatelessWidget {
               ),
             ),
           ],
+          const _PendingTopUps(),
           const Gap(14),
           const DNote(icon: 'shield-check', text: 'Once you pay, the seller is paid straight away and a collection code appears here. Show it at the branch to take your piece.'),
           if (o.can('pay')) ...[const Gap(16), DButton('Pay ${moneyOf(o.amountDue)}', loading: busy, onTap: onPay)],
         ];
       case CustomerOrderStage.pay:
-        return const [DNote(icon: 'clock', kind: NoteKind.wait, text: 'The piece passed inspection. The buyer is paying the balance.')];
+        return [
+          const DNote(icon: 'clock', kind: NoteKind.wait, text: 'The piece passed inspection. The buyer is paying the balance.'),
+          if (o.sellerEstimate != null) ...[const Gap(14), _SellerEstimateCard(order: o)],
+        ];
       case CustomerOrderStage.collect || CustomerOrderStage.done when o.isSeller:
         return [
           AmountBlockView(caption: 'Paid to your wallet', amount: '+ ${moneyOf(o.sellerProceeds)}'),
@@ -680,6 +694,88 @@ class AmountBlockView extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// What the sale will pay the seller, before the buyer pays (backend `seller_estimate`, app notes
+/// 2026-10-26). The backend's figures only; the app adds nothing up.
+class _SellerEstimateCard extends StatelessWidget {
+  const _SellerEstimateCard({required this.order});
+
+  final CustomerOrder order;
+
+  @override
+  Widget build(BuildContext context) {
+    final e = order.sellerEstimate!;
+    final note = !e.indicative
+        ? AppNotesSalesKeys.estimateFinal
+        : (order.category == 'gold' && !e.weightMeasured ? AppNotesSalesKeys.estimateStated : AppNotesSalesKeys.estimateIndicative);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DLabel(context.k(AppNotesSalesKeys.estimateTitle)),
+        DSoft.bordered(
+          child: Column(
+            children: [
+              DRow(context.k(AppNotesSalesKeys.estimatePiece), moneyOf(e.gross)),
+              DRow(context.k(ListingPriceKeys.commissionVatIncluded), '− ${moneyOf(e.commissionTotal)}'),
+              if (e.hasSaving) DRow(context.k(AppNotesSalesKeys.estimateSaving), moneyOf(e.savedTotal), keyColor: DColors.ok, valueColor: DColors.ok),
+              if (e.hasCertificateFee) DRow(context.k(AppNotesSalesKeys.estimateCertificate), '− ${moneyOf(e.certificateFee)}'),
+              DRow(
+                context.k(AppNotesSalesKeys.estimateReceive),
+                '',
+                rule: true,
+                bold: true,
+                keyIsLabel: false,
+                valueWidget: T(moneyOf(e.proceeds), style: DText.price),
+              ),
+            ],
+          ),
+        ),
+        const Gap(8),
+        T(context.k(note), style: DText.tiny),
+      ],
+    );
+  }
+}
+
+/// Transfers the buyer told us about that Dahab has not matched yet, on the pay screen (app notes
+/// 2026-10-26): the money is on its way, so the buyer knows to wait rather than send it again.
+class _PendingTopUps extends StatefulWidget {
+  const _PendingTopUps();
+
+  @override
+  State<_PendingTopUps> createState() => _PendingTopUpsState();
+}
+
+class _PendingTopUpsState extends State<_PendingTopUps> {
+  late final Future<List<TopUp>> _future = context.read<WalletRepository>().topUps();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<TopUp>>(
+      future: _future,
+      builder: (context, snap) {
+        final waiting = [for (final t in snap.data ?? const <TopUp>[]) if (t.status == TopUpStatus.pending || t.status == TopUpStatus.onHold) t];
+        if (waiting.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 14),
+          child: DCard(
+            padding: const EdgeInsets.all(13),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                T(context.k(AppNotesSalesKeys.pendingTopUpsTitle), style: DText.title),
+                const Gap(6),
+                for (final t in waiting) DRow(t.number, t.claimedAmount == null ? '—' : money(t.claimedAmount!), keyIsLabel: false, valueColor: DColors.wait),
+                const Gap(6),
+                T(context.k(AppNotesSalesKeys.pendingTopUpsNote), style: DText.tiny),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

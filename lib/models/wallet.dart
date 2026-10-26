@@ -106,7 +106,9 @@ class WalletTxn {
     final withdrawalStep = kind != 'withdrawal' ? null : (available < 0 ? 'withdrawal_hold' : (available > 0 ? 'withdrawal_return' : 'withdrawal'));
     final sent = withdrawalStep == 'withdrawal';
     final change = sent ? _amount(j['held_change']) : available;
-    final words = WalletLabels.of(withdrawalStep ?? kind);
+    // App notes 2026-10-26: the seller's side of a settlement (money in) is the sale paid, not a purchase.
+    final salePaid = kind == 'balance_payment' && available > 0;
+    final words = WalletLabels.of(withdrawalStep ?? (salePaid ? 'sale_paid' : kind));
     return WalletTxn(
       id: (j['id'] ?? '') as String,
       date: '',

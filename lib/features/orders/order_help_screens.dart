@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/app_notes_sales.dart';
 import '../../core/text/keys/orders_after_collection.dart';
 import '../../core/text/texts_controller.dart';
 import '../../core/utils/idempotency.dart';
@@ -720,6 +721,11 @@ class _FreeRelistFormState extends State<_FreeRelistForm> with _Keyed {
     if (previousValue != null && price > previousValue) {
       return setState(() => _error = context.kr(OrdersAfterCollectionKeys.formErrorPriceAbovePrevious, {'fee': previousValue.toStringAsFixed(2)}));
     }
+    // A stone piece: no higher than what the buyer paid (app notes 2026-10-26; the backend decides).
+    final paid = _gold ? null : double.tryParse(widget.order.freeRelist.previousPrice ?? '');
+    if (paid != null && price > paid) {
+      return setState(() => _error = context.kr(AppNotesSalesKeys.relistErrorAbovePaid, {'price': amount(paid)}));
+    }
     if (declaration == null || !_own) return setState(() => _error = context.kr(OrdersAfterCollectionKeys.formErrorConfirmOwnership));
     setState(() {
       _busy = true;
@@ -792,6 +798,10 @@ class _FreeRelistFormState extends State<_FreeRelistForm> with _Keyed {
         const Gap(14),
         if (_gold && double.tryParse(offer.previousMakingCharge ?? '') != null) ...[
           DNote(icon: 'tag', text: context.k(OrdersAfterCollectionKeys.formPreviousFee, {'fee': double.parse(offer.previousMakingCharge!).toStringAsFixed(2)})),
+          const Gap(14),
+        ],
+        if (!_gold && double.tryParse(offer.previousPrice ?? '') != null) ...[
+          DNote(icon: 'tag', text: context.k(AppNotesSalesKeys.relistPreviousPrice, {'price': amount(double.parse(offer.previousPrice!))})),
           const Gap(14),
         ],
         DField(

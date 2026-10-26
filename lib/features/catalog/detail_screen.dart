@@ -824,7 +824,6 @@ class _SellerQueueCardState extends State<_SellerQueueCard> {
               T(q.items.length == 1 ? '1 buyer in line' : '${q.items.length} buyers in line', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
               const Gap(6),
               DRow('A buy request at', moneyOf(head.lockedTotalPrice)),
-              DRow('From buyer', head.buyerRef),
               if (q.youWouldReceive != null) DRow('You would receive', moneyOf(q.youWouldReceive)),
               DRow('Reply before', whenOf(head.sellerReplyDeadline), valueColor: DColors.bad),
               const Gap(8),
