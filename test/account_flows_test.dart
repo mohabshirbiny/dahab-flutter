@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dahab_app/core/i18n/i18n.dart';
+import 'package:dahab_app/features/shared/piece_card.dart';
 import 'package:dahab_app/widgets/inputs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -168,8 +169,22 @@ void main() {
     await _acSignIn(tester);
     _acGo(tester, '/saved');
     await _acSettle(tester);
-    expect(find.text('No longer available'), findsOneWidget);
+    expect(find.text('Taken off the market'), findsOneWidget);
     await _acTap(tester, 'Remove');
+    expect(api.saved, isEmpty);
+    expect(find.text('Nothing here yet'), findsOneWidget);
+    await _acEnd(tester);
+  });
+
+  testWidgets('saved pieces: a piece still for sale can be removed with its heart', (tester) async {
+    final api = FakeBackend()..saved.add(FakeBackend.marketRingId);
+    await _acStart(tester, backend: api);
+    await _acSignIn(tester);
+    _acGo(tester, '/saved');
+    await _acSettle(tester);
+    expect(find.byType(PieceCard), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Remove'));
+    await _acSettle(tester);
     expect(api.saved, isEmpty);
     expect(find.text('Nothing here yet'), findsOneWidget);
     await _acEnd(tester);

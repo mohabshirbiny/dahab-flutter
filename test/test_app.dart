@@ -787,8 +787,8 @@ class FakeBackend {
               {
                 'listing_id': id,
                 'saved_at': '2026-10-05T10:00:00+03:00',
-                'available': false,
-                'listing': null,
+                'available': market.any((m) => m['id'] == id),
+                'listing': market.where((m) => m['id'] == id).firstOrNull,
                 'summary': {
                   'category': 'gold',
                   'piece_type': {'id': 1, 'name_en': 'Ring', 'name_ar': 'خاتم'},

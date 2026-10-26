@@ -86,7 +86,7 @@ class _SavedScreenState extends State<SavedScreen> {
               }
               final live = [
                 for (final s in items)
-                  if (s.piece != null) s.piece!,
+                  if (s.piece != null) s,
               ];
               final sold = [
                 for (final s in items)
@@ -99,7 +99,19 @@ class _SavedScreenState extends State<SavedScreen> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (live.isNotEmpty) Grid2(children: [for (final p in live) PieceCard(piece: p)]),
+                  if (live.isNotEmpty)
+                    Grid2(
+                      children: [
+                        for (final s in live)
+                          Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              PieceCard(piece: s.piece!),
+                              PositionedDirectional(top: 6, end: 6, child: _RemoveHeart(onTap: () => _remove(s))),
+                            ],
+                          ),
+                      ],
+                    ),
                   ..._group('Sold — you have an order on these', sold),
                   ..._group('Taken off the market', gone),
                 ],
@@ -107,6 +119,31 @@ class _SavedScreenState extends State<SavedScreen> {
             },
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The filled-in heart on a saved piece still for sale; tapping it removes the piece from saved.
+class _RemoveHeart extends StatelessWidget {
+  const _RemoveHeart({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tappable(
+      onTap: onTap,
+      child: Semantics(
+        label: context.tr('Remove'),
+        button: true,
+        child: Container(
+          width: 30,
+          height: 30,
+          alignment: Alignment.center,
+          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+          child: const DIcon('heart', size: 16, color: DColors.ok),
+        ),
       ),
     );
   }
