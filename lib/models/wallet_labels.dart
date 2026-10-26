@@ -28,6 +28,8 @@ class WalletLabels {
     'settlement_seller': WalletLabels('Sale settled', 'Sale settled', 'Settlement for a piece you sold. Commission and VAT were taken before this reached you.'),
     'first_sale_payout': WalletLabels('First sale paid early', 'Paid early', 'Your first gold sale was paid to you before the buyer paid, as a welcome.'),
     'balance_payment': WalletLabels('Balance paid on a purchase', 'Balance paid', 'The rest of the price of a piece you bought.'),
+    // The same entry seen by the seller: their share, paid when the buyer paid the balance.
+    'sale_paid': WalletLabels('Paid for a piece you sold', 'Sale paid', 'Your share of a piece you sold, after commission and VAT, paid when the buyer paid the balance.'),
     'withdrawal': WalletLabels('Withdrawn to your bank', 'Withdrawal', 'Sent to your payout account.'),
     // Backend spec 013: the other two steps of a withdrawal (same ledger kind).
     'withdrawal_hold': WalletLabels('Withdrawal requested', 'Withdrawal', 'Set aside for a withdrawal to your bank. It leaves once a person has checked it.'),

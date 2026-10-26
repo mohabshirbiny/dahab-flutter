@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/listing_price.dart';
 import '../../core/text/keys/offer_details.dart';
 import '../../core/text/keys/promo.dart';
 import '../../core/text/texts_controller.dart';
@@ -326,7 +327,8 @@ class _Sell1BodyState extends State<_Sell1Body> {
                   keyWidget: Text.rich(
                     TextSpan(
                       children: [
-                        TextSpan(text: '${context.t('Dahab commission')} '),
+                        // App notes 2026-10-26: the commission rate includes VAT, on every category.
+                        TextSpan(text: '${context.k(ListingPriceKeys.commissionVatIncluded)} '),
                         TextSpan(text: context.t(q.commissionNote), style: DText.tiny),
                       ],
                     ),

@@ -510,6 +510,62 @@ void main() {
     await _end(tester);
   });
 
+  // Owner notes of 2026-10-26: the seller sees what the sale pays before the buyer pays; the buyer
+  // sees a transfer still waiting to be matched on the pay screen.
+  testWidgets('the seller sees what they will receive, and the buyer a top-up waiting to be confirmed', (tester) async {
+    const sold = '0199d000-0000-7000-8000-000000000008';
+    const bought = '0199d000-0000-7000-8000-000000000009';
+    final api = FakeBackend()
+      ..orders = [
+        FakeBackend.order(sold, role: 'seller', state: 'awaiting_balance', stage: 'pay')
+          ..['seller_estimate'] = {
+            'gross_egp': '52368.7500',
+            'commission_total_egp': '2100.4000',
+            'commission_ordinary_total_egp': '2100.4000',
+            'saved_total_egp': '0.0000',
+            'certificate_fee_egp': '0.0000',
+            'proceeds_egp': '50268.3500',
+            'weight_g': '8.000',
+            'weight_measured': true,
+            'indicative': false,
+          },
+        FakeBackend.order(bought, state: 'awaiting_balance', stage: 'pay', actions: ['pay'], amountDue: '46560.0000'),
+      ]
+      ..topUps = [
+        {
+          'id': 'tu-9',
+          'number': 'TOP-9',
+          'method': 'bank_transfer',
+          'reference': 'DAHAB-396233',
+          'status': 'pending',
+          'claimed_amount': '30000.0000',
+          'credited_amount': null,
+          'has_receipt': true,
+          'submitted_at': '2026-10-26T10:00:00+03:00',
+          'credited_at': null,
+          'reject_reason': null,
+          'can_cancel': true,
+        },
+      ];
+    await _start(tester, backend: api);
+    await signIn(tester);
+
+    _go(tester, '/order?id=$bought');
+    await _settle(tester);
+    expect(find.text('Waiting for Dahab to confirm'), findsOneWidget);
+    expect(find.text('TOP-9'), findsOneWidget);
+    expect(find.text('30,000 EGP'), findsOneWidget);
+
+    _go(tester, '/orders');
+    await _settle(tester);
+    _go(tester, '/order?id=$sold');
+    await _settle(tester);
+    expect(find.text('What you will receive'), findsOneWidget);
+    expect(find.text('50,268.35 EGP'), findsOneWidget);
+    expect(find.text('This reaches your wallet as soon as the buyer pays the balance.'), findsOneWidget);
+    await _end(tester);
+  });
+
   // Backend spec 016: the customer's tax invoices, their PDFs, and the links from the order and the wallet line.
   testWidgets('invoices: list sold and bought, open one, download, not ready, from the order and the wallet', (tester) async {
     const orderId = '0199d000-0000-7000-8000-000000000016';
@@ -1234,7 +1290,8 @@ void main() {
     _go(tester, '/detail?id=$id&view=owner');
     await _settle(tester);
     expect(find.text('1 buyer in line'), findsOneWidget);
-    expect(find.text('4417'), findsOneWidget);
+    // App notes 2026-10-26: the seller does not see who asked.
+    expect(find.text('4417'), findsNothing);
 
     await _tap(tester, 'Accept');
     await _tap(tester, 'Nasr City');
