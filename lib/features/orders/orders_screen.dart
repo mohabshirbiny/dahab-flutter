@@ -305,6 +305,8 @@ class _ListingsScreenState extends State<ListingsScreen> {
     return OrderCardData(
       id: l.id,
       pieceId: l.id,
+      photoPath: l.photos.isEmpty ? null : l.photos.first.url,
+      photoAuth: true,
       title: arabic && l.typeNameAr.isNotEmpty ? pieceTitleAr(l.category, l.typeNameAr, l.karat) : pieceTitle(l.category, l.typeNameEn, l.karat),
       status: status,
       statusTone: tone,

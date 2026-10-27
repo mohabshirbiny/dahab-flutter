@@ -155,7 +155,11 @@ class PieceDetail {
     this.priceExact,
     this.depositExact,
     this.stone,
+    this.sellerSalesCount,
   });
+
+  /// How many sales the piece's seller completed on Dahab (market pieces only; never who).
+  final int? sellerSalesCount;
 
   /// Stones: the certificate it comes with and the stone as stated (null for gold).
   final StoneDetails? stone;
@@ -231,6 +235,7 @@ class PieceDetail {
       branchNamesAr: [for (final b in branches) '${(b as Map)['name_ar']}'],
       live: true,
       stone: StoneDetails.fromJson(j['stone']),
+      sellerSalesCount: (j['seller_sales_count'] as num?)?.toInt(),
     );
   }
 

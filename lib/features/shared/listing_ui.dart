@@ -171,7 +171,8 @@ class _ApiImageState extends State<ApiImage> {
     final client = context.read<ApiClient>();
     _bytes = _recent.putIfAbsent(path, () {
       if (_recent.length >= _keep) _recent.remove(_recent.keys.first);
-      final f = client.getBytes(path, auth: widget.auth).then((r) => Uint8List.fromList(r.bytes));
+      Future<Uint8List> fetch() => client.getBytes(path, auth: widget.auth).then((r) => Uint8List.fromList(r.bytes));
+      final f = fetch().catchError((Object _) => Future.delayed(const Duration(milliseconds: 1500), fetch));
       f.catchError((Object _) {
         _recent.remove(path);
         return Uint8List(0);

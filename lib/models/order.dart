@@ -27,7 +27,15 @@ class OrderCardData {
     this.roleIcon,
     this.detailView = 'owner',
     this.pieceId,
+    this.photoPath,
+    this.photoAuth = false,
   });
+
+  /// The piece's first photo for the thumbnail; null shows the placeholder.
+  final String? photoPath;
+
+  /// The seller's own listing media needs the session; market photos do not.
+  final bool photoAuth;
 
   final String id;
   final String title;

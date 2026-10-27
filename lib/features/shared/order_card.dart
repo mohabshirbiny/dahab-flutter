@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/order.dart';
 import '../../widgets/widgets.dart';
+import 'listing_ui.dart';
 
 Color? toneColor(Tone t) => switch (t) {
   Tone.ok => DColors.ok,
@@ -144,7 +145,10 @@ class OrderHead extends StatelessWidget {
               border: Border.all(color: DColors.line),
             ),
             alignment: Alignment.center,
-            child: const DIcon('diamond', size: 22, color: DColors.line2),
+            clipBehavior: Clip.antiAlias,
+            child: data.photoPath == null
+                ? const DIcon('diamond', size: 22, color: DColors.line2)
+                : ApiImage(path: data.photoPath, auth: data.photoAuth, height: 54, iconSize: 22),
           ),
         ),
         const SizedBox(width: 11),
