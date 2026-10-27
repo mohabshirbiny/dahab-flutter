@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../core/text/keys/listing_price.dart';
 import '../../core/text/keys/offer_details.dart';
 import '../../core/text/keys/promo.dart';
-import '../../core/text/keys/sell_figures.dart';
 import '../../core/text/texts_controller.dart';
 import '../../models/reference.dart';
 import '../../services/auth/auth_controller.dart';
@@ -50,13 +49,7 @@ class _Sell1Body extends StatefulWidget {
 class _Sell1BodyState extends State<_Sell1Body> {
   String? _error;
 
-  /// The typed figures that cannot be used yet (weight, making charge, asking price).
-  final Set<String> _badFigures = {};
-
-  void _figure(String name, bool ok) => setState(() => ok ? _badFigures.remove(name) : _badFigures.add(name));
-
   void _continue() {
-    if (_badFigures.isNotEmpty) return setState(() => _error = context.kr(SellFigureKeys.fixFigures));
     if (context.read<SellDraft>().certificateMissing) return setState(() => _error = 'Upload the stone certificate, or choose No certificate.');
     setState(() => _error = null);
     context.nav(R.sell2);
@@ -115,16 +108,16 @@ class _Sell1BodyState extends State<_Sell1Body> {
           DSeg<int>(options: [for (final k in ref.karats) (k, '${k}K')], value: d.karat, onChanged: (v) => d.update((d) => d.karat = v)),
           const Gap(14),
           ...kindGrid,
-          DNumberField(
-            key: ValueKey('weight-${d.editing?.id}'),
+          DSlider(
             label: 'Weight',
             value: d.weight,
-            min: 0,
-            minExclusive: true,
-            max: 9999,
+            min: 1,
+            max: 100,
+            step: 1,
+            display: '${_grams(d.weight)} g',
+            typeMax: 9999,
+            typeDecimals: 2,
             unit: 'g',
-            invalidText: context.k(SellFigureKeys.weightInvalid),
-            onValidity: (ok) => _figure('weight', ok),
             onChanged: (v) => d.update((d) => d.weight = v),
           ),
           Transform.translate(
@@ -136,14 +129,15 @@ class _Sell1BodyState extends State<_Sell1Body> {
           ),
           const Gap(6),
           if (isGold) ...[
-            DNumberField(
-              key: ValueKey('making-${d.editing?.id}'),
+            DSlider(
               label: 'Making charge',
               value: d.making,
-              max: 100000,
+              min: 0,
+              max: 5000,
+              step: 10,
+              display: '${d.making.round()} /g',
+              typeMax: 100000,
               unit: 'EGP /g',
-              invalidText: context.k(SellFigureKeys.amountInvalid),
-              onValidity: (ok) => _figure('making', ok),
               onChanged: (v) => d.update((d) => d.making = v),
             ),
             const DNote(
@@ -196,14 +190,15 @@ class _Sell1BodyState extends State<_Sell1Body> {
               ],
             ),
           ),
-          DNumberField(
-            key: ValueKey('stone-ask-${d.editing?.id}'),
+          DSlider(
             label: 'You ask',
             value: d.stoneAsk,
-            max: SellDraft.maxAsk,
+            min: 0,
+            max: 150000,
+            step: 500,
+            display: group(d.stoneAsk),
+            typeMax: SellDraft.maxAsk,
             unit: 'EGP',
-            invalidText: context.k(SellFigureKeys.amountInvalid),
-            onValidity: (ok) => _figure('stone-ask', ok),
             onChanged: (v) => d.update((d) => d.stoneAsk = v, touchesStone: true),
           ),
         ],
@@ -280,14 +275,15 @@ class _Sell1BodyState extends State<_Sell1Body> {
         // ---- total price (mixed) ----
         if (isMixed) ...[
           const DLabel('Your price for the whole piece'),
-          DNumberField(
-            key: ValueKey('total-ask-${d.editing?.id}'),
+          DSlider(
             label: 'You ask',
             value: d.totalAsk,
-            max: SellDraft.maxAsk,
+            min: 0,
+            max: 300000,
+            step: 1000,
+            display: group(d.totalAsk),
+            typeMax: SellDraft.maxAsk,
             unit: 'EGP',
-            invalidText: context.k(SellFigureKeys.amountInvalid),
-            onValidity: (ok) => _figure('total-ask', ok),
             onChanged: (v) => d.update((d) => d.totalAsk = v),
           ),
           if (q != null)
@@ -400,6 +396,9 @@ class _Sell1BodyState extends State<_Sell1Body> {
     );
   }
 }
+
+/// A weight as the seller set it: whole grams on the slider, up to 2 decimals when typed.
+String _grams(double w) => w == w.roundToDouble() ? w.toStringAsFixed(0) : w.toStringAsFixed(2).replaceFirst(RegExp(r'0$'), '');
 
 /// Carats as the seller set them: one decimal on the slider, up to 2 when typed.
 String _trimmed(double c) => c.toStringAsFixed(2).replaceFirst(RegExp(r'0$'), '');

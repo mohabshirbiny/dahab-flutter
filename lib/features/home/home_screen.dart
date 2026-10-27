@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/text/keys/sell_figures.dart';
-import '../../core/text/texts_controller.dart';
 
 import '../../models/piece.dart';
 import '../../models/prices.dart';
@@ -155,23 +153,28 @@ class _Calculator extends StatelessWidget {
             onChanged: (k) => s.setHome(karat: k),
           ),
           const Gap(14),
-          // Typed, like Sell step 1 (owner, 2026-10-27): a figure the slider cannot reach is common.
-          DNumberField(
+          // Like Sell step 1 (owner, 2026-10-27): tap the value to type a figure the slider cannot reach.
+          DSlider(
             label: 'Weight',
             value: s.homeWeight,
-            min: 0,
-            minExclusive: true,
-            max: 9999,
+            min: 0.5,
+            max: 50,
+            step: 0.1,
+            display: '${_trimmed(s.homeWeight)} g',
+            typeMax: 9999,
+            typeDecimals: 2,
             unit: 'g',
-            invalidText: context.k(SellFigureKeys.weightInvalid),
             onChanged: (v) => s.setHome(weight: v),
           ),
-          DNumberField(
+          DSlider(
             label: 'Making charge',
             value: s.homeMaking,
-            max: 100000,
+            min: 0,
+            max: 1000,
+            step: 10,
+            display: '${s.homeMaking.round()} /g',
+            typeMax: 100000,
             unit: 'EGP /g',
-            invalidText: context.k(SellFigureKeys.amountInvalid),
             onChanged: (v) => s.setHome(making: v),
           ),
           DSoft.paper(
@@ -292,3 +295,6 @@ class _Protections extends StatelessWidget {
     );
   }
 }
+
+/// A weight with up to 2 decimals, trailing zeros dropped (8, 8.5, 8.25).
+String _trimmed(double w) => w.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
