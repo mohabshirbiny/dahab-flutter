@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/text/keys/buy_request_balance.dart';
 import '../../core/text/keys/listing_price.dart';
 import '../../core/text/keys/listing_relist.dart';
+import '../../core/text/keys/piece_seller.dart';
 import '../../core/text/keys/screens_shared.dart';
 import '../../core/text/texts_controller.dart';
 import '../../core/utils/idempotency.dart';
@@ -17,6 +18,7 @@ import '../../services/auth/auth_controller.dart';
 import '../../services/media_tab.dart';
 import '../../services/repositories.dart';
 import '../../services/sell_draft.dart';
+import '../../widgets/video_view.dart';
 import '../../widgets/widgets.dart';
 import '../account/account_messages.dart';
 import '../../services/saved_controller.dart';
@@ -249,6 +251,26 @@ class _DetailBody extends StatelessWidget {
       if (context.mounted) showToast(context, 'The file could not be loaded. Try again.');
     }
   }
+
+  /// The video, played inside the page (the gallery's last slide shows it too).
+  Future<void> _playVideo(BuildContext context) => showDialog<void>(
+    context: context,
+    barrierColor: DColors.modalBarrier,
+    builder: (ctx) => Dialog(
+      insetPadding: const EdgeInsets.all(16),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(height: 320, child: _VideoBox(path: d.videoPath!, auth: d.own != null, autoLoad: true)),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: Padding(padding: const EdgeInsets.all(8), child: DButton.ghost(ctx.k(PieceSellerKeys.videoClose), small: true, onTap: () => Navigator.of(ctx).pop())),
+          ),
+        ],
+      ),
+    ),
+  );
 
   /// Send buy request (backend spec 011): the deposit terms, then the request with
   /// the exact price shown. A short wallet opens *You need a little more* with the
@@ -495,7 +517,7 @@ class _DetailBody extends StatelessWidget {
                   '',
                   bottomBorder: true,
                   padding: rowPad,
-                  valueWidget: DLink('Watch the video', onTap: () => _openMedia(context, d.videoPath!)),
+                  valueWidget: DLink('Watch the video', onTap: () => _playVideo(context)),
                 ),
               if (d.hasCertificate)
                 DRow(
@@ -550,6 +572,37 @@ class _DetailBody extends StatelessWidget {
                     ),
                   ),
                 const Gap(10),
+              ],
+              // Buyers see how many sales the seller completed on Dahab (a count, never who).
+              if (!_owner && d.sellerSalesCount != null) ...[
+                DSoft.bordered(
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: const BoxDecoration(color: DColors.paper, shape: BoxShape.circle),
+                        alignment: Alignment.center,
+                        child: const DIcon('user-check', size: 15, color: DColors.gold),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            T(context.k(PieceSellerKeys.verified), style: DText.body13),
+                            T(switch (d.sellerSalesCount!) {
+                              0 => context.k(PieceSellerKeys.salesNone),
+                              1 => context.k(PieceSellerKeys.salesOne),
+                              final n => context.k(PieceSellerKeys.salesMany, {'count': n}),
+                            }, style: DText.tiny),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Gap(14),
               ],
               if (d.sellerName != null) ...[
                 DSoft.bordered(
@@ -665,19 +718,34 @@ class _GalleryState extends State<_Gallery> {
     final paths = d.photoPaths;
     final count = paths.isEmpty ? d.photoCount : paths.length;
     final video = d.live ? d.hasVideo : true;
+    final onVideo = d.hasVideo && _index >= paths.length;
     return Stack(
       children: [
-        if (paths.isEmpty)
+        if (paths.isEmpty && !d.hasVideo)
           const PieceThumb(height: 170, iconSize: 38)
         else
           SizedBox(
             height: 170,
             child: PageView(
               onPageChanged: (i) => setState(() => _index = i),
-              children: [for (final p in paths) ApiImage(path: p, auth: widget.auth, height: 170, iconSize: 38)],
+              children: [
+                for (final p in paths) ApiImage(path: p, auth: widget.auth, height: 170, iconSize: 38),
+                // The video is the last slide, played inside the page.
+                if (d.hasVideo) _VideoBox(path: d.videoPath!, auth: widget.auth),
+              ],
             ),
           ),
-        if (count > 0)
+        if (onVideo)
+          PositionedDirectional(
+            top: 11,
+            end: 13,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 10),
+              decoration: BoxDecoration(color: DColors.white, borderRadius: BorderRadius.circular(999)),
+              child: const T('Video', style: DText.tiny),
+            ),
+          )
+        else if (count > 0)
           PositionedDirectional(
             bottom: 11,
             end: 13,
@@ -688,6 +756,73 @@ class _GalleryState extends State<_Gallery> {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// A listing's video inside the page: a tile until tapped (or at once with [autoLoad]), then the
+/// browser's player. The file is downloaded first (with the session for the seller's own piece) and
+/// played from memory: see [VideoView].
+class _VideoBox extends StatefulWidget {
+  const _VideoBox({required this.path, required this.auth, this.autoLoad = false});
+
+  final String path;
+  final bool auth;
+  final bool autoLoad;
+
+  @override
+  State<_VideoBox> createState() => _VideoBoxState();
+}
+
+class _VideoBoxState extends State<_VideoBox> {
+  ({List<int> bytes, String contentType})? _file;
+  bool _loading = false;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.autoLoad) _load();
+  }
+
+  Future<void> _load() async {
+    if (_loading) return;
+    setState(() {
+      _loading = true;
+      _failed = false;
+    });
+    try {
+      final file = await context.read<ApiClient>().getBytes(widget.path, auth: widget.auth);
+      if (mounted) setState(() => _file = file);
+    } catch (_) {
+      if (mounted) setState(() => _failed = true);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final file = _file;
+    if (file != null) return ColoredBox(color: Colors.black, child: VideoView(bytes: file.bytes, contentType: file.contentType));
+    return Tappable(
+      onTap: _load,
+      child: Container(
+        color: DColors.paper,
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_loading) const SizedBox(width: 26, height: 26, child: CircularProgressIndicator(strokeWidth: 2)) else const DIcon('video', size: 34, color: DColors.ink3),
+            const Gap(8),
+            T(
+              context.k(_loading ? PieceSellerKeys.videoLoading : (_failed ? PieceSellerKeys.videoFailed : PieceSellerKeys.videoTap)),
+              style: DText.tiny,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
