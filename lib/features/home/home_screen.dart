@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/text/keys/sell_figures.dart';
+import '../../core/text/texts_controller.dart';
 
 import '../../models/piece.dart';
 import '../../models/prices.dart';
@@ -119,7 +121,10 @@ class RateBar extends StatelessWidget {
             ),
             const SizedBox(width: 9),
             if (rates.ready && !rates.paused)
-              T(rates.prices?.feedState == 'live' ? 'live' : 'updated', style: TextStyle(fontSize: 11, color: rates.prices?.feedState == 'live' ? DColors.ok : DColors.ink3)),
+              T(
+                rates.prices?.feedState == 'live' ? 'live' : 'updated',
+                style: TextStyle(fontSize: 11, color: rates.prices?.feedState == 'live' ? DColors.ok : DColors.ink3),
+              ),
           ],
         ),
       ),
@@ -150,22 +155,23 @@ class _Calculator extends StatelessWidget {
             onChanged: (k) => s.setHome(karat: k),
           ),
           const Gap(14),
-          DSlider(
+          // Typed, like Sell step 1 (owner, 2026-10-27): a figure the slider cannot reach is common.
+          DNumberField(
             label: 'Weight',
             value: s.homeWeight,
-            min: 0.5,
-            max: 50,
-            step: 0.1,
-            display: '${s.homeWeight.toStringAsFixed(1)} g',
+            min: 0,
+            minExclusive: true,
+            max: 9999,
+            unit: 'g',
+            invalidText: context.k(SellFigureKeys.weightInvalid),
             onChanged: (v) => s.setHome(weight: v),
           ),
-          DSlider(
+          DNumberField(
             label: 'Making charge',
             value: s.homeMaking,
-            min: 0,
-            max: 1000,
-            step: 10,
-            display: '${s.homeMaking.round()} /g',
+            max: 100000,
+            unit: 'EGP /g',
+            invalidText: context.k(SellFigureKeys.amountInvalid),
             onChanged: (v) => s.setHome(making: v),
           ),
           DSoft.paper(
