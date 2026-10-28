@@ -1269,7 +1269,7 @@ void main() {
     const id = '0199b000-0000-7000-8000-0000000000b1';
     final api = FakeBackend()
       ..listings = [
-        {...FakeBackend.listing(id, 'reserved'), 'queue_count': 1, 'order': null},
+        {...FakeBackend.listing(id, 'reserved'), 'queue_count': 2, 'order': null},
       ]
       ..queues = {
         id: [
@@ -1283,15 +1283,28 @@ void main() {
             'requested_at': '2026-09-30T19:00:00+03:00',
             'seller_reply_deadline': '2026-10-02T19:00:00+03:00',
           },
+          {
+            'id': '0199c000-0000-7000-8000-0000000000f2',
+            'place_in_line': 2,
+            'queue_position': 2,
+            'is_head': false,
+            'buyer': {'display_ref': '5528'},
+            'locked_total_price': '58200.0000',
+            'requested_at': '2026-09-30T19:30:00+03:00',
+            'seller_reply_deadline': '2026-10-02T19:00:00+03:00',
+          },
         ],
       };
     await _start(tester, backend: api);
     await signIn(tester);
     _go(tester, '/detail?id=$id&view=owner');
     await _settle(tester);
-    expect(find.text('1 buyer in line'), findsOneWidget);
-    // App notes 2026-10-26: the seller does not see who asked.
-    expect(find.text('4417'), findsNothing);
+    // Owner note 2026-10-26: two buyers wait, but the seller sees only the first request, never how many.
+    expect(find.textContaining(RegExp(r'\d+ buyers? (are )?in line')), findsNothing);
+    expect(find.text('Buyers in line'), findsNothing);
+    expect(find.text('A buy request still waiting'), findsWidgets);
+    expect(find.text('4417'), findsOneWidget);
+    expect(find.text('5528'), findsNothing);
 
     await _tap(tester, 'Accept');
     await _tap(tester, 'Nasr City');

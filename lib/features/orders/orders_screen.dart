@@ -325,8 +325,8 @@ class _ListingsScreenState extends State<ListingsScreen> {
           ListingState.inReview => 'We are checking your photos and description. You will hear back within a few hours.',
           ListingState.changesRequested => 'Fix what we asked for and send it again.',
           ListingState.live => 'Buyers can see this piece.',
-          ListingState.reserved =>
-            l.queueCount == 1 ? 'A buyer sent a request. Open the piece to accept or decline it.' : '${l.queueCount} buyers are in line. Open the piece to answer the first.',
+          // The seller is not told how many buyers are in line (owner note 2026-10-26).
+          ListingState.reserved => 'A buyer sent a request. Open the piece to accept or decline it.',
           ListingState.accepted =>
             l.order == null
                 ? 'You accepted a buyer.'
