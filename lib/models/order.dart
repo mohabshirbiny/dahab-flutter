@@ -351,7 +351,9 @@ class OrderTimelineEvent {
     if (raw is! Map) return null;
     final at = _time(raw['at']);
     if (at == null) return null;
-    return OrderTimelineEvent(event: '${raw['event']}', at: at, detail: (raw['detail'] as Map?)?.cast<String, dynamic>() ?? const {});
+    // The backend sent an empty detail as `[]` before 2026-10-28; anything but an object reads as no detail.
+    final detail = raw['detail'];
+    return OrderTimelineEvent(event: '${raw['event']}', at: at, detail: detail is Map ? detail.cast<String, dynamic>() : const {});
   }
 }
 
