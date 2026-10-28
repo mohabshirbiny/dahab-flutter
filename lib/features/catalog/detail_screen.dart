@@ -352,7 +352,7 @@ class _DetailBody extends StatelessWidget {
     ListingState.inReview => 'Waiting for approval',
     ListingState.changesRequested => 'Changes needed',
     ListingState.live => 'Live',
-    ListingState.reserved => 'Buyers in line',
+    ListingState.reserved => 'A buy request still waiting',
     ListingState.accepted => 'Sold to a buyer, waiting for delivery',
     ListingState.sold => 'Sold',
     ListingState.rejected => 'Not accepted',
@@ -971,9 +971,11 @@ class _SellerQueueCardState extends State<_SellerQueueCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              T(q.items.length == 1 ? '1 buyer in line' : '${q.items.length} buyers in line', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+              // Owner note 2026-10-26: the seller never sees how many buyers are in line, only the first request.
+              const T('A buy request still waiting', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
               const Gap(6),
               DRow('A buy request at', moneyOf(head.lockedTotalPrice)),
+              DRow('From buyer', head.buyerRef),
               if (q.youWouldReceive != null) DRow('You would receive', moneyOf(q.youWouldReceive)),
               DRow('Reply before', whenOf(head.sellerReplyDeadline), valueColor: DColors.bad),
               const Gap(8),
