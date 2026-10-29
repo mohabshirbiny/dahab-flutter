@@ -23,9 +23,9 @@ enum DButtonKind {
 /// `.btn` and its variants. Labels are English source strings and are
 /// translated here.
 class DButton extends StatefulWidget {
-  const DButton(this.label, {super.key, this.onTap, this.kind = DButtonKind.primary, this.small = false, this.expand, this.loading = false, this.foreground, this.borderColor});
+  const DButton(this.label, {super.key, this.onTap, this.kind = DButtonKind.primary, this.small = false, this.dense = false, this.expand, this.loading = false, this.foreground, this.borderColor});
 
-  const DButton.ghost(this.label, {super.key, this.onTap, this.small = false, this.expand, this.loading = false, this.foreground, this.borderColor}) : kind = DButtonKind.ghost;
+  const DButton.ghost(this.label, {super.key, this.onTap, this.small = false, this.dense = false, this.expand, this.loading = false, this.foreground, this.borderColor}) : kind = DButtonKind.ghost;
 
   final String label;
   final VoidCallback? onTap;
@@ -33,6 +33,9 @@ class DButton extends StatefulWidget {
 
   /// `.btn.small` / `.btn.tiny-b` — 10×14 padding, 13px, auto width.
   final bool small;
+
+  /// With [small]: 12px text and 8px side padding, for three buttons sharing a narrow row.
+  final bool dense;
 
   /// Full width. Defaults to `!small`, like the CSS.
   final bool? expand;
@@ -71,7 +74,7 @@ class _DButtonState extends State<DButton> {
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: widget.small ? 13 : 14, fontWeight: FontWeight.w500, color: foreground),
+            style: TextStyle(fontSize: widget.dense ? 12 : (widget.small ? 13 : 14), fontWeight: FontWeight.w500, color: foreground),
           );
 
     Widget box = AnimatedScale(
@@ -80,7 +83,7 @@ class _DButtonState extends State<DButton> {
       child: Container(
         width: expand ? double.infinity : null,
         constraints: BoxConstraints(minHeight: widget.small ? 38 : 45),
-        padding: widget.small ? const EdgeInsets.symmetric(vertical: 9, horizontal: 14) : const EdgeInsets.all(12),
+        padding: widget.small ? EdgeInsets.symmetric(vertical: 9, horizontal: widget.dense ? 8 : 14) : const EdgeInsets.all(12),
         alignment: expand ? Alignment.center : null,
         decoration: BoxDecoration(
           color: bg,

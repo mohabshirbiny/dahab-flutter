@@ -38,6 +38,7 @@ class DIcon extends StatelessWidget {
     'arrow-up-right': '<path d="M7 17L17 7"/><path d="M8 7h9v9"/>',
     'arrows-sort': '<path d="M6 4v16"/><path d="M3 7l3-3 3 3"/><path d="M18 20V4"/><path d="M15 17l3 3 3-3"/>',
     'plus': '<path d="M12 5v14"/><path d="M5 12h14"/>',
+    'pencil': '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
     'circle-check': '<circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/>',
     'shield-check': '<path d="M12 3l7 3v6c0 4-3 7.5-7 9-4-1.5-7-5-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
     'shield-lock': '<path d="M12 3l7 3v6c0 4-3 7.5-7 9-4-1.5-7-5-7-9V6z"/><rect x="9.5" y="11" width="5" height="4" rx="1"/><path d="M10.5 11V9.8a1.5 1.5 0 013 0V11"/>',

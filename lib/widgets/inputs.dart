@@ -592,7 +592,15 @@ class DSlider extends StatelessWidget {
                 : Semantics(
                     button: true,
                     label: context.t('Type the number'),
-                    child: Tappable(onTap: () => _type(context), child: shown),
+                    // A pencil beside the value says it can be tapped (owner notes of 2026-10-29: people missed it).
+                    child: Tappable(
+                      onTap: () => _type(context),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [Flexible(child: shown), const SizedBox(width: 5), const DIcon('pencil', size: 14, color: DColors.gold)],
+                      ),
+                    ),
                   ),
           ),
         ],
