@@ -42,7 +42,7 @@ class SplashScreen extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const DahabLogo(width: 203, height: 58, color: DColors.white),
+                            const DahabLogo(width: 203, height: 58, color: DColors.white, centred: true),
                             const Gap(16),
                             Text(
                               '${context.t('Sell your jewellery')}\n${context.t("for what it's really worth")}',

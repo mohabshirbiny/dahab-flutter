@@ -421,6 +421,7 @@ class _DetailBody extends StatelessWidget {
                             DButton.ghost(
                               own.category == 'gold' ? context.k(ScreensSharedKeys.sharedChangeMakingCharge) : context.k(ListingPriceKeys.changePrice),
                               small: true,
+                              dense: true,
                               onTap: () async {
                                 await context.navAndWait(R.editprice, query: {'id': own.id});
                                 if (context.mounted) onChanged();
@@ -430,14 +431,15 @@ class _DetailBody extends StatelessWidget {
                             DButton.ghost(
                               'Fix and resend',
                               small: true,
+                              dense: true,
                               onTap: () {
                                 context.read<SellDraft>().loadFrom(own);
                                 context.nav(R.sell1);
                               },
                             ),
-                          if (own == null ? !d.live : own.canWithdraw) DButton.ghost('Take down', small: true, onTap: () => _takeDown(context)),
-                          if (own != null && own.canRelist) DButton(context.k(ListingRelistKeys.button), small: true, onTap: () => _relist(context, own)),
-                          DButton.ghost('View', small: true, onTap: () => context.nav(R.listings)),
+                          if (own == null ? !d.live : own.canWithdraw) DButton.ghost('Take down', small: true, dense: true, onTap: () => _takeDown(context)),
+                          if (own != null && own.canRelist) DButton(context.k(ListingRelistKeys.button), small: true, dense: true, onTap: () => _relist(context, own)),
+                          DButton.ghost('View', small: true, dense: true, onTap: () => context.nav(R.listings)),
                         ],
                       ),
                     ],

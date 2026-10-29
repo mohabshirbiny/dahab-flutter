@@ -67,7 +67,7 @@ class _Sell1BodyState extends State<_Sell1Body> {
     final isDiamond = d.type == SellType.diamond;
     final isMixed = d.type == SellType.mixed;
     final arabic = context.isArabic;
-    // Spec 019 US7: staff may hide the Rapaport suggestion; the seller still sets the price.
+    // Spec 019 US7: staff may hide the stone price suggestion (switch `rapaport_reference`); the seller still sets the price.
     final showsGuide = context.watch<TextsController?>()?.controls.shows('rapaport_reference') ?? true;
     final kinds = [for (final t in ref.pieceTypes.where((t) => t.category == d.category)) (t.id, arabic && t.nameAr.isNotEmpty ? t.nameAr : t.nameEn)];
     final kindGrid = <Widget>[
@@ -186,7 +186,7 @@ class _Sell1BodyState extends State<_Sell1Body> {
                   padding: const EdgeInsets.symmetric(vertical: 3),
                   child: T(money(d.suggestedStone), style: DText.price),
                 ),
-                const T('A guide from the Rapaport matrix, updated 28 Aug. IGI confirms the grade and value.', style: DText.tiny),
+                const T('A guide only, not a valuation. IGI confirms the grade and value.', style: DText.tiny),
               ],
             ),
           ),

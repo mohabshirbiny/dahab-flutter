@@ -778,19 +778,13 @@ class PricesScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const T('Two independent references decide what your jewellery is worth, not us. Evolve prices the gold and Rapaport guides the diamonds.', style: DText.muted),
+          const T('An independent reference decides what your gold is worth, not us. Evolve prices the gold and IGI checks every piece.', style: DText.muted),
           const Gap(18),
           source(
             'chart-line',
             'Evolve',
             'The gold rate',
             'We take the gold rate from Evolve and apply it to the weight and karat of your piece. We do not adjust it by hand, and it updates through the day.',
-          ),
-          source(
-            'diamond',
-            'Rapaport',
-            'The diamond guide',
-            'Diamond suggestions come from the Rapaport price list, the reference the trade uses worldwide, converted to Egyptian pounds. It is a guide, not a valuation. IGI decides the real grade.',
           ),
           const CommissionCard(),
           const Gap(14),
