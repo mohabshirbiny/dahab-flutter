@@ -102,7 +102,28 @@ class Listing {
     this.paysAdvance,
     this.certificateFee,
     this.stone,
+    this.labId,
+    this.goldInspectionFee,
+    this.otherLabName,
+    this.needsLabChoice = false,
+    this.needsBranchChoice = false,
   });
+
+  /// The lab that inspects the piece.
+  final int? labId;
+
+  /// Gold only: what the lab costs the seller, already out of [youWouldReceive]; null when it is 0.
+  final String? goldInspectionFee;
+
+  /// What the seller typed for `Another lab`.
+  final String? otherLabName;
+
+  /// The lab stopped taking pieces: a live piece is off the market until the seller chooses another.
+  final bool needsLabChoice;
+
+  /// Accepting a buyer must name a branch: the piece does not have exactly one open branch.
+  final bool needsBranchChoice;
+
 
   /// Stones: what IGI's certificate costs the seller, already out of [youWouldReceive]; null when nothing.
   final String? certificateFee;
@@ -218,6 +239,11 @@ class Listing {
       paysAdvance: PaysAdvance.fromJson(j['pays_advance']),
       certificateFee: j['certificate_fee'] as String?,
       stone: StoneDetails.fromJson(j['stone']),
+      labId: ((j['lab'] as Map?)?['id'] as num?)?.toInt(),
+      goldInspectionFee: j['gold_inspection_fee'] as String?,
+      otherLabName: j['certificate_other_lab_name'] as String?,
+      needsLabChoice: j['needs_lab_choice'] == true,
+      needsBranchChoice: j['needs_branch_choice'] == true,
     );
   }
 }

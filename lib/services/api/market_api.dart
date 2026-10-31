@@ -104,6 +104,7 @@ class ApiReferenceRepository implements ReferenceRepository {
       _client.get('/reference/legal-documents/ownership_declaration'),
       // Optional: the form still works without the certificate costs.
       _client.get('/reference/certificate-costs').then<Map<String, dynamic>?>((r) => r, onError: (Object _) => null),
+      _client.get('/reference/labs'),
     ]);
     List<Map<String, dynamic>> rows(Map<String, dynamic>? res) => [for (final r in (res?['data'] as List? ?? const [])) (r as Map).cast<String, dynamic>()];
     final costs = results[4]?['data'];
@@ -114,6 +115,7 @@ class ApiReferenceRepository implements ReferenceRepository {
       branches: [for (final b in rows(results[2])) BranchRef.fromJson(b)],
       declaration: LegalDoc.fromJson((results[3]?['data'] as Map).cast<String, dynamic>()),
       certificateCosts: costs is Map ? CertificateCosts.fromJson(costs.cast<String, dynamic>()) : null,
+      labs: [for (final l in rows(results[5])) LabRef.fromJson(l)],
     );
   }
 }

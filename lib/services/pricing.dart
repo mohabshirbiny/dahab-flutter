@@ -116,6 +116,7 @@ class SellQuote {
     required this.jewellerPays,
     required this.commissionNote,
     this.certificateFee = 0,
+    this.goldInspectionFee = 0,
     this.rate = 0,
   });
 
@@ -133,4 +134,7 @@ class SellQuote {
 
   /// The stone certificate cost already out of [net] (0 for gold or none).
   final double certificateFee;
+
+  /// Gold only: what the lab charges to inspect it; 0 appears nowhere.
+  final double goldInspectionFee;
 }

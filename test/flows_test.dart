@@ -975,6 +975,10 @@ void main() {
     await _settle(tester);
     expect(find.text('Earrings'), findsOneWidget); // piece types come from the API
     await _tap(tester, 'Continue to photos');
+    // One lab and one of its branches, chosen on this page (backend labs-and-certificate-costs).
+    expect(find.text('Choose a branch to bring the piece to.'), findsOneWidget);
+    await _tap(tester, 'Nasr City');
+    await _tap(tester, 'Continue to photos');
     await _tap(tester, 'Continue to review');
     expect(find.text('Add the required photos before continuing.'), findsOneWidget);
     await _tap(tester, 'Full piece');
@@ -985,9 +989,6 @@ void main() {
     await _tap(tester, 'Continue to review');
     expect(find.text('Before it goes live'), findsOneWidget);
 
-    await _tap(tester, 'Send for approval');
-    expect(find.text('Choose at least one branch you can bring the piece to.'), findsOneWidget);
-    await _tap(tester, 'Nasr City');
     await _tap(tester, 'Send for approval');
     expect(find.text('Confirm ownership to list the piece.'), findsOneWidget);
     expect(api.requests.any((r) => r.url.path.endsWith('/customer/me/listings') && r.method == 'POST'), isFalse);
@@ -1306,10 +1307,13 @@ void main() {
     expect(find.text('4417'), findsOneWidget);
     expect(find.text('5528'), findsNothing);
 
+    // The piece has its one branch: the seller confirms and names none.
     await _tap(tester, 'Accept');
-    await _tap(tester, 'Nasr City');
+    expect(find.textContaining('Bring the piece to Nasr City'), findsOneWidget);
+    await tester.tap(find.text('Accept').last);
+    await _settle(tester);
     final accept = api.requests.singleWhere((r) => r.url.path.endsWith('/accept'));
-    expect(jsonDecode(accept.body), {'buy_request_id': '0199c000-0000-7000-8000-0000000000f1', 'branch_id': 1});
+    expect(jsonDecode(accept.body), {'buy_request_id': '0199c000-0000-7000-8000-0000000000f1'});
     expect(api.listings.single['state'], 'accepted');
     await _settle(tester); // the listing reloads
     expect(find.textContaining('order DH-2026-000001'), findsOneWidget);
@@ -1771,13 +1775,14 @@ void main() {
     await _end(tester);
   });
 
-  testWidgets('sell step 1 needs the certificate uploaded when IGI or another lab is chosen', (tester) async {
+  testWidgets('sell step 1 needs the certificate uploaded when a lab or another lab is chosen', (tester) async {
     await _start(tester);
     await signIn(tester);
     _go(tester, '/sell1');
     await _settle(tester);
     await _tap(tester, 'Diamond');
-    for (final lab in ['IGI certificate', 'Another lab']) {
+    await tester.ensureVisible(find.text('IGI').first);
+    for (final lab in ['IGI', 'Another lab']) {
       await _tap(tester, lab);
       await _tap(tester, 'Continue to photos');
       expect(find.text('Upload the stone certificate, or choose No certificate.'), findsOneWidget);
@@ -1785,6 +1790,7 @@ void main() {
     }
 
     await _tap(tester, 'No certificate');
+    await _tap(tester, 'Nasr City');
     expect(find.text('Upload the stone certificate, or choose No certificate.'), findsNothing);
     await _tap(tester, 'Continue to photos');
     expect(find.text('Photos'), findsOneWidget);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/labs.dart';
 import '../../core/text/keys/listing_price.dart';
 import '../../core/text/keys/offer_details.dart';
 import '../../core/text/keys/promo.dart';
@@ -15,6 +16,7 @@ import '../../widgets/widgets.dart';
 import '../account/identity_again_screen.dart';
 import '../shared/listing_ui.dart';
 import 'promo_card.dart';
+import 'lab_picker.dart';
 
 /// `#s-sell1` — what are you selling, and what you would receive.
 class Sell1Screen extends StatelessWidget {
@@ -50,7 +52,10 @@ class _Sell1BodyState extends State<_Sell1Body> {
   String? _error;
 
   void _continue() {
-    if (context.read<SellDraft>().certificateMissing) return setState(() => _error = 'Upload the stone certificate, or choose No certificate.');
+    final d = context.read<SellDraft>();
+    if (d.certificateMissing) return setState(() => _error = 'Upload the stone certificate, or choose No certificate.');
+    if (d.otherLabNameMissing) return setState(() => _error = context.kr(LabKeys.otherLabNameMissing));
+    if (d.branchIds.isEmpty) return setState(() => _error = context.kr(LabKeys.chooseBranchMissing));
     setState(() => _error = null);
     context.nav(R.sell2);
   }
@@ -232,13 +237,8 @@ class _Sell1BodyState extends State<_Sell1Body> {
 
         // ---- certificate (diamond, mixed) ----
         if (isDiamond || isMixed) ...[
-          const DLabel('Stone certificate'),
-          DSeg<String>(
-            options: const [('igi', 'IGI certificate'), ('other', 'Another lab'), ('none', 'No certificate')],
-            value: d.cert,
-            fontSize: 12,
-            onChanged: (v) => d.update((d) => d.cert = v),
-          ),
+          DLabel(context.k(LabKeys.certificateQuestion)),
+          CertificateChoice(labs: ref.labs),
           const Gap(12),
           if (d.cert != 'none') ...[
             DSlot(
@@ -253,24 +253,21 @@ class _Sell1BodyState extends State<_Sell1Body> {
             ),
             const Gap(10),
           ],
-          DNote(
-            icon: 'info-circle',
-            text: switch (d.cert) {
-              'igi' => 'An IGI certificate costs you nothing. We check it against the stone at handover.',
-              'other' =>
-                'Upload it and buyers can see it while browsing. IGI still issues its own certificate, at a lower cost because they have something to start from, taken from your settlement.',
-              _ => 'IGI issues one for you. The full cost is taken from your settlement when the piece sells.',
-            },
-          ),
-          // What IGI's certificate costs for this choice, as staff set it.
-          if (ref.certificateCosts case final costs?)
-            DRow(
-              'IGI certificate cost',
-              costs.of(d.cert) == 0 ? 'Free' : '− ${money(costs.of(d.cert))}',
-              valueColor: costs.of(d.cert) == 0 ? DColors.ok : null,
-            ),
+          if (d.cert == 'other') ...[
+            DLabel(context.k(LabKeys.otherLabName)),
+            DInput(initialValue: d.otherLabName, onChanged: (v) => d.update((d) => d.otherLabName = v)),
+            const Gap(10),
+          ],
+          DNote(icon: 'info-circle', text: context.k(LabKeys.certificateNote)),
           const Gap(16),
         ],
+
+        // ---- the lab and branch (every piece) ----
+        DLabel(context.k(LabKeys.chooseLab)),
+        Text(context.k(LabKeys.chooseBranchHint), style: DText.tiny),
+        const Gap(8),
+        LabPicker(labs: ref.labs),
+        const Gap(6),
 
         // ---- total price (mixed) ----
         if (isMixed) ...[
@@ -335,7 +332,8 @@ class _Sell1BodyState extends State<_Sell1Body> {
                     style: const TextStyle(fontSize: 13, color: DColors.ink2),
                   ),
                 ),
-                if (q.certificateFee > 0) DRow('IGI certificate', '− ${money(q.certificateFee)}'),
+                if (q.certificateFee > 0) DRow(context.k(LabKeys.certificateCost), '− ${money(q.certificateFee)}'),
+                if (q.goldInspectionFee > 0) DRow(context.k(LabKeys.inspectionCost), '− ${money(q.goldInspectionFee)}'),
                 if (d.promoSaving > 0) DRow(context.k(PromoKeys.estimateSaving), '+ ${money(d.promoSaving)}', keyColor: DColors.ok, valueColor: DColors.ok),
                 DRow(
                   'You receive',
@@ -389,7 +387,7 @@ class _Sell1BodyState extends State<_Sell1Body> {
         const Gap(16),
         const PromoCard(),
         const Gap(16),
-        DError(_error ?? '', visible: _error != null && d.certificateMissing),
+        DError(_error ?? '', visible: _error != null && (d.certificateMissing || d.otherLabNameMissing || d.branchIds.isEmpty)),
         const Gap(12),
         DButton('Continue to photos', onTap: _continue),
       ],

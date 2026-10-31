@@ -1,7 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show BuildContext;
 
+import '../core/text/keys/labs.dart';
+import '../core/text/texts_controller.dart';
+import '../core/utils/format.dart';
 import '../core/utils/idempotency.dart';
 import '../models/listing.dart';
 import '../models/prices.dart';
@@ -36,7 +40,15 @@ class SellDraft extends ChangeNotifier {
   bool _stoneTouched = false;
   double totalAsk = 90000;
 
-  String cert = 'igi';
+  /// The certificate the seller holds: `lab` (from [certificateLabId]), `other` or `none`.
+  String cert = 'lab';
+  int? certificateLabId;
+
+  /// What the seller typed for `Another lab`.
+  String otherLabName = '';
+
+  /// The lab of the branch in [branchIds]: one lab, one branch.
+  int? labId;
 
   /// The code the seller typed and the backend accepted (backend spec 023); sent with the listing.
   String? promoCode;
@@ -64,7 +76,7 @@ class SellDraft extends ChangeNotifier {
 
   String description = '';
 
-  /// Branches the seller is willing to bring the piece to.
+  /// The branch the seller brings the piece to (one; an old listing being fixed may hold more until it is chosen).
   final Set<int> branchIds = {};
 
   /// The listing being fixed, or one created here that is not sent yet.
@@ -91,6 +103,15 @@ class SellDraft extends ChangeNotifier {
     if (!types.any((t) => t.id == pieceTypeId)) pieceTypeId = types.isEmpty ? null : types.first.id;
     if (ref.karats.isNotEmpty && !ref.karats.contains(karat)) karat = ref.karats.contains(21) ? 21 : ref.karats.first;
     branchIds.removeWhere((id) => !ref.branches.any((b) => b.id == id));
+    if (branchIds.length != 1 || !ref.labs.any((l) => l.id == labId && l.branches.any((b) => b.id == branchIds.first))) {
+      final held = branchIds.length == 1 ? branchIds.first : null;
+      final lab = ref.labs.where((l) => l.branches.any((b) => b.id == held)).firstOrNull;
+      labId = lab?.id;
+      if (lab == null) branchIds.clear();
+    }
+    if (certificateLabId == null || !ref.labs.any((l) => l.id == certificateLabId)) {
+      certificateLabId = ref.labs.isEmpty ? null : ref.labs.first.id;
+    }
   }
 
   double get suggestedStone => Pricing.suggestedStone(carat, clarity, cut);
@@ -98,10 +119,33 @@ class SellDraft extends ChangeNotifier {
   /// The certificate the seller brings, as the backend names it (stones only).
   String? get certificateKind => type == SellType.gold ? null : (cert == 'other' ? 'other_lab' : cert);
 
+  /// `Another lab` was chosen with no name written.
+  bool get otherLabNameMissing => type != SellType.gold && cert == 'other' && otherLabName.trim().isEmpty;
+
+  /// What this lab costs for this piece, in words; null when it appears nowhere.
+  String? costLabel(BuildContext context, LabRef lab) {
+    if (type == SellType.gold) {
+      final gold = lab.goldCost;
+      return gold == null ? null : '${context.k(LabKeys.inspectionCost)}: ${money(gold)}';
+    }
+    final cost = lab.certificateCost(cert, certificateLabId);
+    return '${context.k(LabKeys.certificateCost)}: ${cost == 0 ? context.k(LabKeys.free) : money(cost)}';
+  }
+
+  void chooseBranch(int lab, int branch) {
+    labId = lab;
+    branchIds
+      ..clear()
+      ..add(branch);
+    notifyListeners();
+  }
+
   /// What the backend is asked to price (backend spec 015, `GET /reference/quote`).
   QuoteParams get quoteParams => QuoteParams(
     type: type,
     certificate: certificateKind,
+    certificateLabId: type != SellType.gold && cert == 'lab' ? certificateLabId : null,
+    labId: labId,
     karat: karat,
     weight: weight,
     makingPerGram: making,
@@ -188,11 +232,6 @@ class SellDraft extends ChangeNotifier {
     return true;
   }
 
-  void toggleBranch(int id) {
-    branchIds.contains(id) ? branchIds.remove(id) : branchIds.add(id);
-    notifyListeners();
-  }
-
   /// Forget upload tokens the backend no longer accepts; the files are sent again.
   void forgetTokens() => tokens.clear();
 
@@ -209,7 +248,10 @@ class SellDraft extends ChangeNotifier {
     stoneAsk = 30000;
     _stoneTouched = false;
     totalAsk = 90000;
-    cert = 'igi';
+    cert = 'lab';
+    certificateLabId = null;
+    otherLabName = '';
+    labId = null;
     promoCode = null;
     promoPreview = null;
     _recordedCode = null;
@@ -245,6 +287,8 @@ class SellDraft extends ChangeNotifier {
     if (ask != null && type == SellType.mixed) totalAsk = ask.clamp(0, maxAsk).toDouble();
     description = l.description ?? '';
     branchIds.addAll(l.branchIds);
+    labId = l.labId;
+    otherLabName = l.otherLabName ?? '';
     final recorded = l.promo;
     _recordedCode = recorded != null && recorded.status == 'active' && recorded.kind != 'referral' ? recorded.code : null;
     promoCode = _recordedCode;
@@ -252,8 +296,9 @@ class SellDraft extends ChangeNotifier {
     if (type != SellType.gold) cert = kept.containsKey('cert') ? 'other' : 'none';
     final stone = l.stone;
     if (stone != null) {
+      certificateLabId = stone.certificateLabId;
       cert = switch (stone.certificateKind) {
-        'igi' => 'igi',
+        'lab' => 'lab',
         'other_lab' => 'other',
         'none' => 'none',
         _ => cert,
@@ -309,6 +354,8 @@ class SellDraft extends ChangeNotifier {
     if (type == SellType.diamond) 'asking_price': stoneAsk.round().toString(),
     if (type == SellType.mixed) 'asking_price': totalAsk.round().toString(),
     if (certificateKind != null) 'certificate_kind': certificateKind,
+    if (certificateKind == 'lab') 'certificate_lab_id': certificateLabId,
+    if (certificateKind == 'other_lab') 'certificate_other_lab_name': otherLabName.trim(),
     // What the stone is, as the seller states it: shown to buyers, above all without a certificate.
     if (type != SellType.gold) 'stone_carat': carat.toStringAsFixed(2),
     if (type != SellType.gold && _clarities[clarity] != null) 'stone_clarity': _clarities[clarity],

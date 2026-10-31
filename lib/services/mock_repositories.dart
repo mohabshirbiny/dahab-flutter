@@ -59,7 +59,7 @@ class MockBuyRequestsRepository implements BuyRequestsRepository {
   Future<SellerQueue> queue(String listingId) async => const SellerQueue(items: [], youWouldReceive: null);
 
   @override
-  Future<OrderSummary> accept(String listingId, String requestId, int branchId, {required String idempotencyKey}) => throw UnsupportedError('No buy requests without the backend.');
+  Future<OrderSummary> accept(String listingId, String requestId, int? branchId, {required String idempotencyKey}) => throw UnsupportedError('No buy requests without the backend.');
 
   @override
   Future<void> decline(String listingId, String requestId, {required String idempotencyKey}) async {}

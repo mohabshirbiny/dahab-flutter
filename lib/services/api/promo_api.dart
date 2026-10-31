@@ -26,6 +26,9 @@ class ApiPromoRepository implements PromoRepository {
     }
     if (piece.category == 'gold') body['making_charge_per_g'] = piece.makingPerGram.toStringAsFixed(2);
     if (piece.category != 'gold') body['asking_price'] = piece.askingPrice.toStringAsFixed(2);
+    if (piece.category != 'gold' && piece.certificate != null) body['certificate'] = piece.certificate;
+    if (piece.category != 'gold' && piece.certificateLabId != null) body['certificate_lab_id'] = piece.certificateLabId;
+    if (piece.labId != null) body['lab_id'] = piece.labId;
 
     final res = await _client.post('/customer/me/commission-preview', body: body, auth: true);
     return PromoPreview.fromJson((res?['data'] as Map).cast<String, dynamic>());

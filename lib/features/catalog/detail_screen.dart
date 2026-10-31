@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/labs.dart';
 import '../../core/text/keys/buy_request_balance.dart';
 import '../../core/text/keys/listing_price.dart';
 import '../../core/text/keys/listing_relist.dart';
@@ -8,6 +9,7 @@ import '../../core/text/keys/piece_seller.dart';
 import '../../core/text/keys/screens_shared.dart';
 import '../../core/text/texts_controller.dart';
 import '../../core/utils/idempotency.dart';
+import '../../models/reference.dart';
 import '../../models/buy_request.dart';
 import '../../models/listing.dart';
 import '../../models/piece.dart';
@@ -24,6 +26,7 @@ import '../account/account_messages.dart';
 import '../../services/saved_controller.dart';
 import '../shared/listing_ui.dart';
 import '../shared/piece_card.dart';
+import '../sell/lab_picker.dart';
 import '../shared/stone_rows.dart';
 import 'buyer_code_card.dart';
 
@@ -464,6 +467,13 @@ class _DetailBody extends StatelessWidget {
               // A stone piece pays IGI's certificate from the proceeds: why "You would receive" is lower still.
               if (own?.certificateFee != null && (double.tryParse(own!.certificateFee!) ?? 0) > 0)
                 DRow(certificateFeeLabel(context, own.stone?.certificateKind), '− ${moneyOf(own.certificateFee)}'),
+              if (own?.goldInspectionFee != null) DRow(context.k(LabKeys.inspectionCost), '− ${moneyOf(own!.goldInspectionFee)}'),
+              if (own?.needsLabChoice == true) ...[
+                const Gap(8),
+                DNote(icon: 'info-circle', kind: NoteKind.wait, text: context.k(LabKeys.labGone)),
+                const Gap(4),
+                DLink(context.k(LabKeys.chooseAnother), onTap: () => _chooseLab(context, own!)),
+              ],
               if (own?.youWouldReceive != null) ...[
                 const Gap(6),
                 T('You would receive ${money(double.tryParse(own!.youWouldReceive!) ?? 0)}', style: DText.tiny.copyWith(color: DColors.ok)),
@@ -902,25 +912,39 @@ class _SellerQueueCardState extends State<_SellerQueueCard> {
   Future<void> _accept(SellerQueueItem head) async {
     final l = widget.listing;
     final arabic = context.read<LangController>().isArabic;
-    final branchId = await showDialog<int>(
-      context: context,
-      barrierColor: DColors.modalBarrier,
-      builder: (ctx) => SimpleDialog(
-        title: const T('Choose where to take the piece', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-        children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(24, 0, 24, 8),
-            child: T('Your deadline is counted in working hours at the branch you pick.', style: DText.tiny),
-          ),
-          for (var i = 0; i < l.branchIds.length; i++)
-            SimpleDialogOption(
-              onPressed: () => Navigator.of(ctx).pop(l.branchIds[i]),
-              child: Text(arabic && i < l.branchNamesAr.length ? l.branchNamesAr[i] : (i < l.branchNames.length ? l.branchNames[i] : '#${l.branchIds[i]}')),
+    int? branchId;
+    final mustChoose = l.needsBranchChoice || l.needsLabChoice;
+    if (mustChoose) {
+      final labs = (await context.read<ReferenceRepository>().sellReference()).labs;
+      if (!mounted) return;
+      // A closed branch gives way to a branch of the same lab; a lab that stopped, to any other's.
+      final open = [for (final lab in labs) if (l.needsLabChoice || lab.id == l.labId) ...lab.branches];
+      final named = [for (final b in open) if (l.branchIds.contains(b.id)) b];
+      final choices = named.isNotEmpty && !l.needsLabChoice ? named : open;
+      branchId = await showDialog<int>(
+        context: context,
+        barrierColor: DColors.modalBarrier,
+        builder: (ctx) => SimpleDialog(
+          title: const T('Choose where to take the piece', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(24, 0, 24, 8),
+              child: T('Your deadline is counted in working hours at the branch you pick.', style: DText.tiny),
             ),
-        ],
-      ),
-    );
-    if (branchId == null || !mounted) return;
+            for (final b in choices)
+              SimpleDialogOption(
+                onPressed: () => Navigator.of(ctx).pop(b.id),
+                child: Text(arabic && b.nameAr.isNotEmpty ? b.nameAr : b.nameEn),
+              ),
+          ],
+        ),
+      );
+      if (branchId == null || !mounted) return;
+    } else {
+      final name = arabic && l.branchNamesAr.isNotEmpty ? l.branchNamesAr.first : (l.branchNames.isNotEmpty ? l.branchNames.first : '');
+      final ok = await ask(context, title: context.kr(LabKeys.acceptTitle), body: context.kr(LabKeys.acceptBody, {'branch': name}), yes: context.kr(LabKeys.acceptYes));
+      if (!ok || !mounted) return;
+    }
     setState(() => _busy = true);
     try {
       final order = await context.read<BuyRequestsRepository>().accept(l.id, head.id, branchId, idempotencyKey: newIdempotencyKey());
@@ -1058,5 +1082,36 @@ class _SaveButtonState extends State<_SaveButton> {
   Widget build(BuildContext context) {
     final isSaved = context.select<SavedController, bool>((c) => c.isSaved(widget.listingId));
     return DButton.ghost(isSaved ? 'Saved' : 'Save', small: true, loading: _busy, foreground: isSaved ? DColors.gold : null, borderColor: isSaved ? DColors.gold : null, onTap: _toggle);
+  }
+}
+
+/// A live piece whose lab stopped: the seller picks a branch of another lab and it is back on the market.
+Future<void> _chooseLab(BuildContext context, Listing own) async {
+  final repo = context.read<ListingsRepository>();
+  final labs = (await context.read<ReferenceRepository>().sellReference()).labs;
+  if (!context.mounted) return;
+  final picked = await showDialog<(LabRef, BranchRef)>(
+    context: context,
+    barrierColor: DColors.modalBarrier,
+    builder: (ctx) => AlertDialog(
+      title: Text(ctx.k(LabKeys.chooseLab), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+      content: SingleChildScrollView(
+        child: LabBranchList(
+          labs: labs,
+          selectedBranchId: null,
+          costOf: (lab) => own.stone?.certificateKind == null
+              ? (lab.goldCost == null ? null : '${ctx.k(LabKeys.inspectionCost)}: ${money(lab.goldCost!)}')
+              : '${ctx.k(LabKeys.certificateCost)}: ${money(lab.certificateCost(switch (own.stone!.certificateKind) { 'other_lab' => 'other', final k? => k, _ => 'none' }, own.stone!.certificateLabId))}',
+          onBranch: (lab, branch) => Navigator.of(ctx).pop((lab, branch)),
+        ),
+      ),
+    ),
+  );
+  if (picked == null || !context.mounted) return;
+  try {
+    await repo.chooseLab(own.id, picked.$2.id, idempotencyKey: newIdempotencyKey());
+    if (context.mounted) showToast(context, context.kr(LabKeys.newCost, {'lab': picked.$1.name(context.read<LangController>().isArabic)}));
+  } on ApiException catch (e) {
+    if (context.mounted) showToast(context, listingErrorMessage(e));
   }
 }

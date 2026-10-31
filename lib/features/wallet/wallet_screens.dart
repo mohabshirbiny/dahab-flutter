@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/labs.dart';
 import '../../core/text/keys/invoice_vat.dart';
 import '../../core/text/keys/offer_details.dart';
 import '../../core/text/keys/wallet_statement.dart';
@@ -1352,6 +1353,10 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                 const Gap(14),
                 if (d?.certificateFee != null) ...[
                   DSoft.bordered(child: DRow('Stone certificate fee, from the proceeds', moneyOf(d!.certificateFee))),
+                  const Gap(14),
+                ],
+                if (d?.goldInspectionFee != null) ...[
+                  DSoft.bordered(child: DRow(context.k(LabKeys.inspectionCost), moneyOf(d!.goldInspectionFee))),
                   const Gap(14),
                 ],
                 if (d?.paidToWallet != null)
