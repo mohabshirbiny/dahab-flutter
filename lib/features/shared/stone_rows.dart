@@ -49,13 +49,6 @@ String certificateWords(BuildContext context, String kind, {StoneDetails? stone}
   _ => context.k(OfferDetailsKeys.certNone),
 };
 
-/// The seller's row for what IGI's certificate costs them, by what they bring.
-String certificateFeeLabel(BuildContext context, String? kind) => switch (kind) {
-  'none' => context.k(OfferDetailsKeys.feeNone),
-  'other_lab' => context.k(OfferDetailsKeys.feeOther),
-  _ => context.k(OfferDetailsKeys.feeIgi),
-};
-
 /// "0.70" → "0.7", "1.00" → "1".
 String _trim(String carat) {
   final v = double.tryParse(carat);

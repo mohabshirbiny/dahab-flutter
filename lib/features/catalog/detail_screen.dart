@@ -466,13 +466,13 @@ class _DetailBody extends StatelessWidget {
               ],
               // A stone piece pays IGI's certificate from the proceeds: why "You would receive" is lower still.
               if (own?.certificateFee != null && (double.tryParse(own!.certificateFee!) ?? 0) > 0)
-                DRow(certificateFeeLabel(context, own.stone?.certificateKind), '− ${moneyOf(own.certificateFee)}'),
+                DRow(context.k(LabKeys.certificateCost), '− ${moneyOf(own.certificateFee)}'),
               if (own?.goldInspectionFee != null) DRow(context.k(LabKeys.inspectionCost), '− ${moneyOf(own!.goldInspectionFee)}'),
               if (own?.needsLabChoice == true) ...[
                 const Gap(8),
                 DNote(icon: 'info-circle', kind: NoteKind.wait, text: context.k(LabKeys.labGone)),
                 const Gap(4),
-                DLink(context.k(LabKeys.chooseAnother), onTap: () => _chooseLab(context, own!)),
+                DLink(context.k(LabKeys.chooseAnother), onTap: () => _chooseLab(context, own!, onChanged)),
               ],
               if (own?.youWouldReceive != null) ...[
                 const Gap(6),
@@ -1086,7 +1086,7 @@ class _SaveButtonState extends State<_SaveButton> {
 }
 
 /// A live piece whose lab stopped: the seller picks a branch of another lab and it is back on the market.
-Future<void> _chooseLab(BuildContext context, Listing own) async {
+Future<void> _chooseLab(BuildContext context, Listing own, VoidCallback onChanged) async {
   final repo = context.read<ListingsRepository>();
   final labs = (await context.read<ReferenceRepository>().sellReference()).labs;
   if (!context.mounted) return;
@@ -1110,6 +1110,7 @@ Future<void> _chooseLab(BuildContext context, Listing own) async {
   if (picked == null || !context.mounted) return;
   try {
     await repo.chooseLab(own.id, picked.$2.id, idempotencyKey: newIdempotencyKey());
+    onChanged();
     if (context.mounted) showToast(context, context.kr(LabKeys.newCost, {'lab': picked.$1.name(context.read<LangController>().isArabic)}));
   } on ApiException catch (e) {
     if (context.mounted) showToast(context, listingErrorMessage(e));
