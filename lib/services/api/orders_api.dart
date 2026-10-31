@@ -270,6 +270,9 @@ class ApiOrdersRepository implements OrdersRepository {
       ],
       detailView: 'owner',
       pieceId: o.listingId,
+      // The order's own media route (needs the session).
+      photoPath: o.photoPath,
+      photoAuth: true,
     );
   }
 
@@ -331,6 +334,8 @@ class ApiOrdersRepository implements OrdersRepository {
       blocks: blocks,
       detailView: r.state == BuyRequestState.queued ? 'requested' : 'cancelled',
       pieceId: r.listingId,
+      photoPath: r.photoPath,
+      photoAuth: true,
     );
   }
 }

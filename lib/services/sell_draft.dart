@@ -142,6 +142,17 @@ class SellDraft extends ChangeNotifier {
   /// The photo slots in display order (the invoice is not a photo).
   List<String> get _photoKeys => ['full', 'hall', if (type != SellType.gold) 'stone', for (var i = 0; i < extraPhotos; i++) 'x$i'];
 
+  /// The piece's first photo for the summary on step 3: a file just picked, or one kept from the listing.
+  ({List<int>? bytes, String? url}) get coverPhoto {
+    for (final key in _photoKeys) {
+      final file = files[key];
+      if (file != null) return (bytes: file.bytes, url: null);
+      final media = kept[key];
+      if (media != null) return (bytes: null, url: media.url);
+    }
+    return (bytes: null, url: null);
+  }
+
   int get maxExtraPhotos => maxPhotos - (type == SellType.gold ? 2 : 3);
 
   int get requiredCount => photoSlots.where((s) => s.required).length;
