@@ -61,6 +61,9 @@ abstract interface class ListingsRepository {
   /// `listing_not_relistable` (Dahab took it down, or it left another way), `platform_stopped`.
   Future<Listing> relist(String id, {required String idempotencyKey});
 
+  /// The lab of a live piece stopped taking pieces: bring it back at a branch of another.
+  Future<Listing> chooseLab(String id, int branchId, {required String idempotencyKey});
+
   /// Changes the price of a live piece nobody has asked for (backend spec 022):
   /// `{making_charge_per_g}` for gold, `{asking_price}` for stones. Throws
   /// `listing_has_requests`, `listing_price_locked`, `listing_not_live`, `platform_stopped`.
@@ -92,7 +95,7 @@ abstract interface class BuyRequestsRepository {
   Future<SellerQueue> queue(String listingId);
 
   /// Accepts the first in line at one of the listing's branches; returns the order.
-  Future<OrderSummary> accept(String listingId, String requestId, int branchId, {required String idempotencyKey});
+  Future<OrderSummary> accept(String listingId, String requestId, int? branchId, {required String idempotencyKey});
 
   /// Declines the first in line (no reason).
   Future<void> decline(String listingId, String requestId, {required String idempotencyKey});

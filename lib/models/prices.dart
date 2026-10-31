@@ -30,7 +30,7 @@ class KaratPrice {
 
 /// What a quote is asked for: the sell form's piece, or the home calculator's.
 class QuoteParams {
-  const QuoteParams({required this.type, this.karat, this.weight = 0, this.makingPerGram = 0, this.askingPrice = 0, this.certificate});
+  const QuoteParams({required this.type, this.karat, this.weight = 0, this.makingPerGram = 0, this.askingPrice = 0, this.certificate, this.certificateLabId, this.labId});
 
   final SellType type;
   final int? karat;
@@ -38,8 +38,12 @@ class QuoteParams {
   final double makingPerGram;
   final double askingPrice;
 
-  /// Stones only: `igi`, `other_lab` or `none`; its cost comes out of the payout (backend package D).
+  /// Stones only: `lab`, `other_lab` or `none`; its cost at the lab comes out of the payout.
   final String? certificate;
+  final int? certificateLabId;
+
+  /// The lab that inspects the piece; the backend prices the main lab until one is chosen.
+  final int? labId;
 
   String get category => switch (type) {
     SellType.gold => 'gold',
@@ -57,6 +61,8 @@ class QuoteParams {
     if (type == SellType.gold) q['making_per_g'] = makingPerGram.toStringAsFixed(2);
     if (type != SellType.gold) q['asking_price'] = askingPrice.toStringAsFixed(2);
     if (type != SellType.gold && certificate != null) q['certificate'] = certificate!;
+    if (type != SellType.gold && certificateLabId != null) q['certificate_lab_id'] = '$certificateLabId';
+    if (labId != null) q['lab_id'] = '$labId';
     return q.entries.map((e) => '${e.key}=${Uri.encodeQueryComponent(e.value)}').join('&');
   }
 
@@ -91,6 +97,7 @@ SellQuote sellQuoteFromJson(Map<String, dynamic> j) {
     commission: (_num(j['commission']) + _num(j['vat'])).toDouble(),
     net: _num(j['payout']).toDouble(),
     certificateFee: _num(j['certificate_fee']).toDouble(),
+    goldInspectionFee: _num(j['gold_inspection_fee']).toDouble(),
     // The gold rate behind the gold value (gold only: a gold-and-diamond piece is valued at the mid).
     rate: gold ? _num(j['rate_per_gram']).toDouble() : 0,
     jewellerPays: _num(j['gold_value']).toDouble(),

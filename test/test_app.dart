@@ -1149,6 +1149,19 @@ class FakeBackend {
       });
     }
     if (path == '/reference/branches') return json(200, {'data': branches});
+    if (path == '/reference/labs') {
+      return json(200, {
+        'data': [
+          {
+            'id': 1,
+            'name_en': 'IGI',
+            'name_ar': 'IGI',
+            'costs': {'own': '0.0000', 'other': '1000.0000', 'none': '2000.0000', 'gold': null},
+            'branches': branches,
+          },
+        ],
+      });
+    }
     if (path == '/reference/legal-documents/ownership_declaration') return json(200, {'data': declaration});
     if (path == '/reference/legal-documents/deposit_agreement') return json(200, {'data': depositTerms});
     if (path == '/reference/legal-documents/collection_proxy_authorisation') return json(200, {'data': proxyAuthorisation});
@@ -1241,7 +1254,7 @@ class FakeBackend {
         if (i >= 0) listings[i] = {...listings[i], 'state': items.isEmpty ? 'live' : 'reserved', 'queue_count': items.length};
         return json(200, {'data': listings[i]});
       }
-      if (body['branch_id'] != 1) return error(409, 'branch_not_in_options');
+      if ((body['branch_id'] ?? 1) != 1) return error(409, 'branch_not_in_options');
       final order = {
         'order_ref': 'DH-2026-000001',
         'state': 'awaiting_delivery',

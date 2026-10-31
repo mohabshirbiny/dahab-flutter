@@ -10,6 +10,7 @@ import 'buy_request_balance.dart';
 import 'commission_terms.dart';
 import 'listing_price.dart';
 import 'listing_relist.dart';
+import 'labs.dart';
 import 'offer_details.dart';
 import 'orders_after_collection.dart';
 import 'patterns.dart';
@@ -47,6 +48,7 @@ const List<TextKey> allTextKeys = [
   ...WalletStatementKeys.all,
   ...InvoiceVatKeys.all,
   ...OfferDetailsKeys.all,
+  ...LabKeys.all,
   ...AppNotesSalesKeys.all,
   ...PieceSellerKeys.all,
   ...PricesPageKeys.all,

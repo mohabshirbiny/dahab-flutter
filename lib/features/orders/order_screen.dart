@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/labs.dart';
 import '../../core/text/keys/app_notes_sales.dart';
 import '../../core/text/keys/listing_price.dart';
 import '../../core/text/keys/offer_details.dart';
@@ -538,7 +539,8 @@ class _OrderBody extends StatelessWidget {
       case CustomerOrderStage.collect || CustomerOrderStage.done when o.isSeller:
         return [
           AmountBlockView(caption: 'Paid to your wallet', amount: '+ ${moneyOf(o.sellerProceeds)}'),
-          if (o.certificateFee != null) ...[const Gap(8), DRow('IGI certificate, taken from the sale', '− ${moneyOf(o.certificateFee)}')],
+          if (o.certificateFee != null) ...[const Gap(8), DRow(context.k(LabKeys.certificateCost), '− ${moneyOf(o.certificateFee)}')],
+          if (o.goldInspectionFee != null) ...[const Gap(8), DRow(context.k(LabKeys.inspectionCost), '− ${moneyOf(o.goldInspectionFee)}')],
           const Gap(12),
           const DNote(icon: 'circle-check', kind: NoteKind.ok, text: 'The sale is complete on your side. The buyer collects the piece from the branch.'),
         ];
@@ -721,7 +723,7 @@ class _SellerEstimateCard extends StatelessWidget {
               DRow(context.k(AppNotesSalesKeys.estimatePiece), moneyOf(e.gross)),
               DRow(context.k(ListingPriceKeys.commissionVatIncluded), '− ${moneyOf(e.commissionTotal)}'),
               if (e.hasSaving) DRow(context.k(AppNotesSalesKeys.estimateSaving), moneyOf(e.savedTotal), keyColor: DColors.ok, valueColor: DColors.ok),
-              if (e.hasCertificateFee) DRow(context.k(AppNotesSalesKeys.estimateCertificate), '− ${moneyOf(e.certificateFee)}'),
+              if (e.hasCertificateFee) DRow(context.k(LabKeys.certificateCost), '− ${moneyOf(e.certificateFee)}'),
               DRow(
                 context.k(AppNotesSalesKeys.estimateReceive),
                 '',

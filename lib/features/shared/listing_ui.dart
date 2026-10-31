@@ -119,6 +119,14 @@ String buyRequestErrorMessage(ApiException e) {
     case 'not_queue_head':
     case 'queue_empty':
       return 'The line has changed. It has been refreshed.';
+    case 'lab_not_available':
+      return 'This lab is not taking pieces right now. Choose another.';
+    case 'certificate_lab_required':
+      return 'Choose the lab that issued the certificate.';
+    case 'other_lab_name_required':
+      return 'Write the name of the lab that issued the certificate.';
+    case 'branch_not_in_lab':
+      return 'Choose an open branch of the same lab.';
     case 'branch_not_in_options':
       return 'That branch is not available any more. Choose another.';
     case 'buyer_suspended':

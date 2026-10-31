@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/text/keys/offer_details.dart';
+import '../../core/text/keys/labs.dart';
 import '../../core/text/keys/promo.dart';
 import '../../core/text/texts_controller.dart';
 import '../../models/promo.dart';
@@ -14,7 +14,6 @@ import '../../services/live_rates.dart';
 import '../../services/repositories.dart';
 import '../../services/sell_draft.dart';
 import '../../widgets/widgets.dart';
-import '../shared/branch_sheet.dart';
 import '../shared/listing_ui.dart';
 import '../shared/piece_card.dart';
 import 'promo_card.dart';
@@ -54,7 +53,7 @@ class _Sell3ScreenState extends State<Sell3Screen> {
     if (draft.certificateMissing) return setState(() => _error = 'Upload the stone certificate, or choose No certificate.');
     if (draft.requiredAdded < draft.requiredCount) return setState(() => _error = 'Add the required photos before continuing.');
     if (draft.description.trim().length < 40) return setState(() => _error = 'Add a little more detail before continuing.');
-    if (draft.branchIds.isEmpty) return setState(() => _error = 'Choose at least one branch you can bring the piece to.');
+    if (draft.branchIds.isEmpty) return setState(() => _error = context.kr(LabKeys.chooseBranchMissing));
     if (!_own) return setState(() => _error = 'Confirm ownership to list the piece.');
     setState(() {
       _busy = true;
@@ -146,7 +145,8 @@ class _Sell3ScreenState extends State<Sell3Screen> {
             child: Column(
               children: [
                 const DRow('Listing fee', 'None'),
-                const DRow('Inspection cost', 'Paid by Dahab'),
+                // Said only when nothing comes out of the seller's money for the lab.
+                if (q == null || (q.certificateFee <= 0 && q.goldInspectionFee <= 0)) const DRow('Inspection cost', 'Paid by Dahab'),
                 if (paidAhead) ...[
                   const DRow('Money released (first gold sale)', 'When IGI confirms the piece'),
                   const DRow('Money released (after that)', 'When the buyer pays'),
@@ -214,29 +214,6 @@ class _Sell3ScreenState extends State<Sell3Screen> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const DLabel('Where can you bring the piece?'),
-                  const T('Choose every branch that suits you. The buyer picks one of them.', style: DText.tiny),
-                  const Gap(8),
-                  if (ref.branches.isEmpty)
-                    const DNote(icon: 'info-circle', kind: NoteKind.wait, text: 'No branch is open for inspections right now. Try again later.')
-                  else
-                    for (final b in ref.branches) ...[
-                      DCheck(
-                        value: d.branchIds.contains(b.id),
-                        bottom: 2,
-                        onChanged: (_) {
-                          d.toggleBranch(b.id);
-                          setState(() => _error = null);
-                        },
-                        text: arabic && b.nameAr.isNotEmpty ? b.nameAr : b.nameEn,
-                      ),
-                      // Its hours, address, phone and map, before the seller commits to bringing the piece there.
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(start: 25, bottom: 10),
-                        child: DLink(context.k(OfferDetailsKeys.branchDetails), onTap: () => showBranchDetails(context, b)),
-                      ),
-                    ],
-                  const Gap(10),
                   DCheck(
                     value: _own,
                     bottom: 8,

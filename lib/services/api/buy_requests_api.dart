@@ -69,10 +69,10 @@ class ApiBuyRequestsRepository implements BuyRequestsRepository {
   }
 
   @override
-  Future<OrderSummary> accept(String listingId, String requestId, int branchId, {required String idempotencyKey}) async {
+  Future<OrderSummary> accept(String listingId, String requestId, int? branchId, {required String idempotencyKey}) async {
     final res = await _client.post(
       '/customer/me/listings/${Uri.encodeComponent(listingId)}/accept',
-      body: {'buy_request_id': requestId, 'branch_id': branchId},
+      body: {'buy_request_id': requestId, 'branch_id': ?branchId},
       auth: true,
       idempotencyKey: idempotencyKey,
     );

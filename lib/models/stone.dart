@@ -3,10 +3,15 @@
 library;
 
 class StoneDetails {
-  const StoneDetails({this.certificateKind, this.carat, this.clarity, this.cut});
+  const StoneDetails({this.certificateKind, this.certificateLabId, this.certificateLabNameEn, this.certificateLabNameAr, this.carat, this.clarity, this.cut});
 
-  /// `igi`, `other_lab` or `none`; null for a listing made before it was asked.
+  /// `lab`, `other_lab` or `none`; null for a listing made before it was asked.
   final String? certificateKind;
+
+  /// With `lab`: the lab that issued it.
+  final int? certificateLabId;
+  final String? certificateLabNameEn;
+  final String? certificateLabNameAr;
 
   /// Carats, 2 decimals (`0.70`).
   final String? carat;
@@ -24,7 +29,13 @@ class StoneDetails {
     if (raw is! Map) return null;
     final j = raw.cast<String, dynamic>();
     String? s(String k) => j[k] == null ? null : '${j[k]}';
-    return StoneDetails(certificateKind: s('certificate_kind'), carat: s('carat'), clarity: s('clarity'), cut: s('cut'));
+    final lab = j['certificate_lab'];
+    return StoneDetails(
+        certificateKind: s('certificate_kind'),
+        certificateLabId: lab is Map ? (lab['id'] as num?)?.toInt() : null,
+        certificateLabNameEn: lab is Map ? '${lab['name_en']}' : null,
+        certificateLabNameAr: lab is Map ? '${lab['name_ar']}' : null,
+        carat: s('carat'), clarity: s('clarity'), cut: s('cut'));
   }
 }
 

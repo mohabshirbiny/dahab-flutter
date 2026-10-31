@@ -37,6 +37,7 @@ class BranchHourRef {
 class BranchRef {
   const BranchRef({
     required this.id,
+    this.labId,
     required this.nameEn,
     required this.nameAr,
     this.addressEn = '',
@@ -47,6 +48,7 @@ class BranchRef {
   });
 
   final int id;
+  final int? labId;
   final String nameEn;
   final String nameAr;
   final String addressEn;
@@ -58,6 +60,7 @@ class BranchRef {
   final List<BranchHourRef> hours;
 
   factory BranchRef.fromJson(Map<String, dynamic> j) => BranchRef(
+    labId: (j['lab_id'] as num?)?.toInt(),
     id: (j['id'] as num).toInt(),
     nameEn: '${j['name_en'] ?? ''}',
     nameAr: '${j['name_ar'] ?? ''}',
@@ -80,6 +83,55 @@ class LegalDoc {
 
   factory LegalDoc.fromJson(Map<String, dynamic> j) =>
       LegalDoc(id: (j['id'] as num).toInt(), version: '${j['version'] ?? ''}', bodyEn: '${j['body_en'] ?? ''}', bodyAr: '${j['body_ar'] ?? ''}');
+}
+
+/// A lab a seller can choose: what it costs them and its open branches (`GET /reference/labs`).
+class LabRef {
+  const LabRef({
+    required this.id,
+    required this.nameEn,
+    required this.nameAr,
+    required this.ownCost,
+    required this.otherCost,
+    required this.noneCost,
+    this.goldCost,
+    this.branches = const [],
+  });
+
+  final int id;
+  final String nameEn;
+  final String nameAr;
+  final double ownCost;
+  final double otherCost;
+  final double noneCost;
+
+  /// Null when it is 0: it then appears nowhere.
+  final double? goldCost;
+  final List<BranchRef> branches;
+
+  String name(bool arabic) => arabic && nameAr.isNotEmpty ? nameAr : nameEn;
+
+  /// The cost at this lab for the form's choice (`lab` with the lab behind it, `other` or `none`).
+  double certificateCost(String cert, int? certificateLabId) => switch (cert) {
+    'lab' => certificateLabId == id ? ownCost : otherCost,
+    'other' => otherCost,
+    _ => noneCost,
+  };
+
+  factory LabRef.fromJson(Map<String, dynamic> j) {
+    final costs = (j['costs'] as Map?)?.cast<String, dynamic>() ?? const {};
+    double read(String k) => double.tryParse('${costs[k]}') ?? 0;
+    return LabRef(
+      id: (j['id'] as num).toInt(),
+      nameEn: '${j['name_en'] ?? ''}',
+      nameAr: '${j['name_ar'] ?? ''}',
+      ownCost: read('own'),
+      otherCost: read('other'),
+      noneCost: read('none'),
+      goldCost: costs['gold'] == null ? null : double.tryParse('${costs['gold']}'),
+      branches: [for (final b in (j['branches'] as List? ?? const [])) BranchRef.fromJson((b as Map).cast<String, dynamic>())],
+    );
+  }
 }
 
 /// What IGI's certificate costs the seller, in EGP, by the certificate they bring
@@ -106,7 +158,7 @@ class CertificateCosts {
 
 /// Everything the sell flow reads before a listing exists.
 class SellReference {
-  const SellReference({required this.karats, required this.pieceTypes, required this.branches, required this.declaration, this.certificateCosts});
+  const SellReference({required this.karats, required this.pieceTypes, required this.branches, required this.declaration, this.certificateCosts, this.labs = const []});
 
   /// Enabled karat codes, in display order.
   final List<int> karats;
@@ -116,6 +168,9 @@ class SellReference {
 
   /// Null when the backend could not say (an older backend): the form shows no figure.
   final CertificateCosts? certificateCosts;
+
+  /// The labs taking pieces, the main lab first.
+  final List<LabRef> labs;
 
   /// The enabled type of [category] named [nameEn], if Dahab accepts it now.
   PieceTypeRef? pieceType(String category, String nameEn) {

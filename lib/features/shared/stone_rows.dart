@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/text/keys/labs.dart';
 import '../../core/text/keys/offer_details.dart';
 import '../../core/text/texts_controller.dart';
 import '../../models/stone.dart';
@@ -26,7 +27,7 @@ List<Widget> stoneRows(
     if (s.certificateKind != null)
       DRow(
         context.k(OfferDetailsKeys.certificate),
-        certificateWords(context, s.certificateKind!),
+        certificateWords(context, s.certificateKind!, stone: s),
         valueColor: s.hasNoCertificate ? DColors.wait : null,
         padding: padding,
         bottomBorder: bottomBorder,
@@ -40,17 +41,12 @@ List<Widget> stoneRows(
 }
 
 /// "IGI certificate" · "Another lab's certificate" · "No certificate".
-String certificateWords(BuildContext context, String kind) => switch (kind) {
-  'igi' => context.k(OfferDetailsKeys.certIgi),
+String certificateWords(BuildContext context, String kind, {StoneDetails? stone}) => switch (kind) {
+  'lab' when stone?.certificateLabNameEn != null =>
+    context.k(LabKeys.certFrom, {'lab': (context.isArabic ? stone!.certificateLabNameAr : stone!.certificateLabNameEn) ?? ''}),
+  'lab' => context.k(OfferDetailsKeys.certIgi),
   'other_lab' => context.k(OfferDetailsKeys.certOther),
   _ => context.k(OfferDetailsKeys.certNone),
-};
-
-/// The seller's row for what IGI's certificate costs them, by what they bring.
-String certificateFeeLabel(BuildContext context, String? kind) => switch (kind) {
-  'none' => context.k(OfferDetailsKeys.feeNone),
-  'other_lab' => context.k(OfferDetailsKeys.feeOther),
-  _ => context.k(OfferDetailsKeys.feeIgi),
 };
 
 /// "0.70" → "0.7", "1.00" → "1".
