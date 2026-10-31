@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -113,7 +115,13 @@ class _Sell3ScreenState extends State<Sell3Screen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const PieceThumb(),
+                // The seller's own first photo (owner notes of 2026-10-29); the paper tile until one is added.
+                switch (d.coverPhoto) {
+                  (bytes: final List<int> bytes, url: _) => Image.memory(Uint8List.fromList(bytes), height: 96, width: double.infinity, fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const PieceThumb()),
+                  (bytes: _, url: final String url) => ApiImage(path: url, auth: true, height: 96),
+                  _ => const PieceThumb(),
+                },
                 Padding(
                   padding: const EdgeInsets.all(13),
                   child: Column(

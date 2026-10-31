@@ -83,6 +83,7 @@ class BuyRequest {
     required this.karat,
     required this.weight,
     required this.listingState,
+    this.photoPath,
     required this.queueCount,
     required this.placeInLine,
     required this.aheadCount,
@@ -104,6 +105,9 @@ class BuyRequest {
   final int? karat;
   final String? weight;
   final String listingState;
+
+  /// The piece's first photo (the order's media route once it became an order: needs the session).
+  final String? photoPath;
   final int queueCount;
 
   /// 1 = the seller answers you next. Null unless queued.
@@ -135,6 +139,7 @@ class BuyRequest {
       karat: karat,
       weight: listing['weight_g'] as String?,
       listingState: '${listing['state'] ?? ''}',
+      photoPath: (listing['photo'] as Map?)?['url'] as String?,
       queueCount: (listing['queue_count'] as num?)?.toInt() ?? 0,
       placeInLine: (j['place_in_line'] as num?)?.toInt(),
       aheadCount: (j['ahead_count'] as num?)?.toInt(),
