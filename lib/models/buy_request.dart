@@ -195,11 +195,30 @@ class SellerQueue {
 
 /// The figures behind "You need a little more" (409 insufficient_funds details).
 class DepositShortfall {
-  const DepositShortfall({required this.depositAmount, required this.available, required this.shortfall});
+  const DepositShortfall({required this.depositAmount, required this.available, required this.shortfall, this.price});
 
   final String depositAmount;
   final String available;
   final String shortfall;
+
+  /// The price the buyer sent the request at (the piece page's), for [suggested].
+  final String? price;
+
+  /// Share of the price added to the suggestion: the gold rate may move until the transfer arrives.
+  static const bufferPct = 1;
+
+  DepositShortfall withPrice(String price) =>
+      DepositShortfall(depositAmount: depositAmount, available: available, shortfall: shortfall, price: price);
+
+  /// What to add: the deposit plus [bufferPct] % of the price, less the wallet, in whole pounds
+  /// (the bare shortfall when the price is unknown). Advice only — the backend holds the deposit.
+  String get suggested {
+    double n(String? v) => double.tryParse(v ?? '') ?? 0;
+    final p = n(price);
+    if (p <= 0) return shortfall;
+    final need = n(depositAmount) + p * bufferPct / 100 - n(available);
+    return need > 0 ? need.ceil().toString() : shortfall;
+  }
 }
 
 /// The deposit terms the buyer accepts with each request (`deposit_agreement`).

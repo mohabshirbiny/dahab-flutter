@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/text/keys/deposit_topup.dart';
+import '../../core/text/texts_controller.dart';
 import '../../core/utils/idempotency.dart';
 import '../../models/piece.dart';
 import '../../services/api/api_client.dart';
@@ -312,16 +314,17 @@ class _TopUpFirstScreenState extends State<TopUpFirstScreen> {
                 children: [
                   DRow('Deposit needed', moneyOf(s.depositAmount)),
                   DRow('In your wallet', moneyOf(s.available)),
+                  DRow('Add at least', moneyOf(s.shortfall), rule: true),
                   DRow(
-                    'Add at least',
-                    moneyOf(s.shortfall),
-                    rule: true,
+                    context.k(DepositTopUpKeys.suggest),
+                    moneyOf(s.suggested),
                     valueColor: DColors.wait,
                     valueStyle: const TextStyle(fontWeight: FontWeight.w500),
                   ),
                 ],
               ),
             ),
+          if (s != null) ...[const Gap(14), DNote(icon: 'info-circle', text: context.k(DepositTopUpKeys.note))],
           const Gap(14),
           const DNote(icon: 'info-circle', text: 'Other buyers may be in the queue for this piece, and the price follows the gold rate until you send your request.'),
           if (listingId != null && !saved) ...[
@@ -329,7 +332,7 @@ class _TopUpFirstScreenState extends State<TopUpFirstScreen> {
             const DNote(icon: 'heart', text: 'Save this piece so you can come straight back to it after adding funds.'),
           ],
           const Gap(16),
-          DButton('Add funds', onTap: () => context.nav(R.addfunds, query: s == null ? null : {'amount': s.shortfall})),
+          DButton('Add funds', onTap: () => context.nav(R.addfunds, query: s == null ? null : {'amount': s.suggested})),
           if (listingId != null) ...[
             const Gap(9),
             if (saved)

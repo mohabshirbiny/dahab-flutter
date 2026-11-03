@@ -309,7 +309,7 @@ class _DetailBody extends StatelessWidget {
     } on ApiException catch (e) {
       final short = shortfallOf(e);
       if (short != null) {
-        session.walletShort(short, listingId: d.piece.id);
+        session.walletShort(short.withPrice(price), listingId: d.piece.id);
         if (context.mounted) context.nav(R.topup);
         return;
       }

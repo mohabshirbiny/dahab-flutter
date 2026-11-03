@@ -7,6 +7,7 @@ import 'account_identity.dart';
 import 'account_legal.dart';
 import 'auth_reset.dart';
 import 'buy_request_balance.dart';
+import 'deposit_topup.dart';
 import 'commission_terms.dart';
 import 'listing_price.dart';
 import 'listing_relist.dart';
@@ -42,6 +43,7 @@ const List<TextKey> allTextKeys = [
   ...ListingRelistKeys.all,
   ...SellFigureKeys.all,
   ...BuyRequestBalanceKeys.all,
+  ...DepositTopUpKeys.all,
   ...PromoKeys.all,
   ...ReferralKeys.all,
   ...CommissionTermsKeys.all,
