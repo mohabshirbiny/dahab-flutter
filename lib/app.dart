@@ -31,6 +31,19 @@ class _DahabAppState extends State<DahabApp> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _goToAcceptanceIfOwed());
     // The sign-in flow navigates home after the session is set: keep the acceptance in front of it.
     _router.routerDelegate.addListener(_onRoute);
+    _router.routerDelegate.addListener(_onRouteForBars);
+    _onRouteForBars();
+  }
+
+  /// On a phone the system bars go dark on the dark splash. The router reports
+  /// a new route while the tree is being built, so the change waits for the frame.
+  final _darkSystemBars = ValueNotifier<bool>(false);
+
+  void _onRouteForBars() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _darkSystemBars.value = _router.routerDelegate.currentConfiguration.uri.path == '/${R.splash}';
+    });
   }
 
   void _onRoute() {
@@ -59,6 +72,8 @@ class _DahabAppState extends State<DahabApp> {
   void dispose() {
     _auth.removeListener(_onAuth);
     _router.routerDelegate.removeListener(_onRoute);
+    _router.routerDelegate.removeListener(_onRouteForBars);
+    _darkSystemBars.dispose();
     _router.dispose();
     super.dispose();
   }
@@ -87,7 +102,11 @@ class _DahabAppState extends State<DahabApp> {
       ),
       builder: (context, child) => DefaultTextStyle(
         style: base,
-        child: PhoneFrame(child: child ?? const SizedBox()),
+        // The splash is dark, so on a phone the system bars go dark with it.
+        child: ValueListenableBuilder<bool>(
+          valueListenable: _darkSystemBars,
+          builder: (context, dark, _) => PhoneFrame(darkSystemBars: dark, child: child ?? const SizedBox()),
+        ),
       ),
     );
   }
