@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -192,9 +193,13 @@ class _Tab extends StatelessWidget {
 /// `.phone` — on wide screens the app sits in a centred 390px phone with
 /// rounded corners and a shadow; at 430px and below it fills the viewport.
 class PhoneFrame extends StatelessWidget {
-  const PhoneFrame({super.key, required this.child});
+  const PhoneFrame({super.key, required this.child, this.darkSystemBars = false});
 
   final Widget child;
+
+  /// The screen on show is dark (the splash): the phone's status and
+  /// navigation bars take its colour, with light icons.
+  final bool darkSystemBars;
 
   @override
   Widget build(BuildContext context) {
@@ -203,7 +208,10 @@ class PhoneFrame extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, c) {
           if (c.maxWidth <= DLayout.fullBleedBreakpoint) {
-            return ColoredBox(color: DColors.paper, child: child);
+            return _SystemBars(
+              dark: darkSystemBars,
+              child: ColoredBox(color: DColors.paper, child: child),
+            );
           }
           final height = (c.maxHeight - 40).clamp(0.0, DLayout.phoneHeight);
           final width = (c.maxWidth - 24).clamp(0.0, DLayout.phoneWidth);
@@ -224,6 +232,40 @@ class PhoneFrame extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// On a phone the app is drawn edge to edge: keep the screens clear of the
+/// status bar at the top and the navigation bar at the bottom, and paint those
+/// strips white (like the top bar and the tabs) or ink on a dark screen.
+/// On the web the system padding is zero, so nothing changes there.
+class _SystemBars extends StatelessWidget {
+  const _SystemBars({required this.dark, required this.child});
+
+  final bool dark;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final padding = MediaQuery.paddingOf(context);
+    final bar = dark ? DColors.ink : DColors.white;
+    final icons = dark ? Brightness.light : Brightness.dark;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: icons,
+        statusBarBrightness: dark ? Brightness.dark : Brightness.light,
+        systemNavigationBarColor: bar,
+        systemNavigationBarIconBrightness: icons,
+      ),
+      child: ColoredBox(
+        color: bar,
+        child: Padding(
+          padding: EdgeInsets.only(top: padding.top, bottom: padding.bottom),
+          child: MediaQuery.removePadding(context: context, removeTop: true, removeBottom: true, child: child),
+        ),
       ),
     );
   }
