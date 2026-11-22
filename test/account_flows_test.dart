@@ -234,7 +234,11 @@ void main() {
     await _acStart(tester);
     _acGo(tester, '/legal');
     await _acSettle(tester);
-    expect(find.text('Not published yet'), findsNWidgets(3));
+    // Only terms, privacy, ID handling and the payout declaration are listed (owner, 2026-11-22)
+    expect(find.text('Not published yet'), findsNWidgets(2));
+    expect(find.text('Selling rules and deadlines'), findsNothing);
+    expect(find.text('Payout account declaration'), findsOneWidget);
+    expect(find.text('Ownership declaration'), findsNothing);
     await _acTap(tester, 'Terms of use');
     expect(find.text('These are the terms of use.'), findsOneWidget);
 

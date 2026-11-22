@@ -829,6 +829,10 @@ class FakeBackend {
           {'code': 'selling_rules', 'published': false, 'version': null, 'published_at': null},
           {'code': 'id_handling', 'published': false, 'version': null, 'published_at': null},
         ],
+        'declarations': [
+          {'code': 'ownership_declaration', 'published': true, 'version': 1, 'published_at': '2026-09-01T10:00:00+03:00'},
+          {'code': 'payout_account_declaration', 'published': true, 'version': 1, 'published_at': '2026-09-01T10:00:00+03:00'},
+        ],
       });
     }
     if (path == '/reference/legal-documents/terms') {
