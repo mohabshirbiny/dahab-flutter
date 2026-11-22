@@ -418,8 +418,12 @@ class _FaqRow extends StatelessWidget {
 }
 
 /// `#s-legal` — the documents the backend lists (spec 017 FR-045); only published ones open.
+/// Only [listed] are shown (owner, 2026-11-22): the selling rules are part of the terms, and the
+/// ownership, deposit and collection texts are read where they are accepted.
 class LegalScreen extends StatelessWidget {
   const LegalScreen({super.key});
+
+  static const listed = {'terms', 'privacy', 'id_handling', 'payout_account_declaration'};
 
   @override
   Widget build(BuildContext context) {
@@ -432,7 +436,7 @@ class LegalScreen extends StatelessWidget {
             load: context.read<AccountRepository>().legalDocuments,
             builder: (context, docs) => DMenuCard(
               children: [
-                for (final d in docs)
+                for (final d in docs.where((d) => listed.contains(d.code)))
                   DMenu(
                     title: d.title,
                     sub: d.published ? null : context.t('Not published yet'),
